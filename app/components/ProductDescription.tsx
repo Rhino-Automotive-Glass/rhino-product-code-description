@@ -3,15 +3,18 @@
 import { useState } from 'react';
 import { vehicleBrandAbbreviations } from '../../carBrands';
 
-export default function ProductDescription() {
-  const [parte, setParte] = useState('');
+interface ProductDescriptionProps {
+  parte: string;
+}
+
+export default function ProductDescription({ parte }: ProductDescriptionProps) {
   const [posicion, setPosicion] = useState('');
   const [lado, setLado] = useState('');
   const [marca, setMarca] = useState('');
   const [subMarca, setSubMarca] = useState('');
   const [modelo, setModelo] = useState('');
 
-  // Parte options with full names
+  // Parte options with full names (for mapping value to label)
   const parteOptions = [
     { value: 's', label: 'Side' },
     { value: 'b', label: 'Back' },
@@ -36,11 +39,10 @@ export default function ProductDescription() {
     const subMarcaText = subMarca || '-';
     const modeloText = modelo || '-';
 
-    return `${parteLabel} ${posicionText} ${ladoText} ${marcaText} ${subMarcaText} ${modeloText}`;
+    return `${parteLabel} ${posicionText} ${ladoText} ${marcaText} ${subMarcaText} ${modeloText}`.toUpperCase();
   };
 
   const handleClean = () => {
-    setParte('');
     setPosicion('');
     setLado('');
     setMarca('');
@@ -52,35 +54,11 @@ export default function ProductDescription() {
     <div className="card p-6 lg:p-8">
       <div className="mb-6 lg:mb-8">
         <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
-          Product Description
+          Descripción del producto
         </h2>
       </div>
 
       <form className="space-y-6">
-        {/* Parte */}
-        <div className="w-full">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Parte
-          </label>
-          <div className="flex flex-wrap gap-4">
-            {parteOptions.map((option) => (
-              <label key={option.value} className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="parte"
-                  value={option.value}
-                  checked={parte === option.value}
-                  onChange={(e) => setParte(e.target.value)}
-                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
-                />
-                <span className="ml-2 text-sm text-slate-700">
-                  {option.value} - {option.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
         {/* Posición */}
         <div className="w-full">
           <label className="block text-sm font-medium text-slate-700 mb-2">

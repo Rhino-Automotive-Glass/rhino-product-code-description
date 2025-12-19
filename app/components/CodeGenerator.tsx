@@ -2,9 +2,13 @@
 
 import { useState } from 'react';
 
-export default function CodeGenerator() {
+interface CodeGeneratorProps {
+  parte: string;
+  setParte: (value: string) => void;
+}
+
+export default function CodeGenerator({ parte, setParte }: CodeGeneratorProps) {
   const [clasificacion, setClasificacion] = useState('');
-  const [parte, setParte] = useState('');
   const [numero, setNumero] = useState('');
   const [color, setColor] = useState('');
   const [aditamento, setAditamento] = useState('');
@@ -40,7 +44,7 @@ export default function CodeGenerator() {
     <div className="card p-6 lg:p-8">
       <div className="mb-6 lg:mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
-         Código del producto
+          Código del producto
         </h1>
       </div>
 
@@ -50,16 +54,41 @@ export default function CodeGenerator() {
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Clasificación Comercial
           </label>
-          <select
-            value={clasificacion}
-            onChange={(e) => setClasificacion(e.target.value)}
-            className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
-          >
-            <option value="">Select...</option>
-            <option value="D">D - Doméstico</option>
-            <option value="F">F - Foránea</option>
-            <option value="R">R - Rhino Automotive</option>
-          </select>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="clasificacion"
+                value="D"
+                checked={clasificacion === 'D'}
+                onChange={(e) => setClasificacion(e.target.value)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
+              />
+              <span className="ml-2 text-sm text-slate-700">D - Doméstico</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="clasificacion"
+                value="F"
+                checked={clasificacion === 'F'}
+                onChange={(e) => setClasificacion(e.target.value)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
+              />
+              <span className="ml-2 text-sm text-slate-700">F - Foránea</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="clasificacion"
+                value="R"
+                checked={clasificacion === 'R'}
+                onChange={(e) => setClasificacion(e.target.value)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
+              />
+              <span className="ml-2 text-sm text-slate-700">R - Rhino Automotive</span>
+            </label>
+          </div>
         </div>
 
         {/* Parte */}
