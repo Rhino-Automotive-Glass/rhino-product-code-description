@@ -2,18 +2,16 @@
 
 export default function ProductDescription() {
   return (
-    <div className="bg-white rounded-xl shadow-xl p-8">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
-          Product Description
+    <div className="card p-6 lg:p-8">
+      <div className="mb-6 lg:mb-8">
+        <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+         Descripción del producto
         </h2>
-        <p className="text-gray-600">
-          Coming soon...
-        </p>
+
       </div>
       
-      <div className="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-        <p className="text-gray-400 text-lg">
+      <div className="flex items-center justify-center h-64 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
+        <p className="text-slate-400 text-lg font-medium">
           Section under development
         </p>
       </div>

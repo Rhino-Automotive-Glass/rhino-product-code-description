@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function CodeGenerator() {
   const [clasificacion, setClasificacion] = useState('');
@@ -37,26 +37,23 @@ export default function CodeGenerator() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-xl p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Rhino Code Generator
+    <div className="card p-6 lg:p-8">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+         Código del producto
         </h1>
-        <p className="text-gray-600">
-          Industrial Glass Production Catalog Reference
-        </p>
       </div>
 
       <form className="space-y-6">
         {/* Clasificación Comercial */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="w-full">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Clasificación Comercial
           </label>
           <select
             value={clasificacion}
             onChange={(e) => setClasificacion(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
           >
             <option value="">Select...</option>
             <option value="D">D - Doméstico</option>
@@ -66,8 +63,8 @@ export default function CodeGenerator() {
         </div>
 
         {/* Parte */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="w-full">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Parte
           </label>
           <div className="flex flex-wrap gap-4">
@@ -85,17 +82,17 @@ export default function CodeGenerator() {
                   value={option.value}
                   checked={parte === option.value}
                   onChange={(e) => setParte(e.target.value)}
-                  className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
                 />
-                <span className="ml-2 text-sm text-gray-700">{option.label}</span>
+                <span className="ml-2 text-sm text-slate-700">{option.label}</span>
               </label>
             ))}
           </div>
         </div>
 
         {/* Número */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="w-full">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Número
           </label>
           <input
@@ -104,19 +101,19 @@ export default function CodeGenerator() {
             onChange={handleNumeroChange}
             placeholder="00000"
             maxLength={5}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
           />
         </div>
 
         {/* Color */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="w-full">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Color
           </label>
           <select
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
           >
             <option value="">Select...</option>
             <option value="GT">GT - Green Tint</option>
@@ -127,8 +124,8 @@ export default function CodeGenerator() {
         </div>
 
         {/* Aditamento */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="w-full">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Aditamento
           </label>
           <div className="flex gap-6">
@@ -139,9 +136,9 @@ export default function CodeGenerator() {
                 value="Y"
                 checked={aditamento === 'Y'}
                 onChange={(e) => setAditamento(e.target.value)}
-                className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
               />
-              <span className="ml-2 text-sm text-gray-700">Y</span>
+              <span className="ml-2 text-sm text-slate-700">Y</span>
             </label>
             <label className="flex items-center cursor-pointer">
               <input
@@ -150,19 +147,19 @@ export default function CodeGenerator() {
                 value="N"
                 checked={aditamento === 'N'}
                 onChange={(e) => setAditamento(e.target.value)}
-                className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
               />
-              <span className="ml-2 text-sm text-gray-700">N</span>
+              <span className="ml-2 text-sm text-slate-700">N</span>
             </label>
           </div>
         </div>
 
         {/* Clean Button */}
-        <div className="flex justify-center pt-4">
+        <div className="pt-4">
           <button
             type="button"
             onClick={handleClean}
-            className="px-8 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-md hover:shadow-lg"
+            className="btn btn-primary btn-md w-full"
           >
             Clean
           </button>
@@ -170,11 +167,11 @@ export default function CodeGenerator() {
       </form>
 
       {/* Generated Code Display */}
-      <div className="mt-8 p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-        <p className="text-sm text-gray-600 mb-2 text-center">
+      <div className="mt-6 lg:mt-8 p-6 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
+        <p className="text-sm text-slate-600 mb-2 text-center font-medium">
           Generated Rhino Code
         </p>
-        <p className="text-4xl font-mono font-bold text-center text-gray-800 tracking-wider">
+        <p className="text-3xl lg:text-4xl font-mono font-bold text-center text-slate-900 tracking-wider">
           {generateCode()}
         </p>
       </div>

@@ -1,4 +1,4 @@
-Create a Next.js 16.1.0 application under the folder dev for Rhino Auto Glass, an industrial glass production company.
+Create a Next.js 16.1.0 application under the folder dev for Rhino Auto Glass, an Automotive Glass production company.
 
 Consider that this is the first part of the scope of the application (Code Generation) This is a catalog reference code creation tool based on NAGS naming conventions. The second part of the scope will be called Product Description, which will be another form type section where the user selects another set of parameters resulting in another generated string very similar to this first part of the scope.
 
@@ -9,7 +9,7 @@ REQUIREMENTS FOR FIRST PART OF THE SCOPE:
 
 1. **UI Components:**
    - Heading: "Rhino Code Generator"
-   - Subtitle: "Industrial Glass Production Catalog Reference"
+   - Subtitle: "Automotive Glass Production Catalog Reference"
    - Form with 5 fields (in order):
      a) Clasificación Comercial (dropdown): D - Doméstico, F - Foránea, R - Rhino Automotive
      b) Parte (radio buttons): s - Side, b - Back, d - Door, q - Quarter, v - Vent
