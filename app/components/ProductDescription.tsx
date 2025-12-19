@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { vehicleBrandAbbreviations } from '../../carBrands';
+import { useState, useEffect } from 'react';
+import { carBrandsWithSubModels } from '../../carBrands';
 
 interface ProductDescriptionProps {
   parte: string;
@@ -11,6 +11,7 @@ export default function ProductDescription({ parte }: ProductDescriptionProps) {
   const [posicion, setPosicion] = useState('');
   const [lado, setLado] = useState('');
   const [marca, setMarca] = useState('');
+  const [subModelo, setSubModelo] = useState('');
   const [subMarca, setSubMarca] = useState('');
   const [modelo, setModelo] = useState('');
 
@@ -22,6 +23,26 @@ export default function ProductDescription({ parte }: ProductDescriptionProps) {
     { value: 'q', label: 'Quarter' },
     { value: 'v', label: 'Vent' },
   ];
+
+  // Get subModels for the selected marca with "Other" option
+  const getSubModelos = (): string[] => {
+    const selectedBrand = carBrandsWithSubModels.find(brand => brand.name === marca);
+    if (!selectedBrand) return [];
+    return [...selectedBrand.subModels, 'Other'];
+  };
+
+  // Reset subModelo and subMarca when marca changes
+  useEffect(() => {
+    setSubModelo('');
+    setSubMarca('');
+  }, [marca]);
+
+  // Reset subMarca when subModelo changes (and it's not "Other")
+  useEffect(() => {
+    if (subModelo !== 'Other') {
+      setSubMarca('');
+    }
+  }, [subModelo]);
 
   // Generate years from 2000 to current year
   const currentYear = new Date().getFullYear();
@@ -36,16 +57,27 @@ export default function ProductDescription({ parte }: ProductDescriptionProps) {
     const posicionText = posicion || '-';
     const ladoText = lado || '-';
     const marcaText = marca || '-';
-    const subMarcaText = subMarca || '-';
+    
+    // Determine what to show for sub-marca/sub-modelo
+    let subMarcaModeloText = '-';
+    if (subModelo === 'Other') {
+      // If "Other" is selected, use subMarca text input (or "Other" if empty)
+      subMarcaModeloText = subMarca || 'Other';
+    } else if (subModelo) {
+      // If a specific sub-modelo is selected, use it
+      subMarcaModeloText = subModelo;
+    }
+    
     const modeloText = modelo || '-';
 
-    return `${parteLabel} ${posicionText} ${ladoText} ${marcaText} ${subMarcaText} ${modeloText}`.toUpperCase();
+    return `${parteLabel} ${posicionText} ${ladoText} ${marcaText} ${subMarcaModeloText} ${modeloText}`.toUpperCase();
   };
 
   const handleClean = () => {
     setPosicion('');
     setLado('');
     setMarca('');
+    setSubModelo('');
     setSubMarca('');
     setModelo('');
   };
@@ -54,8 +86,11 @@ export default function ProductDescription({ parte }: ProductDescriptionProps) {
     <div className="card p-6 lg:p-8">
       <div className="mb-6 lg:mb-8">
         <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
-          Descripción del producto
+          Product Description
         </h2>
+        <p className="text-base text-slate-600">
+          Generate automotive glass product descriptions
+        </p>
       </div>
 
       <form className="space-y-6">
@@ -132,7 +167,7 @@ export default function ProductDescription({ parte }: ProductDescriptionProps) {
             className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
           >
             <option value="">Select...</option>
-            {vehicleBrandAbbreviations.cars.map((brand) => (
+            {carBrandsWithSubModels.map((brand) => (
               <option key={brand.abbr} value={brand.name}>
                 {brand.name}
               </option>
@@ -140,19 +175,43 @@ export default function ProductDescription({ parte }: ProductDescriptionProps) {
           </select>
         </div>
 
-        {/* Sub-Marca */}
+        {/* Sub-Modelo */}
         <div className="w-full">
           <label className="block text-sm font-medium text-slate-700 mb-2">
-            Sub-Marca
+            Sub-Modelo
           </label>
-          <input
-            type="text"
-            value={subMarca}
-            onChange={(e) => setSubMarca(e.target.value)}
-            placeholder="e.g., Sprinter, Corolla, Civic"
-            className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
-          />
+          <select
+            value={subModelo}
+            onChange={(e) => setSubModelo(e.target.value)}
+            disabled={!marca}
+            className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+          >
+            <option value="">
+              {marca ? 'Select...' : 'Select a Marca first...'}
+            </option>
+            {getSubModelos().map((subModel) => (
+              <option key={subModel} value={subModel}>
+                {subModel}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {/* Sub-Marca (Text Input - only shown when "Other" is selected) */}
+        {subModelo === 'Other' && (
+          <div className="w-full">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Sub-Marca
+            </label>
+            <input
+              type="text"
+              value={subMarca}
+              onChange={(e) => setSubMarca(e.target.value)}
+              placeholder="Enter sub-marca name..."
+              className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
+            />
+          </div>
+        )}
 
         {/* Modelo (Year) */}
         <div className="w-full">
