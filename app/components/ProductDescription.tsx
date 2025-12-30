@@ -1,16 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Compatibility } from '../page';
 
 interface ProductDescriptionProps {
   parte: string;
   compatibilities: Compatibility[];
+  clearTrigger: number;
 }
 
-export default function ProductDescription({ parte, compatibilities }: ProductDescriptionProps) {
+export default function ProductDescription({ parte, compatibilities, clearTrigger }: ProductDescriptionProps) {
   const [posicion, setPosicion] = useState('');
   const [lado, setLado] = useState('');
+
+  // Listen for clear trigger from parent
+  useEffect(() => {
+    if (clearTrigger > 0) {
+      setPosicion('');
+      setLado('');
+    }
+  }, [clearTrigger]);
 
   // Parte options with full names (for mapping value to label)
   const parteOptions = [
@@ -63,11 +72,6 @@ export default function ProductDescription({ parte, compatibilities }: ProductDe
     }
 
     return description.toUpperCase();
-  };
-
-  const handleClean = () => {
-    setPosicion('');
-    setLado('');
   };
 
   return (
@@ -142,17 +146,6 @@ export default function ProductDescription({ parte, compatibilities }: ProductDe
               <span className="ml-2 text-sm text-slate-700">Right</span>
             </label>
           </div>
-        </div>
-
-        {/* Clean Button */}
-        <div className="pt-4">
-          <button
-            type="button"
-            onClick={handleClean}
-            className="btn btn-primary btn-md w-full"
-          >
-            Clean
-          </button>
         </div>
       </form>
 

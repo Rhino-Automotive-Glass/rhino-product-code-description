@@ -1,17 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface CodeGeneratorProps {
   parte: string;
   setParte: (value: string) => void;
+  clearTrigger: number;
 }
 
-export default function CodeGenerator({ parte, setParte }: CodeGeneratorProps) {
+export default function CodeGenerator({ parte, setParte, clearTrigger }: CodeGeneratorProps) {
   const [clasificacion, setClasificacion] = useState('');
   const [numero, setNumero] = useState('');
   const [color, setColor] = useState('');
   const [aditamento, setAditamento] = useState('');
+
+  // Listen for clear trigger from parent
+  useEffect(() => {
+    if (clearTrigger > 0) {
+      setClasificacion('');
+      setNumero('');
+      setColor('');
+      setAditamento('');
+    }
+  }, [clearTrigger]);
 
   // Generate code in real-time
   const generateCode = (): string => {
@@ -32,20 +43,12 @@ export default function CodeGenerator({ parte, setParte }: CodeGeneratorProps) {
     }
   };
 
-  const handleClean = () => {
-    setClasificacion('');
-    setParte('');
-    setNumero('');
-    setColor('');
-    setAditamento('');
-  };
-
   return (
     <div className="card p-6 lg:p-8">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+        <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
           Product Code
-        </h1>
+        </h2>
       </div>
 
       <form className="space-y-6">
@@ -181,17 +184,6 @@ export default function CodeGenerator({ parte, setParte }: CodeGeneratorProps) {
               <span className="ml-2 text-sm text-slate-700">N</span>
             </label>
           </div>
-        </div>
-
-        {/* Clean Button */}
-        <div className="pt-4">
-          <button
-            type="button"
-            onClick={handleClean}
-            className="btn btn-primary btn-md w-full"
-          >
-            Clean
-          </button>
         </div>
       </form>
 

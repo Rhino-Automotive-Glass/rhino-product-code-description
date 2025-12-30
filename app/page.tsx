@@ -14,25 +14,67 @@ export interface Compatibility {
 export default function Home() {
   const [parte, setParte] = useState('');
   const [compatibilities, setCompatibilities] = useState<Compatibility[]>([]);
+  const [clearTrigger, setClearTrigger] = useState(0);
+
+  // Global clean handler - clears everything
+  const handleGlobalClean = () => {
+    setParte('');
+    setCompatibilities([]);
+    setClearTrigger(prev => prev + 1); // Trigger child components to clear
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
+      {/* Floating Header */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl lg:text-2xl font-bold text-slate-900">
+                Rhino Code Generator
+              </h1>
+              <p className="text-sm text-slate-600">
+                Automotive Glass Production Catalog
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleGlobalClean}
+              className="btn btn-primary btn-md"
+            >
+              Clean All
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-6 lg:gap-8">
           {/* Code Generator Section */}
           <div>
-            <CodeGenerator parte={parte} setParte={setParte} />
+            <CodeGenerator 
+              parte={parte} 
+              setParte={setParte}
+              clearTrigger={clearTrigger}
+            />
           </div>
+
           {/* Product Compatibility Section */}
-          <div className="md:col-span-2 lg:col-span-1">
+          <div>
             <ProductCompatibility 
               compatibilities={compatibilities}
               setCompatibilities={setCompatibilities}
             />
           </div>
+
           {/* Product Description Section */}
-          <div>
-            <ProductDescription parte={parte} compatibilities={compatibilities} />
+          <div className="md:col-span-2 lg:col-span-1">
+            <ProductDescription 
+              parte={parte} 
+              compatibilities={compatibilities}
+              clearTrigger={clearTrigger}
+            />
           </div>
         </div>
       </div>
