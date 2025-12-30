@@ -7,11 +7,13 @@ import { Compatibility } from '../page';
 interface ProductCompatibilityProps {
   compatibilities: Compatibility[];
   setCompatibilities: (compatibilities: Compatibility[]) => void;
+  resetTrigger?: number; // Increment this to trigger form reset
 }
 
 export default function ProductCompatibility({ 
   compatibilities, 
-  setCompatibilities 
+  setCompatibilities,
+  resetTrigger = 0
 }: ProductCompatibilityProps) {
   const [marca, setMarca] = useState('');
   const [subModelo, setSubModelo] = useState('');
@@ -28,6 +30,15 @@ export default function ProductCompatibility({
   useEffect(() => {
     setSubModelo('');
   }, [marca]);
+
+  // Reset form fields when resetTrigger changes
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      setMarca('');
+      setSubModelo('');
+      setModelo('');
+    }
+  }, [resetTrigger]);
 
   // Generate years from 2000 to current year
   const currentYear = new Date().getFullYear();

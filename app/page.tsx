@@ -25,6 +25,7 @@ export default function Home() {
 
   // ProductCompatibility state
   const [compatibilities, setCompatibilities] = useState<Compatibility[]>([]);
+  const [compatibilityResetTrigger, setCompatibilityResetTrigger] = useState(0);
 
   // Global clean handler - clears everything
   const handleGlobalClean = () => {
@@ -39,8 +40,9 @@ export default function Home() {
     setPosicion('');
     setLado('');
     
-    // Clear ProductCompatibility
+    // Clear ProductCompatibility (list and form fields)
     setCompatibilities([]);
+    setCompatibilityResetTrigger(prev => prev + 1); // Trigger form reset
   };
 
   return (
@@ -92,6 +94,7 @@ export default function Home() {
             <ProductCompatibility 
               compatibilities={compatibilities}
               setCompatibilities={setCompatibilities}
+              resetTrigger={compatibilityResetTrigger}
             />
           </div>
 

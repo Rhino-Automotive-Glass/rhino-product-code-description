@@ -1,0 +1,226 @@
+import { Page, Locator, expect } from '@playwright/test';
+
+/**
+ * Page Object Model for Rhino Code Generator Application
+ * This class provides methods to interact with all three sections of the app
+ * 
+ * SELECTOR STRATEGY:
+ * - Uses getByRole() for semantic elements (buttons, headings, radios)
+ * - Uses nth() for selects within a scoped section (most reliable for this DOM structure)
+ * - Scopes selects to their parent section to avoid ambiguity
+ */
+export class RhinoCodeGeneratorPage {
+  readonly page: Page;
+
+  // Header elements
+  readonly headerTitle: Locator;
+  readonly cleanAllButton: Locator;
+
+  // Code Generator elements
+  readonly codeGeneratorHeading: Locator;
+  readonly clasificacionDomestico: Locator;
+  readonly clasificacionForanea: Locator;
+  readonly clasificacionRhino: Locator;
+  readonly parteSide: Locator;
+  readonly parteBack: Locator;
+  readonly parteDoor: Locator;
+  readonly parteQuarter: Locator;
+  readonly parteVent: Locator;
+  readonly numeroInput: Locator;
+  readonly colorSelect: Locator;
+  readonly aditamentoY: Locator;
+  readonly aditamentoN: Locator;
+  readonly generatedCode: Locator;
+
+  // Product Compatibility elements
+  readonly compatibilityHeading: Locator;
+  readonly compatibilitySection: Locator;
+  readonly marcaSelect: Locator;
+  readonly subModeloSelect: Locator;
+  readonly modeloSelect: Locator;
+  readonly addCompatibilityButton: Locator;
+  readonly compatibilityList: Locator;
+  readonly compatibilityCount: Locator;
+  readonly generatedCompatibility: Locator;
+
+  // Product Description elements
+  readonly descriptionHeading: Locator;
+  readonly posicionFront: Locator;
+  readonly posicionRear: Locator;
+  readonly ladoLeft: Locator;
+  readonly ladoRight: Locator;
+  readonly generatedDescription: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+
+    // Header
+    this.headerTitle = page.getByRole('heading', { name: 'Rhino Code Generator' });
+    this.cleanAllButton = page.getByRole('button', { name: 'Clean All' });
+
+    // Code Generator
+    this.codeGeneratorHeading = page.getByRole('heading', { name: 'Product Code' });
+    this.clasificacionDomestico = page.getByRole('radio', { name: /D - Doméstico/ });
+    this.clasificacionForanea = page.getByRole('radio', { name: /F - Foránea/ });
+    this.clasificacionRhino = page.getByRole('radio', { name: /R - Rhino Automotive/ });
+    this.parteSide = page.getByRole('radio', { name: /s - Side/ });
+    this.parteBack = page.getByRole('radio', { name: /b - Back/ });
+    this.parteDoor = page.getByRole('radio', { name: /d - Door/ });
+    this.parteQuarter = page.getByRole('radio', { name: /q - Quarter/ });
+    this.parteVent = page.getByRole('radio', { name: /v - Vent/ });
+    this.numeroInput = page.getByPlaceholder('00000');
+    this.colorSelect = page.locator('select').filter({ hasText: 'Select...GT' });
+    this.aditamentoY = page.getByRole('radio', { name: 'Y', exact: true });
+    this.aditamentoN = page.getByRole('radio', { name: 'N', exact: true });
+    this.generatedCode = page.locator('div').filter({ hasText: /^Generated Rhino Code/ }).locator('p').nth(1);
+
+    // Product Compatibility - Using robust selectors
+    this.compatibilityHeading = page.getByRole('heading', { name: 'Product Compatibility' });
+    
+    // Scope to Product Compatibility section using the card container
+    this.compatibilitySection = page.locator('.card').filter({ 
+      has: page.getByRole('heading', { name: 'Product Compatibility' }) 
+    });
+    
+    // SIMPLE AND RELIABLE: Use getByRole('combobox') scoped to the section
+    // The Product Compatibility section has exactly 3 comboboxes in order: Marca, Sub-Modelo, Modelo
+    // This is the most reliable approach given the DOM structure
+    const comboboxes = this.compatibilitySection.getByRole('combobox');
+    this.marcaSelect = comboboxes.nth(0);      // First combobox = Marca
+    this.subModeloSelect = comboboxes.nth(1);  // Second combobox = Sub-Modelo
+    this.modeloSelect = comboboxes.nth(2);     // Third combobox = Modelo (Year)
+
+    this.addCompatibilityButton = page.getByRole('button', { name: 'Añadir Compatibilidad' });
+    this.compatibilityList = page.locator('div').filter({ hasText: /Compatibilities Added/ });
+    this.compatibilityCount = page.getByText(/Compatibilities Added \(\d+\)/);
+    this.generatedCompatibility = page.locator('div').filter({ hasText: /^Generated Compatibility/ }).locator('p').nth(1);
+
+    // Product Description
+    this.descriptionHeading = page.getByRole('heading', { name: 'Product Description' });
+    this.posicionFront = page.getByRole('radio', { name: 'Front' });
+    this.posicionRear = page.getByRole('radio', { name: 'Rear' });
+    this.ladoLeft = page.getByRole('radio', { name: 'Left' });
+    this.ladoRight = page.getByRole('radio', { name: 'Right' });
+    this.generatedDescription = page.locator('div').filter({ hasText: /^Generated Product Description/ }).locator('p').nth(1);
+  }
+
+  // Navigation
+  async goto() {
+    await this.page.goto('/', { waitUntil: 'networkidle' });
+    // Wait for the page to be fully loaded - just check the heading is visible
+    await this.compatibilityHeading.waitFor({ state: 'visible' });
+    // Wait for at least one combobox to be visible in the compatibility section
+    await this.marcaSelect.waitFor({ state: 'visible' });
+  }
+
+  // Code Generator actions
+  async fillCodeGenerator(options: {
+    clasificacion?: 'D' | 'F' | 'R';
+    parte?: 's' | 'b' | 'd' | 'q' | 'v';
+    numero?: string;
+    color?: 'GT' | 'YT' | 'YP' | 'CL';
+    aditamento?: 'Y' | 'N';
+  }) {
+    if (options.clasificacion === 'D') await this.clasificacionDomestico.click();
+    if (options.clasificacion === 'F') await this.clasificacionForanea.click();
+    if (options.clasificacion === 'R') await this.clasificacionRhino.click();
+
+    if (options.parte === 's') await this.parteSide.click();
+    if (options.parte === 'b') await this.parteBack.click();
+    if (options.parte === 'd') await this.parteDoor.click();
+    if (options.parte === 'q') await this.parteQuarter.click();
+    if (options.parte === 'v') await this.parteVent.click();
+
+    if (options.numero) await this.numeroInput.fill(options.numero);
+    if (options.color) await this.colorSelect.selectOption(options.color);
+
+    if (options.aditamento === 'Y') await this.aditamentoY.click();
+    if (options.aditamento === 'N') await this.aditamentoN.click();
+  }
+
+  /**
+   * Add a compatibility entry
+   * 
+   * This method includes explicit waits between select operations
+   * to handle React's state updates and re-renders properly.
+   */
+  async addCompatibility(marca: string, subModelo: string, modelo: string) {
+    // Step 1: Select Marca
+    await this.marcaSelect.selectOption(marca);
+    
+    // Step 2: Wait for Sub-Modelo to be enabled (React needs to re-render after brand selection)
+    await expect(this.subModeloSelect).toBeEnabled({ timeout: 5000 });
+    
+    // Step 3: Select Sub-Modelo
+    await this.subModeloSelect.selectOption(subModelo);
+    
+    // Step 4: Select Modelo (Year)
+    await this.modeloSelect.selectOption(modelo);
+    
+    // Step 5: Click the Add button
+    await this.addCompatibilityButton.click();
+    
+    // Small buffer for React state update
+    await this.page.waitForTimeout(100);
+  }
+
+  /**
+   * Delete a compatibility entry by its index
+   * 
+   * Uses getByRole to find all "Remove compatibility" buttons and clicks the one at the specified index
+   */
+  async deleteCompatibilityByIndex(index: number) {
+    // Simple and direct: get all remove buttons and click the one at index
+    const deleteButtons = this.compatibilitySection.getByRole('button', { name: 'Remove compatibility' });
+    const targetButton = deleteButtons.nth(index);
+    
+    await expect(targetButton).toBeVisible({ timeout: 5000 });
+    await targetButton.click();
+    
+    // Wait for the deletion to complete
+    await this.page.waitForTimeout(100);
+  }
+
+  /**
+   * Helper to get compatibility item text in the list
+   */
+  getCompatibilityInList(text: string) {
+    return this.compatibilityList
+      .locator('span.text-sm.font-medium.text-slate-900')
+      .getByText(text, { exact: true });
+  }
+
+  // Product Description actions
+  async fillProductDescription(options: {
+    posicion?: 'Front' | 'Rear';
+    lado?: 'Left' | 'Right';
+  }) {
+    if (options.posicion === 'Front') await this.posicionFront.click();
+    if (options.posicion === 'Rear') await this.posicionRear.click();
+
+    if (options.lado === 'Left') await this.ladoLeft.click();
+    if (options.lado === 'Right') await this.ladoRight.click();
+  }
+
+  // Global actions
+  async clickCleanAll() {
+    await this.cleanAllButton.click();
+  }
+
+  // Assertions helpers
+  async getGeneratedCodeText() {
+    return await this.generatedCode.textContent();
+  }
+
+  async getGeneratedCompatibilityText() {
+    return await this.generatedCompatibility.textContent();
+  }
+
+  async getGeneratedDescriptionText() {
+    return await this.generatedDescription.textContent();
+  }
+
+  async getCompatibilityCountText() {
+    return await this.compatibilityCount.textContent();
+  }
+}
