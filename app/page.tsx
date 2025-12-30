@@ -12,15 +12,35 @@ export interface Compatibility {
 }
 
 export default function Home() {
+  // CodeGenerator state
+  const [clasificacion, setClasificacion] = useState('');
   const [parte, setParte] = useState('');
+  const [numero, setNumero] = useState('');
+  const [color, setColor] = useState('');
+  const [aditamento, setAditamento] = useState('');
+
+  // ProductDescription state
+  const [posicion, setPosicion] = useState('');
+  const [lado, setLado] = useState('');
+
+  // ProductCompatibility state
   const [compatibilities, setCompatibilities] = useState<Compatibility[]>([]);
-  const [clearTrigger, setClearTrigger] = useState(0);
 
   // Global clean handler - clears everything
   const handleGlobalClean = () => {
+    // Clear CodeGenerator
+    setClasificacion('');
     setParte('');
+    setNumero('');
+    setColor('');
+    setAditamento('');
+    
+    // Clear ProductDescription
+    setPosicion('');
+    setLado('');
+    
+    // Clear ProductCompatibility
     setCompatibilities([]);
-    setClearTrigger(prev => prev + 1); // Trigger child components to clear
   };
 
   return (
@@ -54,9 +74,16 @@ export default function Home() {
           {/* Code Generator Section */}
           <div>
             <CodeGenerator 
-              parte={parte} 
+              clasificacion={clasificacion}
+              setClasificacion={setClasificacion}
+              parte={parte}
               setParte={setParte}
-              clearTrigger={clearTrigger}
+              numero={numero}
+              setNumero={setNumero}
+              color={color}
+              setColor={setColor}
+              aditamento={aditamento}
+              setAditamento={setAditamento}
             />
           </div>
 
@@ -71,9 +98,12 @@ export default function Home() {
           {/* Product Description Section */}
           <div className="md:col-span-2 lg:col-span-1">
             <ProductDescription 
-              parte={parte} 
+              parte={parte}
+              posicion={posicion}
+              setPosicion={setPosicion}
+              lado={lado}
+              setLado={setLado}
               compatibilities={compatibilities}
-              clearTrigger={clearTrigger}
             />
           </div>
         </div>

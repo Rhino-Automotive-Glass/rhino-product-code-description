@@ -1,26 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Compatibility } from '../page';
 
 interface ProductDescriptionProps {
   parte: string;
+  posicion: string;
+  setPosicion: (value: string) => void;
+  lado: string;
+  setLado: (value: string) => void;
   compatibilities: Compatibility[];
-  clearTrigger: number;
 }
 
-export default function ProductDescription({ parte, compatibilities, clearTrigger }: ProductDescriptionProps) {
-  const [posicion, setPosicion] = useState('');
-  const [lado, setLado] = useState('');
-
-  // Listen for clear trigger from parent
-  useEffect(() => {
-    if (clearTrigger > 0) {
-      setPosicion('');
-      setLado('');
-    }
-  }, [clearTrigger]);
-
+export default function ProductDescription({ 
+  parte, 
+  posicion,
+  setPosicion,
+  lado,
+  setLado,
+  compatibilities 
+}: ProductDescriptionProps) {
   // Parte options with full names (for mapping value to label)
   const parteOptions = [
     { value: 's', label: 'Side' },

@@ -1,29 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-
 interface CodeGeneratorProps {
+  clasificacion: string;
+  setClasificacion: (value: string) => void;
   parte: string;
   setParte: (value: string) => void;
-  clearTrigger: number;
+  numero: string;
+  setNumero: (value: string) => void;
+  color: string;
+  setColor: (value: string) => void;
+  aditamento: string;
+  setAditamento: (value: string) => void;
 }
 
-export default function CodeGenerator({ parte, setParte, clearTrigger }: CodeGeneratorProps) {
-  const [clasificacion, setClasificacion] = useState('');
-  const [numero, setNumero] = useState('');
-  const [color, setColor] = useState('');
-  const [aditamento, setAditamento] = useState('');
-
-  // Listen for clear trigger from parent
-  useEffect(() => {
-    if (clearTrigger > 0) {
-      setClasificacion('');
-      setNumero('');
-      setColor('');
-      setAditamento('');
-    }
-  }, [clearTrigger]);
-
+export default function CodeGenerator({ 
+  clasificacion,
+  setClasificacion,
+  parte,
+  setParte,
+  numero,
+  setNumero,
+  color,
+  setColor,
+  aditamento,
+  setAditamento
+}: CodeGeneratorProps) {
   // Generate code in real-time
   const generateCode = (): string => {
     const clasificacionCode = clasificacion || '-';
