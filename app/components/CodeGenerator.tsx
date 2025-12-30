@@ -44,7 +44,7 @@ export default function CodeGenerator({ parte, setParte }: CodeGeneratorProps) {
     <div className="card p-6 lg:p-8">
       <div className="mb-6 lg:mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
-          Código del producto
+          Product Code
         </h1>
       </div>
 
