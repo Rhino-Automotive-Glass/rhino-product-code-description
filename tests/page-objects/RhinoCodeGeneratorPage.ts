@@ -6,7 +6,7 @@ import { Page, Locator, expect } from '@playwright/test';
  * 
  * SELECTOR STRATEGY:
  * - Uses getByRole() for semantic elements (buttons, headings, radios)
- * - Uses nth() for selects within a scoped section (most reliable for this DOM structure)
+ * - Uses data-testid attributes for form elements (most robust approach)
  * - Scopes selects to their parent section to avoid ambiguity
  */
 export class RhinoCodeGeneratorPage {
@@ -37,7 +37,10 @@ export class RhinoCodeGeneratorPage {
   readonly compatibilitySection: Locator;
   readonly marcaSelect: Locator;
   readonly subModeloSelect: Locator;
+  readonly subModeloContainer: Locator;
   readonly modeloSelect: Locator;
+  readonly customMarcaInput: Locator;
+  readonly customMarcaContainer: Locator;
   readonly addCompatibilityButton: Locator;
   readonly compatibilityList: Locator;
   readonly compatibilityCount: Locator;
@@ -74,7 +77,7 @@ export class RhinoCodeGeneratorPage {
     this.aditamentoN = page.getByRole('radio', { name: 'N', exact: true });
     this.generatedCode = page.locator('div').filter({ hasText: /^Generated Rhino Code/ }).locator('p').nth(1);
 
-    // Product Compatibility - Using robust selectors
+    // Product Compatibility - Using data-testid attributes (most robust approach)
     this.compatibilityHeading = page.getByRole('heading', { name: 'Product Compatibility' });
     
     // Scope to Product Compatibility section using the card container
@@ -82,18 +85,18 @@ export class RhinoCodeGeneratorPage {
       has: page.getByRole('heading', { name: 'Product Compatibility' }) 
     });
     
-    // SIMPLE AND RELIABLE: Use getByRole('combobox') scoped to the section
-    // The Product Compatibility section has exactly 3 comboboxes in order: Marca, Sub-Modelo, Modelo
-    // This is the most reliable approach given the DOM structure
-    const comboboxes = this.compatibilitySection.getByRole('combobox');
-    this.marcaSelect = comboboxes.nth(0);      // First combobox = Marca
-    this.subModeloSelect = comboboxes.nth(1);  // Second combobox = Sub-Modelo
-    this.modeloSelect = comboboxes.nth(2);     // Third combobox = Modelo (Year)
+    // Use data-testid attributes for reliable element selection
+    this.marcaSelect = page.getByTestId('marca-select');
+    this.subModeloSelect = page.getByTestId('sub-modelo-select');
+    this.subModeloContainer = page.getByTestId('sub-modelo-container');
+    this.modeloSelect = page.getByTestId('modelo-select');
+    this.customMarcaInput = page.getByTestId('custom-marca-input');
+    this.customMarcaContainer = page.getByTestId('custom-marca-container');
 
     this.addCompatibilityButton = page.getByRole('button', { name: 'Añadir Compatibilidad' });
-    this.compatibilityList = page.locator('div').filter({ hasText: /Compatibilities Added/ });
-    this.compatibilityCount = page.getByText(/Compatibilities Added \(\d+\)/);
-    this.generatedCompatibility = page.locator('div').filter({ hasText: /^Generated Compatibility/ }).locator('p').nth(1);
+    this.compatibilityList = page.locator('div').filter({ hasText: /Compatibilidades Añadidas/ });
+    this.compatibilityCount = page.getByText(/Compatibilidades Añadidas \(\d+\)/);
+    this.generatedCompatibility = page.locator('div').filter({ hasText: /^Compatibilidad Generada/ }).locator('p').nth(1);
 
     // Product Description
     this.descriptionHeading = page.getByRole('heading', { name: 'Product Description' });
@@ -165,13 +168,54 @@ export class RhinoCodeGeneratorPage {
   }
 
   /**
+   * Add a custom compatibility entry using "Otro" option
+   * 
+   * This method selects "Otro" from the Marca dropdown,
+   * fills in the custom brand/model input, and adds the compatibility.
+   */
+  async addCustomCompatibility(customMarcaText: string, modelo: string) {
+    // Step 1: Select "Otro" from Marca dropdown
+    await this.marcaSelect.selectOption('Otro');
+    
+    // Step 2: Wait for custom input to be visible
+    await expect(this.customMarcaInput).toBeVisible({ timeout: 5000 });
+    
+    // Step 3: Fill in the custom marca/model
+    await this.customMarcaInput.fill(customMarcaText);
+    
+    // Step 4: Select Modelo (Year)
+    await this.modeloSelect.selectOption(modelo);
+    
+    // Step 5: Click the Add button
+    await this.addCompatibilityButton.click();
+    
+    // Small buffer for React state update
+    await this.page.waitForTimeout(100);
+  }
+
+  /**
+   * Check if the custom marca input is visible
+   */
+  async isCustomMarcaInputVisible(): Promise<boolean> {
+    return await this.customMarcaContainer.isVisible();
+  }
+
+  /**
+   * Check if sub-modelo select is visible
+   * Note: When "Otro" is selected, this element is removed from DOM entirely
+   */
+  async isSubModeloSelectVisible(): Promise<boolean> {
+    return await this.subModeloContainer.isVisible();
+  }
+
+  /**
    * Delete a compatibility entry by its index
    * 
-   * Uses getByRole to find all "Remove compatibility" buttons and clicks the one at the specified index
+   * Uses getByRole to find all "Eliminar compatibilidad" buttons and clicks the one at the specified index
    */
   async deleteCompatibilityByIndex(index: number) {
     // Simple and direct: get all remove buttons and click the one at index
-    const deleteButtons = this.compatibilitySection.getByRole('button', { name: 'Remove compatibility' });
+    const deleteButtons = this.compatibilitySection.getByRole('button', { name: 'Eliminar compatibilidad' });
     const targetButton = deleteButtons.nth(index);
     
     await expect(targetButton).toBeVisible({ timeout: 5000 });

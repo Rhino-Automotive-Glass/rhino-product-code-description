@@ -18,17 +18,23 @@ export default function ProductCompatibility({
   const [marca, setMarca] = useState('');
   const [subModelo, setSubModelo] = useState('');
   const [modelo, setModelo] = useState('');
+  const [customMarca, setCustomMarca] = useState(''); // Custom brand/model input
+
+  // Check if "Otro" is selected
+  const isOtroSelected = marca === 'Otro';
 
   // Get subModels for the selected marca
   const getSubModelos = (): string[] => {
+    if (isOtroSelected) return [];
     const selectedBrand = carBrandsWithSubModels.find(brand => brand.name === marca);
     if (!selectedBrand) return [];
     return selectedBrand.subModels;
   };
 
-  // Reset subModelo when marca changes
+  // Reset subModelo and customMarca when marca changes
   useEffect(() => {
     setSubModelo('');
+    setCustomMarca('');
   }, [marca]);
 
   // Reset form fields when resetTrigger changes
@@ -37,6 +43,7 @@ export default function ProductCompatibility({
       setMarca('');
       setSubModelo('');
       setModelo('');
+      setCustomMarca('');
     }
   }, [resetTrigger]);
 
@@ -59,23 +66,43 @@ export default function ProductCompatibility({
 
   // Add compatibility to list
   const handleAddCompatibility = () => {
-    if (!marca || !subModelo || !modelo) {
-      alert('Please select all fields before adding compatibility');
-      return;
+    // Validation based on whether "Otro" is selected
+    if (isOtroSelected) {
+      if (!customMarca.trim() || !modelo) {
+        alert('Por favor ingresa la marca/modelo personalizado y el año');
+        return;
+      }
+    } else {
+      if (!marca || !subModelo || !modelo) {
+        alert('Por favor selecciona todos los campos antes de añadir la compatibilidad');
+        return;
+      }
     }
 
-    const newCompatibility: Compatibility = {
-      marca,
-      subModelo,
-      modelo
-    };
+    const newCompatibility: Compatibility = isOtroSelected
+      ? {
+          marca: customMarca.trim(),
+          subModelo: '', // Empty for custom entries
+          modelo
+        }
+      : {
+          marca,
+          subModelo,
+          modelo
+        };
 
     if (isDuplicate(newCompatibility)) {
-      alert('This compatibility already exists');
+      alert('Esta compatibilidad ya existe');
       return;
     }
 
     setCompatibilities([...compatibilities, newCompatibility]);
+    
+    // Clear the custom input after adding (keep marca as "Otro" for convenience)
+    if (isOtroSelected) {
+      setCustomMarca('');
+      setModelo('');
+    }
   };
 
   // Remove compatibility from list
@@ -89,7 +116,13 @@ export default function ProductCompatibility({
     if (compatibilities.length === 0) return '---';
     
     return compatibilities
-      .map(comp => `${comp.marca} ${comp.subModelo} ${comp.modelo}`)
+      .map(comp => {
+        // Handle custom entries (no subModelo)
+        if (comp.subModelo) {
+          return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
+        }
+        return `${comp.marca} ${comp.modelo}`;
+      })
       .join(', ')
       .toUpperCase();
   };
@@ -112,52 +145,79 @@ export default function ProductCompatibility({
             Marca
           </label>
           <select
+            data-testid="marca-select"
             value={marca}
             onChange={(e) => setMarca(e.target.value)}
             className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
           >
-            <option value="">Select...</option>
+            <option value="">Seleccionar...</option>
             {carBrandsWithSubModels.map((brand) => (
               <option key={brand.abbr} value={brand.name}>
                 {brand.name}
               </option>
             ))}
+            {/* Separator and "Otro" option */}
+            <option disabled>──────────</option>
+            <option value="Otro">Otro (Personalizado)</option>
           </select>
         </div>
 
-        {/* Sub-Modelo */}
-        <div className="w-full">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Sub-Modelo
-          </label>
-          <select
-            value={subModelo}
-            onChange={(e) => setSubModelo(e.target.value)}
-            disabled={!marca}
-            className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
-          >
-            <option value="">
-              {marca ? 'Select...' : 'Select a Marca first...'}
-            </option>
-            {getSubModelos().map((subModel) => (
-              <option key={subModel} value={subModel}>
-                {subModel}
+        {/* Conditional rendering based on "Otro" selection */}
+        {isOtroSelected ? (
+          /* Custom Marca/Modelo Input */
+          <div className="w-full" data-testid="custom-marca-container">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Marca y Modelo Personalizado
+            </label>
+            <input
+              type="text"
+              data-testid="custom-marca-input"
+              value={customMarca}
+              onChange={(e) => setCustomMarca(e.target.value)}
+              placeholder="Ej: Honda Civic, Toyota Corolla..."
+              className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
+            />
+            <p className="mt-1.5 text-xs text-slate-500">
+              Ingresa la marca y modelo que no se encuentra en la lista
+            </p>
+          </div>
+        ) : (
+          /* Sub-Modelo - Only shown when a regular brand is selected */
+          <div className="w-full" data-testid="sub-modelo-container">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Sub-Modelo
+            </label>
+            <select
+              data-testid="sub-modelo-select"
+              value={subModelo}
+              onChange={(e) => setSubModelo(e.target.value)}
+              disabled={!marca}
+              className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+            >
+              <option value="">
+                {marca ? 'Seleccionar...' : 'Selecciona una Marca primero...'}
               </option>
-            ))}
-          </select>
-        </div>
+              {getSubModelos().map((subModel) => (
+                <option key={subModel} value={subModel}>
+                  {subModel}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Modelo (Year) */}
         <div className="w-full">
           <label className="block text-sm font-medium text-slate-700 mb-2">
-            Modelo (Year)
+            Modelo (Año)
           </label>
           <select
+            data-testid="modelo-select"
             value={modelo}
             onChange={(e) => setModelo(e.target.value)}
             className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
           >
-            <option value="">Select...</option>
+            <option value="">Seleccionar...</option>
             {years.map((year) => (
               <option key={year} value={year}>
                 {year}
@@ -181,13 +241,13 @@ export default function ProductCompatibility({
       {/* Compatibility List */}
       <div className="mt-6">
         <h3 className="text-sm font-medium text-slate-700 mb-3">
-          Compatibilities Added ({compatibilities.length})
+          Compatibilidades Añadidas ({compatibilities.length})
         </h3>
         
         {compatibilities.length === 0 ? (
           <div className="p-4 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50">
             <p className="text-sm text-slate-500 text-center">
-              No compatibilities added yet
+              No se han añadido compatibilidades
             </p>
           </div>
         ) : (
@@ -198,13 +258,21 @@ export default function ProductCompatibility({
                 className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
               >
                 <span className="text-sm font-medium text-slate-900">
-                  {comp.marca} {comp.subModelo} {comp.modelo}
+                  {comp.subModelo 
+                    ? `${comp.marca} ${comp.subModelo} ${comp.modelo}`
+                    : `${comp.marca} ${comp.modelo}`
+                  }
+                  {!comp.subModelo && (
+                    <span className="ml-2 text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                      Personalizado
+                    </span>
+                  )}
                 </span>
                 <button
                   type="button"
                   onClick={() => handleRemoveCompatibility(index)}
                   className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
-                  title="Remove compatibility"
+                  title="Eliminar compatibilidad"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
