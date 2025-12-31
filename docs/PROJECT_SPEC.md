@@ -11,12 +11,21 @@ This application consists of three main sections with a global floating header:
 - Sticky header at top of page (always visible when scrolling)
 - App title: "Rhino Code Generator"
 - Subtitle: "Automotive Glass Production Catalog"
-- "Clean All" button (blue primary button)
+- Two action buttons:
+  - **"Guardar"** button (left, blue primary button) - saves current data
+  - **"Clean All"** button (right, gray secondary button) - clears all data
 
 **Functionality:**
 - Sticky positioning (stays at top when scrolling)
 - Semi-transparent white background with backdrop blur
-- Global "Clean All" button clears all form fields across all three sections:
+- **Guardar button** collects all form data and logs to console:
+  - Validates that at least some data exists
+  - If empty: logs `console.warn('No data to save - all fields are empty')`
+  - If data exists: logs structured ProductData object to console
+  - Silent from user perspective (no visual feedback)
+  - Data persists after save (does not clear form)
+  - Designed as stepping stone for future Supabase database integration
+- **Clean All button** clears all form fields across all three sections:
   - Clears all Code Generator fields
   - Clears all Product Description fields
   - Clears all Product Compatibility entries
@@ -27,6 +36,12 @@ This application consists of three main sections with a global floating header:
 - `bg-white/95 backdrop-blur-sm` for glassmorphism effect
 - Border bottom with shadow for depth
 - Responsive padding and layout
+- Guardar: `btn btn-primary btn-md` (blue background)
+- Clean All: `btn btn-secondary btn-md` (gray background)
+
+**Component:**
+- Extracted into dedicated `FloatingHeader.tsx` component
+- Accepts `onSave` and `onCleanAll` callback props
 
 ## SECTION 1: CODE GENERATION (Product Code)
 
@@ -48,6 +63,7 @@ This application consists of three main sections with a global floating header:
 - Auto-pad numbers with leading zeros (e.g., "1" becomes "00001")
 - Final code format: [Clasificación][Parte][5-digit number][Color][Aditamento]
 - Example output: "RV00001GTY"
+- Empty code format: "---------" (9 characters: - - ----- - -)
 - ALL generated codes must be UPPERCASE
 - Generated code display always shows dashes for missing values (e.g., "-----", "R----", "RV---", "RV00123--")
 - Parte field is shared with Product Description section
@@ -155,6 +171,7 @@ This application consists of three main sections with a global floating header:
 - Clean, modern form design
 - Consistent spacing and typography
 - Blue primary buttons (#2563eb - `btn btn-primary`)
+- Gray secondary buttons (#f1f5f9 - `btn btn-secondary`)
 - All generated outputs use monospace bold font for technical aesthetic
 - Smooth transitions and hover effects
 - Mobile responsive with adaptive layouts
@@ -172,7 +189,7 @@ This application consists of three main sections with a global floating header:
 ## STATE MANAGEMENT ARCHITECTURE
 
 **Lifted State Pattern (Best Practice):**
-All clearable state is managed in the parent component (page.tsx) to enable the global "Clean All" functionality and ensure predictable data flow.
+All clearable state is managed in the parent component (page.tsx) to enable global "Clean All" and "Guardar" functionality, ensuring predictable data flow.
 
 **Parent Component (page.tsx) - Single Source of Truth:**
 
@@ -193,8 +210,25 @@ All clearable state is managed in the parent component (page.tsx) to enable the 
 - `compatibilities` - Array of Compatibility objects
 - Local form state: `marca`, `subModelo`, `modelo` (ephemeral inputs)
 
-**Global Clean Handler:**
+**Global Handlers:**
 ```typescript
+// Save Handler
+const handleSave = () => {
+  if (!hasAnyData()) {
+    console.warn('No data to save - all fields are empty');
+    return;
+  }
+  
+  const productData: ProductData = {
+    productCode: { clasificacion, parte, numero, color, aditamento, generated },
+    compatibility: { items: compatibilities, generated },
+    description: { parte, posicion, lado, generated }
+  };
+  
+  console.log('Product Data:', productData);
+};
+
+// Clean Handler
 const handleGlobalClean = () => {
   // Clear CodeGenerator
   setClasificacion('');
@@ -212,11 +246,21 @@ const handleGlobalClean = () => {
 };
 ```
 
+**Helper Functions (in page.tsx):**
+Three helper functions mirror generation logic from child components:
+- `generateProductCode()` - Creates formatted code string
+- `generateCompatibilityString()` - Creates comma-separated string
+- `generateProductDescription()` - Creates description with intelligent grouping
+
+**Validation:**
+- `hasAnyData()` - Returns true if ANY field has data across all sections
+
 **Data Flow Diagram:**
 ```
 page.tsx (parent - owns all state)
 │
-├── Floating Header
+├── FloatingHeader
+│   ├── "Guardar" button → handleSave()
 │   └── "Clean All" button → handleGlobalClean()
 │
 ├── CodeGenerator (controlled component)
@@ -242,6 +286,88 @@ page.tsx (parent - owns all state)
 4. **No Side Effects** - No useEffect for state synchronization
 5. **Explicit Updates** - State changes are direct and synchronous
 
+## GUARDAR FEATURE (SAVE)
+
+**ProductData Interface:**
+```typescript
+export interface ProductData {
+  productCode: {
+    clasificacion: string;
+    parte: string;
+    numero: string;
+    color: string;
+    aditamento: string;
+    generated: string;  // Formatted code: "RS00123GTY"
+  };
+  compatibility: {
+    items: Compatibility[];
+    generated: string;  // Formatted: "TOYOTA CAMRY 2020, ..."
+  };
+  description: {
+    parte: string;
+    posicion: string;
+    lado: string;
+    generated: string;  // Formatted: "SIDE FRONT LEFT ..."
+  };
+}
+```
+
+**Architecture Benefits:**
+- Database-ready structure (maps to Supabase JSONB columns)
+- Stores both raw values AND generated strings
+- Easy to add metadata (timestamps, user IDs, order IDs)
+- Testable helper functions (pure, no side effects)
+- Follows existing lifted state pattern
+
+**Console Output Example:**
+```javascript
+Product Data: {
+  productCode: {
+    clasificacion: "R",
+    parte: "s",
+    numero: "00123",
+    color: "GT",
+    aditamento: "Y",
+    generated: "RS00123GTY"
+  },
+  compatibility: {
+    items: [
+      { marca: "Honda", subModelo: "Accord", modelo: "2020" },
+      { marca: "Honda", subModelo: "Accord", modelo: "2021" }
+    ],
+    generated: "HONDA ACCORD 2020, HONDA ACCORD 2021"
+  },
+  description: {
+    parte: "s",
+    posicion: "Front",
+    lado: "Left",
+    generated: "SIDE FRONT LEFT HONDA ACCORD 2020, 2021"
+  }
+}
+```
+
+**Future Supabase Integration:**
+When ready to connect database:
+1. Create products table with JSONB columns
+2. Replace `console.log()` with `await supabase.from('products').insert()`
+3. Add success/error toast notifications
+4. Add metadata fields (created_at, user_id, order_id, status)
+
+**Suggested Database Schema:**
+```sql
+CREATE TABLE products (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  product_code_data JSONB NOT NULL,
+  compatibility_data JSONB NOT NULL,
+  description_data JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  user_id UUID REFERENCES auth.users(id),
+  order_id UUID,
+  status TEXT DEFAULT 'draft'
+);
+```
+
 ## USER EXPERIENCE
 
 - All inputs provide immediate visual feedback
@@ -255,7 +381,8 @@ page.tsx (parent - owns all state)
 - Smooth animations and transitions
 - Consistent button styling across all sections
 - Clear visual hierarchy and sectioning
-- Sticky header provides easy access to "Clean All" button
+- Sticky header provides easy access to "Guardar" and "Clean All" buttons
+- Guardar button silent operation (no visual feedback for now)
 
 ## DATA STRUCTURE
 
@@ -265,6 +392,30 @@ interface Compatibility {
   marca: string;      // Car brand name
   subModelo: string;  // Sub-model name
   modelo: string;     // Year as string
+}
+```
+
+**ProductData Interface:**
+```typescript
+interface ProductData {
+  productCode: {
+    clasificacion: string;
+    parte: string;
+    numero: string;
+    color: string;
+    aditamento: string;
+    generated: string;
+  };
+  compatibility: {
+    items: Compatibility[];
+    generated: string;
+  };
+  description: {
+    parte: string;
+    posicion: string;
+    lado: string;
+    generated: string;
+  };
 }
 ```
 
@@ -285,23 +436,32 @@ interface Compatibility {
 
 ```
 app/
-├── page.tsx (parent component - owns all state, renders layout + header)
+├── page.tsx (parent - owns all state, save/clean handlers)
 ├── layout.tsx (Next.js app layout)
 ├── globals.css (global styles and Tailwind config)
 └── components/
-    ├── CodeGenerator.tsx (controlled component - code generation logic)
-    ├── ProductDescription.tsx (controlled component - description logic)
-    └── ProductCompatibility.tsx (controlled component - compatibility management)
+    ├── FloatingHeader.tsx (header with Guardar and Clean All buttons)
+    ├── CodeGenerator.tsx (controlled component - code generation)
+    ├── ProductDescription.tsx (controlled component - description)
+    └── ProductCompatibility.tsx (controlled component - compatibility)
 
 carBrands.tsx (data file - car brands and sub-models)
 
 docs/
 ├── PROJECT_SPEC.md (this file)
-├── PRODUCT_COMPATIBILITY_IMPLEMENTATION.md (compatibility feature docs)
-└── STATE_MANAGEMENT_REFACTOR.md (state management architecture docs)
+├── STATE_MANAGEMENT_REFACTOR.md (state architecture documentation)
+└── TESTING.md (comprehensive testing guide)
 ```
 
 ## COMPONENT PROPS (TypeScript Interfaces)
+
+**FloatingHeader:**
+```typescript
+interface FloatingHeaderProps {
+  onSave: () => void;
+  onCleanAll: () => void;
+}
+```
 
 **CodeGenerator:**
 ```typescript
@@ -339,22 +499,36 @@ interface ProductCompatibilityProps {
 }
 ```
 
-## TESTING CONSIDERATIONS
-
-With the lifted state architecture:
-- Easy to test components by passing mock props
-- No need to test useEffect side effects
-- Clear separation of concerns
-- Predictable state updates
-- Simple snapshot testing for UI
-
 ## FUTURE ENHANCEMENT OPPORTUNITIES
 
 With current architecture, these features are easy to add:
+
+**Immediate (when Supabase ready):**
+1. **Database Integration** - Replace console.log with Supabase insert
+2. **Success Toast** - Visual feedback after successful save
+3. **Error Handling** - Display errors if save fails
+4. **Timestamps** - Add created_at, updated_at to ProductData
+
+**Medium-term:**
 1. **Persistence** - Save/load state to localStorage or database
 2. **Undo/Redo** - Keep history of parent state changes
 3. **URL State** - Sync state with URL query parameters
-4. **Export** - Serialize parent state to JSON/CSV
+4. **Export** - Serialize parent state to JSON/CSV/PDF
 5. **Form Validation** - Centralized validation in parent
 6. **Analytics** - Track state changes from one location
 7. **Multi-language** - Centralized state makes i18n easier
+
+**Long-term:**
+1. **User Authentication** - Link saved products to users
+2. **Order Management** - Connect products to orders
+3. **Product Library** - View/edit/delete saved products
+4. **Batch Operations** - Save multiple products at once
+5. **Product Templates** - Save common configurations
+6. **Collaboration** - Share products between users
+7. **Audit Trail** - Track who created/modified products
+
+---
+
+## SUMMARY
+
+This application provides a professional, efficient tool for Rhino Auto Glass to generate product codes, manage compatibility data, and create product descriptions. The architecture follows React best practices with lifted state, controlled components, and a clear separation of concerns. The Guardar feature provides a foundation for future database integration while maintaining simple, testable code.

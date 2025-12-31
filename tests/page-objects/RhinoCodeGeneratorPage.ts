@@ -14,6 +14,7 @@ export class RhinoCodeGeneratorPage {
 
   // Header elements
   readonly headerTitle: Locator;
+  readonly guardarButton: Locator;
   readonly cleanAllButton: Locator;
 
   // Code Generator elements
@@ -59,6 +60,7 @@ export class RhinoCodeGeneratorPage {
 
     // Header
     this.headerTitle = page.getByRole('heading', { name: 'Rhino Code Generator' });
+    this.guardarButton = page.getByRole('button', { name: 'Guardar' });
     this.cleanAllButton = page.getByRole('button', { name: 'Clean All' });
 
     // Code Generator
@@ -96,7 +98,8 @@ export class RhinoCodeGeneratorPage {
     this.addCompatibilityButton = page.getByRole('button', { name: 'Añadir Compatibilidad' });
     this.compatibilityList = page.locator('div').filter({ hasText: /Compatibilidades Añadidas/ });
     this.compatibilityCount = page.getByText(/Compatibilidades Añadidas \(\d+\)/);
-    this.generatedCompatibility = page.locator('div').filter({ hasText: /^Compatibilidad Generada/ }).locator('p').nth(1);
+    // FIXED: Changed from Spanish "Compatibilidad Generada" to English "Generated Compatibility"
+    this.generatedCompatibility = page.locator('div').filter({ hasText: /^Generated Compatibility/ }).locator('p').nth(1);
 
     // Product Description
     this.descriptionHeading = page.getByRole('heading', { name: 'Product Description' });
@@ -247,6 +250,10 @@ export class RhinoCodeGeneratorPage {
   }
 
   // Global actions
+  async clickGuardar() {
+    await this.guardarButton.click();
+  }
+
   async clickCleanAll() {
     await this.cleanAllButton.click();
   }

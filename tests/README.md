@@ -25,6 +25,7 @@ npm run test:headed
 - `fillCodeGenerator(options)` - Fill code generator fields
 - `addCompatibility(marca, subModelo, modelo)` - Add compatibility
 - `fillProductDescription(options)` - Fill description fields
+- `clickGuardar()` - Click Guardar button
 - `clickCleanAll()` - Click global clean button
 - `getGeneratedCodeText()` - Get generated code
 - `getGeneratedCompatibilityText()` - Get compatibility string
@@ -54,6 +55,18 @@ npm run test:headed
 - Year sorting
 - Cross-section updates
 
+### `guardar.spec.ts` ✨ NEW
+**16 tests** covering Guardar (Save) feature:
+- Button visibility and positioning
+- Primary/secondary button styling
+- Console logging (empty data)
+- Console logging (with data)
+- Data preservation after save
+- Independence from Clean All
+- Multiple clicks
+- Responsive behavior (mobile/tablet/desktop)
+- Keyboard accessibility
+
 ### `integration.spec.ts`
 **8 tests** covering cross-section workflows:
 - End-to-end user flows
@@ -70,7 +83,7 @@ npm run test:headed
 
 ## Total Coverage
 
-**43 E2E tests** across **6 browser configurations**:
+**59 E2E tests** across **6 browser configurations**:
 - Chromium (Chrome/Edge)
 - Firefox
 - WebKit (Safari)
@@ -83,6 +96,7 @@ npm run test:headed
 - 📖 **Full Guide**: `/docs/TESTING.md`
 - ⚡ **Quick Start**: `/TESTING_QUICKSTART.md`
 - 📊 **Setup Summary**: `/docs/TESTING_SETUP_SUMMARY.md`
+- 🎯 **Guardar Feature**: `/docs/GUARDAR_FEATURE.md`
 
 ## Adding New Tests
 

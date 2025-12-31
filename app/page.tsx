@@ -4,11 +4,33 @@ import { useState } from 'react';
 import CodeGenerator from './components/CodeGenerator';
 import ProductDescription from './components/ProductDescription';
 import ProductCompatibility from './components/ProductCompatibility';
+import FloatingHeader from './components/FloatingHeader';
 
 export interface Compatibility {
   marca: string;
   subModelo: string;
   modelo: string;
+}
+
+export interface ProductData {
+  productCode: {
+    clasificacion: string;
+    parte: string;
+    numero: string;
+    color: string;
+    aditamento: string;
+    generated: string;
+  };
+  compatibility: {
+    items: Compatibility[];
+    generated: string;
+  };
+  description: {
+    parte: string;
+    posicion: string;
+    lado: string;
+    generated: string;
+  };
 }
 
 export default function Home() {
@@ -27,7 +49,150 @@ export default function Home() {
   const [compatibilities, setCompatibilities] = useState<Compatibility[]>([]);
   const [compatibilityResetTrigger, setCompatibilityResetTrigger] = useState(0);
 
-  // Global clean handler - clears everything
+  // ========================================
+  // HELPER FUNCTIONS - Generate formatted strings
+  // ========================================
+
+  /**
+   * Generate product code string (mirrors CodeGenerator logic)
+   */
+  const generateProductCode = (): string => {
+    const clasificacionCode = clasificacion || '-';
+    const parteCode = parte || '-';
+    const numeroCode = numero ? numero.padStart(5, '0') : '-----';
+    const colorCode = color || '-';
+    const aditamentoCode = aditamento || '-';
+
+    return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}${aditamentoCode}`.toUpperCase();
+  };
+
+  /**
+   * Generate compatibility string (mirrors ProductCompatibility logic)
+   */
+  const generateCompatibilityString = (): string => {
+    if (compatibilities.length === 0) return '---';
+    
+    return compatibilities
+      .map(comp => {
+        // Handle custom entries (no subModelo)
+        if (comp.subModelo) {
+          return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
+        }
+        return `${comp.marca} ${comp.modelo}`;
+      })
+      .join(', ')
+      .toUpperCase();
+  };
+
+  /**
+   * Generate product description (mirrors ProductDescription logic)
+   */
+  const generateProductDescription = (): string => {
+    // Parte options mapping
+    const parteOptions = [
+      { value: 's', label: 'Side' },
+      { value: 'b', label: 'Back' },
+      { value: 'd', label: 'Door' },
+      { value: 'q', label: 'Quarter' },
+      { value: 'v', label: 'Vent' },
+    ];
+
+    const parteLabel = parteOptions.find(p => p.value === parte)?.label || '-';
+    const posicionText = posicion || '-';
+    const ladoText = lado || '-';
+    
+    // Base description
+    let description = `${parteLabel} ${posicionText} ${ladoText}`;
+    
+    // Add grouped compatibilities if any exist
+    if (compatibilities.length > 0) {
+      // Group by marca + subModelo
+      const grouped = new Map<string, string[]>();
+      
+      compatibilities.forEach(comp => {
+        const key = `${comp.marca} ${comp.subModelo}`;
+        if (!grouped.has(key)) {
+          grouped.set(key, []);
+        }
+        grouped.get(key)!.push(comp.modelo);
+      });
+
+      // Build compatibility text
+      const parts: string[] = [];
+      grouped.forEach((years, key) => {
+        const sortedYears = years.sort((a, b) => parseInt(a) - parseInt(b));
+        parts.push(`${key} ${sortedYears.join(', ')}`);
+      });
+
+      description += ` ${parts.join(' ')}`;
+    }
+
+    return description.toUpperCase();
+  };
+
+  // ========================================
+  // VALIDATION
+  // ========================================
+
+  /**
+   * Check if any data exists across all three sections
+   */
+  const hasAnyData = (): boolean => {
+    // Check CodeGenerator fields
+    const hasCodeData = !!(clasificacion || parte || numero || color || aditamento);
+    
+    // Check ProductCompatibility
+    const hasCompatibilityData = compatibilities.length > 0;
+    
+    // Check ProductDescription fields
+    const hasDescriptionData = !!(posicion || lado);
+
+    return hasCodeData || hasCompatibilityData || hasDescriptionData;
+  };
+
+  // ========================================
+  // HANDLERS
+  // ========================================
+
+  /**
+   * Save handler - collects all data and logs to console
+   */
+  const handleSave = () => {
+    // Validate that at least some data exists
+    if (!hasAnyData()) {
+      console.warn('No data to save - all fields are empty');
+      return;
+    }
+
+    // Build the ProductData object
+    const productData: ProductData = {
+      productCode: {
+        clasificacion,
+        parte,
+        numero,
+        color,
+        aditamento,
+        generated: generateProductCode(),
+      },
+      compatibility: {
+        items: compatibilities,
+        generated: generateCompatibilityString(),
+      },
+      description: {
+        parte, // Shared with productCode
+        posicion,
+        lado,
+        generated: generateProductDescription(),
+      },
+    };
+
+    // Log to console
+    console.log('Product Data:', productData);
+  };
+
+  /**
+   * Global clean handler - clears everything
+   */
   const handleGlobalClean = () => {
     // Clear CodeGenerator
     setClasificacion('');
@@ -48,27 +213,10 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
       {/* Floating Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-slate-900">
-                Rhino Code Generator
-              </h1>
-              <p className="text-sm text-slate-600">
-                Automotive Glass Production Catalog
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleGlobalClean}
-              className="btn btn-primary btn-md"
-            >
-              Clean All
-            </button>
-          </div>
-        </div>
-      </header>
+      <FloatingHeader 
+        onSave={handleSave}
+        onCleanAll={handleGlobalClean}
+      />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
