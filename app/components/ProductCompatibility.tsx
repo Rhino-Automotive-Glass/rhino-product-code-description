@@ -10,6 +10,12 @@ interface ProductCompatibilityProps {
   resetTrigger?: number; // Increment this to trigger form reset
 }
 
+// Type for the new subModels structure
+interface SubModel {
+  name: string;
+  versions: string[];
+}
+
 export default function ProductCompatibility({ 
   compatibilities, 
   setCompatibilities,
@@ -17,6 +23,7 @@ export default function ProductCompatibility({
 }: ProductCompatibilityProps) {
   const [marca, setMarca] = useState('');
   const [subModelo, setSubModelo] = useState('');
+  const [version, setVersion] = useState('');
   const [modelo, setModelo] = useState('');
   const [customMarca, setCustomMarca] = useState(''); // Custom brand/model input
 
@@ -24,24 +31,45 @@ export default function ProductCompatibility({
   const isOtroSelected = marca === 'Otro';
 
   // Get subModels for the selected marca
-  const getSubModelos = (): string[] => {
+  const getSubModelos = (): SubModel[] => {
     if (isOtroSelected) return [];
     const selectedBrand = carBrandsWithSubModels.find(brand => brand.name === marca);
     if (!selectedBrand) return [];
     return selectedBrand.subModels;
   };
 
-  // Reset subModelo and customMarca when marca changes
+  // Get versions for the selected subModelo
+  const getVersions = (): string[] => {
+    if (isOtroSelected || !subModelo) return [];
+    const subModels = getSubModelos();
+    const selectedSubModel = subModels.find(sm => sm.name === subModelo);
+    if (!selectedSubModel) return [];
+    return selectedSubModel.versions;
+  };
+
+  // Check if current subModelo has versions available
+  const hasVersions = (): boolean => {
+    return getVersions().length > 0;
+  };
+
+  // Reset subModelo, version, and customMarca when marca changes
   useEffect(() => {
     setSubModelo('');
+    setVersion('');
     setCustomMarca('');
   }, [marca]);
+
+  // Reset version when subModelo changes
+  useEffect(() => {
+    setVersion('');
+  }, [subModelo]);
 
   // Reset form fields when resetTrigger changes
   useEffect(() => {
     if (resetTrigger > 0) {
       setMarca('');
       setSubModelo('');
+      setVersion('');
       setModelo('');
       setCustomMarca('');
     }
@@ -60,6 +88,7 @@ export default function ProductCompatibility({
       comp => 
         comp.marca === newCompatibility.marca && 
         comp.subModelo === newCompatibility.subModelo && 
+        comp.version === newCompatibility.version &&
         comp.modelo === newCompatibility.modelo
     );
   };
@@ -74,20 +103,23 @@ export default function ProductCompatibility({
       }
     } else {
       if (!marca || !subModelo || !modelo) {
-        alert('Por favor selecciona todos los campos antes de añadir la compatibilidad');
+        alert('Por favor selecciona todos los campos requeridos antes de añadir la compatibilidad');
         return;
       }
+      // Note: version is optional, no validation needed
     }
 
     const newCompatibility: Compatibility = isOtroSelected
       ? {
           marca: customMarca.trim(),
           subModelo: '', // Empty for custom entries
+          version: '', // Empty for custom entries
           modelo
         }
       : {
           marca,
           subModelo,
+          version, // Can be empty string if not selected
           modelo
         };
 
@@ -111,18 +143,28 @@ export default function ProductCompatibility({
     setCompatibilities(updatedCompatibilities);
   };
 
+  // Format a single compatibility entry for display
+  const formatCompatibilityDisplay = (comp: Compatibility): string => {
+    // Handle custom entries (no subModelo)
+    if (!comp.subModelo) {
+      return `${comp.marca} ${comp.modelo}`;
+    }
+    
+    // If version exists, format as SUBMODELO-VERSION
+    if (comp.version) {
+      return `${comp.marca} ${comp.subModelo}-${comp.version} ${comp.modelo}`;
+    }
+    
+    // No version, standard format
+    return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
+  };
+
   // Generate compatibility string (comma-separated)
   const generateCompatibilityString = (): string => {
     if (compatibilities.length === 0) return '---';
     
     return compatibilities
-      .map(comp => {
-        // Handle custom entries (no subModelo)
-        if (comp.subModelo) {
-          return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
-        }
-        return `${comp.marca} ${comp.modelo}`;
-      })
+      .map(comp => formatCompatibilityDisplay(comp))
       .join(', ')
       .toUpperCase();
   };
@@ -182,28 +224,60 @@ export default function ProductCompatibility({
             </p>
           </div>
         ) : (
-          /* Sub-Modelo - Only shown when a regular brand is selected */
-          <div className="w-full" data-testid="sub-modelo-container">
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Sub-Modelo
-            </label>
-            <select
-              data-testid="sub-modelo-select"
-              value={subModelo}
-              onChange={(e) => setSubModelo(e.target.value)}
-              disabled={!marca}
-              className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
-            >
-              <option value="">
-                {marca ? 'Seleccionar...' : 'Selecciona una Marca primero...'}
-              </option>
-              {getSubModelos().map((subModel) => (
-                <option key={subModel} value={subModel}>
-                  {subModel}
+          /* Sub-Modelo and Version fields - Only shown when a regular brand is selected */
+          <>
+            {/* Sub-Modelo */}
+            <div className="w-full" data-testid="sub-modelo-container">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Sub-Modelo
+              </label>
+              <select
+                data-testid="sub-modelo-select"
+                value={subModelo}
+                onChange={(e) => setSubModelo(e.target.value)}
+                disabled={!marca}
+                className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+              >
+                <option value="">
+                  {marca ? 'Seleccionar...' : 'Selecciona una Marca primero...'}
                 </option>
-              ))}
-            </select>
-          </div>
+                {getSubModelos().map((subModel) => (
+                  <option key={subModel.name} value={subModel.name}>
+                    {subModel.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Version */}
+            <div className="w-full" data-testid="version-container">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Versión
+                <span className="ml-1 text-xs text-slate-400 font-normal">(opcional)</span>
+              </label>
+              <select
+                data-testid="version-select"
+                value={version}
+                onChange={(e) => setVersion(e.target.value)}
+                disabled={!subModelo || !hasVersions()}
+                className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+              >
+                <option value="">
+                  {!subModelo 
+                    ? 'Selecciona un Sub-Modelo primero...' 
+                    : !hasVersions() 
+                      ? 'No hay versiones disponibles' 
+                      : 'Seleccionar... (opcional)'
+                  }
+                </option>
+                {getVersions().map((ver) => (
+                  <option key={ver} value={ver}>
+                    {ver}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
         )}
 
         {/* Modelo (Year) */}
@@ -258,10 +332,7 @@ export default function ProductCompatibility({
                 className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
               >
                 <span className="text-sm font-medium text-slate-900">
-                  {comp.subModelo 
-                    ? `${comp.marca} ${comp.subModelo} ${comp.modelo}`
-                    : `${comp.marca} ${comp.modelo}`
-                  }
+                  {formatCompatibilityDisplay(comp)}
                   {!comp.subModelo && (
                     <span className="ml-2 text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
                       Personalizado

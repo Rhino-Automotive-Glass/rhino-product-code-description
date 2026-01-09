@@ -39,6 +39,8 @@ export class RhinoCodeGeneratorPage {
   readonly marcaSelect: Locator;
   readonly subModeloSelect: Locator;
   readonly subModeloContainer: Locator;
+  readonly versionSelect: Locator;
+  readonly versionContainer: Locator;
   readonly modeloSelect: Locator;
   readonly customMarcaInput: Locator;
   readonly customMarcaContainer: Locator;
@@ -91,6 +93,8 @@ export class RhinoCodeGeneratorPage {
     this.marcaSelect = page.getByTestId('marca-select');
     this.subModeloSelect = page.getByTestId('sub-modelo-select');
     this.subModeloContainer = page.getByTestId('sub-modelo-container');
+    this.versionSelect = page.getByTestId('version-select');
+    this.versionContainer = page.getByTestId('version-container');
     this.modeloSelect = page.getByTestId('modelo-select');
     this.customMarcaInput = page.getByTestId('custom-marca-input');
     this.customMarcaContainer = page.getByTestId('custom-marca-container');
@@ -145,7 +149,7 @@ export class RhinoCodeGeneratorPage {
   }
 
   /**
-   * Add a compatibility entry
+   * Add a compatibility entry (without version)
    * 
    * This method includes explicit waits between select operations
    * to handle React's state updates and re-renders properly.
@@ -160,10 +164,45 @@ export class RhinoCodeGeneratorPage {
     // Step 3: Select Sub-Modelo
     await this.subModeloSelect.selectOption(subModelo);
     
-    // Step 4: Select Modelo (Year)
+    // Step 4: Select Modelo (Year) - skip version (it's optional)
     await this.modeloSelect.selectOption(modelo);
     
     // Step 5: Click the Add button
+    await this.addCompatibilityButton.click();
+    
+    // Small buffer for React state update
+    await this.page.waitForTimeout(100);
+  }
+
+  /**
+   * Add a compatibility entry with version
+   * 
+   * This method includes explicit waits between select operations
+   * to handle React's state updates and re-renders properly.
+   */
+  async addCompatibilityWithVersion(marca: string, subModelo: string, version: string, modelo: string) {
+    // Step 1: Select Marca
+    await this.marcaSelect.selectOption(marca);
+    
+    // Step 2: Wait for Sub-Modelo to be enabled (React needs to re-render after brand selection)
+    await expect(this.subModeloSelect).toBeEnabled({ timeout: 5000 });
+    
+    // Step 3: Select Sub-Modelo
+    await this.subModeloSelect.selectOption(subModelo);
+    
+    // Step 4: Wait for Version to be enabled (if it has versions)
+    await this.page.waitForTimeout(100); // Small buffer for React state update
+    
+    // Step 5: Select Version (if enabled)
+    const isVersionEnabled = await this.versionSelect.isEnabled();
+    if (isVersionEnabled && version) {
+      await this.versionSelect.selectOption(version);
+    }
+    
+    // Step 6: Select Modelo (Year)
+    await this.modeloSelect.selectOption(modelo);
+    
+    // Step 7: Click the Add button
     await this.addCompatibilityButton.click();
     
     // Small buffer for React state update
@@ -209,6 +248,14 @@ export class RhinoCodeGeneratorPage {
    */
   async isSubModeloSelectVisible(): Promise<boolean> {
     return await this.subModeloContainer.isVisible();
+  }
+
+  /**
+   * Check if version select is visible
+   * Note: When "Otro" is selected, this element is removed from DOM entirely
+   */
+  async isVersionSelectVisible(): Promise<boolean> {
+    return await this.versionContainer.isVisible();
   }
 
   /**

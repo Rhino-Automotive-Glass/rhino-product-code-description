@@ -32,11 +32,23 @@ export default function ProductDescription({
   const groupCompatibilities = (): string => {
     if (compatibilities.length === 0) return '';
 
-    // Create a map to group by marca + subModelo
+    // Create a map to group by marca + subModelo + version
     const grouped = new Map<string, string[]>();
     
     compatibilities.forEach(comp => {
-      const key = `${comp.marca} ${comp.subModelo}`;
+      // Create key based on marca, subModelo, and version
+      let key: string;
+      if (!comp.subModelo) {
+        // Custom entry (no subModelo)
+        key = comp.marca;
+      } else if (comp.version) {
+        // Has version: format as MARCA SUBMODELO-VERSION
+        key = `${comp.marca} ${comp.subModelo}-${comp.version}`;
+      } else {
+        // No version: standard format
+        key = `${comp.marca} ${comp.subModelo}`;
+      }
+      
       if (!grouped.has(key)) {
         grouped.set(key, []);
       }

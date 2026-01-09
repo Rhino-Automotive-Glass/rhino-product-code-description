@@ -9,6 +9,7 @@ import FloatingHeader from './components/FloatingHeader';
 export interface Compatibility {
   marca: string;
   subModelo: string;
+  version: string;
   modelo: string;
 }
 
@@ -67,19 +68,32 @@ export default function Home() {
   };
 
   /**
+   * Format a single compatibility entry for display
+   * Format: MARCA SUBMODELO-VERSION YEAR or MARCA SUBMODELO YEAR (if no version)
+   */
+  const formatCompatibilityEntry = (comp: Compatibility): string => {
+    // Handle custom entries (no subModelo)
+    if (!comp.subModelo) {
+      return `${comp.marca} ${comp.modelo}`;
+    }
+    
+    // If version exists, format as SUBMODELO-VERSION
+    if (comp.version) {
+      return `${comp.marca} ${comp.subModelo}-${comp.version} ${comp.modelo}`;
+    }
+    
+    // No version, standard format
+    return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
+  };
+
+  /**
    * Generate compatibility string (mirrors ProductCompatibility logic)
    */
   const generateCompatibilityString = (): string => {
     if (compatibilities.length === 0) return '---';
     
     return compatibilities
-      .map(comp => {
-        // Handle custom entries (no subModelo)
-        if (comp.subModelo) {
-          return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
-        }
-        return `${comp.marca} ${comp.modelo}`;
-      })
+      .map(comp => formatCompatibilityEntry(comp))
       .join(', ')
       .toUpperCase();
   };
@@ -106,11 +120,21 @@ export default function Home() {
     
     // Add grouped compatibilities if any exist
     if (compatibilities.length > 0) {
-      // Group by marca + subModelo
+      // Group by marca + subModelo + version
       const grouped = new Map<string, string[]>();
       
       compatibilities.forEach(comp => {
-        const key = `${comp.marca} ${comp.subModelo}`;
+        // Create key based on marca, subModelo, and version
+        let key: string;
+        if (!comp.subModelo) {
+          // Custom entry
+          key = comp.marca;
+        } else if (comp.version) {
+          key = `${comp.marca} ${comp.subModelo}-${comp.version}`;
+        } else {
+          key = `${comp.marca} ${comp.subModelo}`;
+        }
+        
         if (!grouped.has(key)) {
           grouped.set(key, []);
         }
