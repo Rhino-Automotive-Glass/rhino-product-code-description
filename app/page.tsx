@@ -5,6 +5,7 @@ import CodeGenerator from './components/CodeGenerator';
 import ProductDescription from './components/ProductDescription';
 import ProductCompatibility from './components/ProductCompatibility';
 import FloatingHeader from './components/FloatingHeader';
+import SavedProductsTable from './components/SavedProductsTable';
 
 export interface Compatibility {
   marca: string;
@@ -49,6 +50,9 @@ export default function Home() {
   // ProductCompatibility state
   const [compatibilities, setCompatibilities] = useState<Compatibility[]>([]);
   const [compatibilityResetTrigger, setCompatibilityResetTrigger] = useState(0);
+
+  // Saved Products state
+  const [savedProducts, setSavedProducts] = useState<ProductData[]>([]);
 
   // ========================================
   // HELPER FUNCTIONS - Generate formatted strings
@@ -179,7 +183,7 @@ export default function Home() {
   // ========================================
 
   /**
-   * Save handler - collects all data and logs to console
+   * Save handler - collects all data, adds to table, and logs to console
    */
   const handleSave = () => {
     // Validate that at least some data exists
@@ -210,8 +214,28 @@ export default function Home() {
       },
     };
 
+    // Check if product code already exists in saved products
+    const isDuplicate = savedProducts.some(
+      product => product.productCode.generated === productData.productCode.generated
+    );
+
+    if (isDuplicate) {
+      alert(`Product code "${productData.productCode.generated}" already exists in the table.`);
+      return;
+    }
+
+    // Add to saved products table
+    setSavedProducts(prev => [...prev, productData]);
+
     // Log to console
     console.log('Product Data:', productData);
+  };
+
+  /**
+   * Delete handler - removes a product from the saved products table
+   */
+  const handleDeleteProduct = (index: number) => {
+    setSavedProducts(prev => prev.filter((_, i) => i !== index));
   };
 
   /**
@@ -244,6 +268,13 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        {/* Saved Products Table */}
+        <div className="mb-6 lg:mb-8">
+          <SavedProductsTable 
+            products={savedProducts}
+            onDelete={handleDeleteProduct}
+          />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-6 lg:gap-8">
           {/* Code Generator Section */}
           <div>
