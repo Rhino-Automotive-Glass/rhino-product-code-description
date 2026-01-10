@@ -268,13 +268,6 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        {/* Saved Products Table */}
-        <div className="mb-6 lg:mb-8">
-          <SavedProductsTable 
-            products={savedProducts}
-            onDelete={handleDeleteProduct}
-          />
-        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-6 lg:gap-8">
           {/* Code Generator Section */}
           <div>
@@ -313,6 +306,13 @@ export default function Home() {
             />
           </div>
         </div>
+        {/* Saved Products Table */}
+        <div className="mb-6 lg:mb-8">
+          <SavedProductsTable 
+            products={savedProducts}
+            onDelete={handleDeleteProduct}
+          />
+        </div>        
       </div>
     </main>
   );
