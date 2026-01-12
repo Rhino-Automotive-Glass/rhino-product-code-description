@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { RhinoCodeGeneratorPage } from './page-objects/RhinoCodeGeneratorPage';
 
-test.describe('Product Description Section', () => {
+test.describe('Product Description Generation (in Product Details)', () => {
   let rhinoPage: RhinoCodeGeneratorPage;
 
   test.beforeEach(async ({ page }) => {
@@ -9,8 +9,9 @@ test.describe('Product Description Section', () => {
     await rhinoPage.goto();
   });
 
-  test('should display all description fields', async () => {
-    await expect(rhinoPage.descriptionHeading).toBeVisible();
+  test('should display all description fields in Product Details section', async () => {
+    // Fields are now in CodeGenerator component (Product Details)
+    await expect(rhinoPage.codeGeneratorHeading).toBeVisible();
     await expect(rhinoPage.posicionFront).toBeVisible();
     await expect(rhinoPage.posicionRear).toBeVisible();
     await expect(rhinoPage.ladoLeft).toBeVisible();
@@ -34,11 +35,11 @@ test.describe('Product Description Section', () => {
     expect(descriptionText).toContain('LEFT');
   });
 
-  test('should include parte from Code Generator', async () => {
-    // Select parte in Code Generator
+  test('should include parte in description', async () => {
+    // Select parte (in same component now)
     await rhinoPage.parteSide.click();
 
-    // Fill Product Description
+    // Fill description fields
     await rhinoPage.fillProductDescription({
       posicion: 'Front',
       lado: 'Left'
@@ -152,7 +153,6 @@ test.describe('Product Description Section', () => {
       posicion: 'Rear',
       lado: 'Left'
     });
-    // Using Nissan instead of Honda (Honda doesn't exist in carBrands.tsx)
     await rhinoPage.addCompatibility('Nissan', 'Altima', '2022');
 
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();

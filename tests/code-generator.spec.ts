@@ -103,4 +103,22 @@ test.describe('Code Generator Section', () => {
     codeText = await rhinoPage.getGeneratedCodeText();
     expect(codeText).toBe('FQ54321YPY');
   });
+
+  test('should support F (Fixed) aditamento option - code stops at color', async () => {
+    await rhinoPage.fillCodeGenerator({
+      clasificacion: 'D',
+      parte: 'b',
+      numero: '12345',
+      color: 'GT',
+      aditamento: 'F'
+    });
+    const codeText = await rhinoPage.getGeneratedCodeText();
+    expect(codeText).toBe('DB12345GT'); // No aditamento suffix
+  });
+
+  test('should display Aditamento options with descriptive labels', async () => {
+    await expect(rhinoPage.aditamentoY).toBeVisible();
+    await expect(rhinoPage.aditamentoN).toBeVisible();
+    await expect(rhinoPage.aditamentoF).toBeVisible();
+  });
 });

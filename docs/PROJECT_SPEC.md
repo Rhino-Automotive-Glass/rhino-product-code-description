@@ -1,218 +1,325 @@
-Create a Next.js 16.1.0 application under the folder dev for Rhino Auto Glass, an Automotive Glass production company.
+# Rhino Code Generator - Project Specification v2.0
 
-This application consists of three main sections with a global floating header:
-1. **Code Generation** - A catalog reference code creation tool based on NAGS naming conventions
-2. **Product Compatibility** - A section for managing vehicle compatibility information
-3. **Product Description** - A form section for generating automotive glass product descriptions
+**Last Updated:** January 2026  
+**Version:** 2.0 (After major UI restructure)
 
-## GLOBAL FLOATING HEADER
+Create a Next.js application for Rhino Auto Glass, an Automotive Glass production company.
+
+This application consists of three main sections with a static header:
+1. **Product Details** - Product code generation and description fields (merged component)
+2. **Product Compatibility** - Vehicle compatibility management
+3. **Generated Output & Actions** - Single-row display with action buttons
+
+---
+
+## HEADER
 
 **UI Components:**
-- Sticky header at top of page (always visible when scrolling)
+- Static header at top of page
 - App title: "Rhino Code Generator"
 - Subtitle: "Automotive Glass Production Catalog"
-- Two action buttons:
-  - **"Guardar"** button (left, blue primary button) - saves current data
-  - **"Clean All"** button (right, gray secondary button) - clears all data
-
-**Functionality:**
-- Sticky positioning (stays at top when scrolling)
-- Semi-transparent white background with backdrop blur
-- **Guardar button** collects all form data and logs to console:
-  - Validates that at least some data exists
-  - If empty: logs `console.warn('No data to save - all fields are empty')`
-  - If data exists: logs structured ProductData object to console
-  - Silent from user perspective (no visual feedback)
-  - Data persists after save (does not clear form)
-  - Designed as stepping stone for future Supabase database integration
-- **Clean All button** clears all form fields across all three sections:
-  - Clears all Code Generator fields
-  - Clears all Product Description fields
-  - Clears all Product Compatibility entries
-- One-click reset for entire application
+- **NO action buttons** (moved to main content)
 
 **Styling:**
-- `sticky top-0 z-50` positioning
-- `bg-white/95 backdrop-blur-sm` for glassmorphism effect
-- Border bottom with shadow for depth
-- Responsive padding and layout
-- Guardar: `btn btn-primary btn-md` (blue background)
-- Clean All: `btn btn-secondary btn-md` (gray background)
+- Clean, minimal design
+- White background with border bottom
+- Consistent padding and typography
+- Responsive layout
 
 **Component:**
-- Extracted into dedicated `FloatingHeader.tsx` component
-- Accepts `onSave` and `onCleanAll` callback props
+- `Header.tsx` component (renamed from FloatingHeader)
+- No props needed (stateless)
 
-## SECTION 1: CODE GENERATION (Product Code)
+---
+
+## SECTION 1: PRODUCT DETAILS (Code Generator + Description)
+
+**Component:** `CodeGenerator.tsx` (merged with former ProductDescription)
 
 **UI Components:**
-- Heading: "Product Code"
-- Form with 5 fields (in order):
-  a) Clasificación Comercial (radio buttons): D - Doméstico, F - Foránea, R - Rhino Automotive
-  b) Parte (radio buttons): s - Side, b - Back, d - Door, q - Quarter, v - Vent
-  c) Número (text input): 5-digit number field, only accepts digits
-  d) Color (dropdown): GT - Green Tint, YT - Gray Tint, YP - Gray Tint Privacy, CL - Clear
-  e) Aditamento (radio buttons): Y, N
-- NO individual clean button (removed - use global Clean All button)
-- Result display area showing "Generated Rhino Code"
+- Heading: "Product Details"
+- Form with 7 fields (in order):
+  a) **Clasificación Comercial** (radio buttons): D - Doméstico, F - Foránea, R - Rhino Automotive
+  b) **Parte** (radio buttons): S - Side, B - Back, D - Door, Q - Quarter, V - Vent
+  c) **Número** (text input): 5-digit number field, only accepts digits
+  d) **Color** (dropdown): GT - Green Tint, YT - Gray Tint, YP - Gray Tint Privacy, CL - Clear
+  e) **Aditamento** (radio buttons): Y - Yes, N - No, F - Fixed
+  f) **Posición** (radio buttons): Front, Rear
+  g) **Lado** (radio buttons): Left, Right
+- **Minimum height:** 750px
 
 **Functionality:**
-- Real-time code generation: Update the displayed code instantly whenever any field changes
-- No generate button needed - automatic updates on every selection/input
-- Number input validation: Only allow digits, max 5 characters, block additional input after 5 digits
+- Real-time code generation on every field change
+- Number input validation: Only digits, max 5 characters
 - Auto-pad numbers with leading zeros (e.g., "1" becomes "00001")
-- Final code format: [Clasificación][Parte][5-digit number][Color][Aditamento]
-- Example output: "RV00001GTY"
-- Empty code format: "---------" (9 characters: - - ----- - -)
+- **Code format depends on Aditamento:**
+  - **Y or N:** `[Clasificación][Parte][5-digit number][Color][Aditamento]`
+    - Example: "DB12345GTN"
+  - **F (Fixed):** `[Clasificación][Parte][5-digit number][Color]` (stops at color)
+    - Example: "DB12345GT"
+- Empty code format: "---------" (9 characters) or "--------" (8 with F)
 - ALL generated codes must be UPPERCASE
-- Generated code display always shows dashes for missing values (e.g., "-----", "R----", "RV---", "RV00123--")
-- Parte field is shared with Product Description section
+- Parte field shared with description generation
 
 **Styling:**
-- Generated code displayed in monospace bold font
-- Font size: `text-3xl lg:text-4xl font-mono font-bold`
+- Card container with padding
+- 750px minimum height for visual balance
+- Consistent spacing and typography
+- Blue focus states on inputs
+
+---
 
 ## SECTION 2: PRODUCT COMPATIBILITY
+
+**Component:** `ProductCompatibility.tsx`
 
 **UI Components:**
 - Heading: "Product Compatibility"
 - Subtitle: "Add vehicle compatibility information"
-- Form with 3 fields:
-  a) Marca (dropdown): Car brands from carBrands.tsx data
-  b) Sub-Modelo (dropdown): Dynamically populated based on selected Marca
-  c) Modelo/Year (dropdown): Years from 2000 to current year (reverse order)
+- Form with 4 fields:
+  a) **Marca** (dropdown): Car brands from carBrands.tsx + "Otro (Personalizado)" option
+  b) **Sub-Modelo** (dropdown): Dynamic based on Marca (hidden when "Otro" selected)
+  c) **Versión** (dropdown): Optional, dynamic based on Sub-Modelo (hidden when "Otro" selected)
+  d) **Modelo/Year** (dropdown): Years from 2000 to current year (reverse order)
+  
+  **When "Otro" selected:**
+  - Custom text input replaces Marca/Sub-Modelo/Versión
+  - Year selection still required
+  
 - "Añadir Compatibilidad" button
 - Compatibility list display with:
-  - Counter showing number of compatibilities added
-  - Each compatibility displayed as a card with delete button (X icon)
-  - Empty state message when no compatibilities exist
-  - Scrollable area (max-height: 16rem) for long lists
-- Result display area showing "Generated Compatibility"
+  - Counter showing number of compatibilities
+  - Each compatibility as a card with delete button (X icon)
+  - Custom entries tagged with "Personalizado" badge
+  - Empty state message when none exist
+  - Scrollable area (max-height: 16rem)
+- **Minimum height:** 750px
 
 **Functionality:**
-- Fields remain populated after adding compatibility (not cleared)
-- Validation: All three fields must be selected before adding
-- Duplicate prevention: Cannot add same Marca + Sub-Modelo + Year combination twice
+- Fields persist after adding (not cleared)
+- Validation: All required fields must be filled
+- Duplicate prevention: Same Marca + Sub-Modelo + Versión + Year
 - Alert messages for validation errors
-- Delete functionality: X button to remove individual compatibilities
-- Real-time updates: Changes immediately reflect in Product Description section
-- Generated Compatibility string format: Comma-separated full entries
-  - Example: "TOYOTA CAMRY 2020, TOYOTA CAMRY 2021, HONDA ACCORD 2022"
+- Delete functionality: X button removes individual entries
+- Real-time updates to description section
+- **Compatibility format:**
+  - Standard: `MARCA SUBMODELO-VERSION YEAR`
+  - No version: `MARCA SUBMODELO YEAR`
+  - Custom: `CUSTOM_TEXT YEAR`
 - Shows "---" when no compatibilities exist
-- ALL text displayed in UPPERCASE
-- No maximum limit on number of compatibilities
+- ALL text in UPPERCASE
 
 **Styling:**
-- Generated compatibility displayed in monospace bold font
-- Font size: `text-2xl lg:text-3xl font-mono font-bold`
-- Compatibility cards with hover effects and red delete button
+- Card container with padding
+- 750px minimum height for visual balance
+- Compatibility cards with hover effects
+- Red delete button with trash icon
+- Orange badge for custom entries
 
-## SECTION 3: PRODUCT DESCRIPTION
+---
+
+## SECTION 3: GENERATED OUTPUT & ACTIONS
+
+**Location:** Inline in `page.tsx` (not a separate component)
+
+**Layout:** Single horizontal row with 3 sections:
+```
+[Código Rhino] | [Descripción del Producto] | [Agregar][Limpiar]
+    flex-1              flex-[2]                  auto-width
+```
 
 **UI Components:**
-- Heading: "Product Description"
-- Subtitle: "Generate automotive glass product descriptions"
-- Form with 2 fields:
-  a) Posición (radio buttons): Front, Rear
-  b) Lado (radio buttons): Left, Right
-- NO individual clean button (removed - use global Clean All button)
-- Result display area showing "Generated Product Description"
 
-**Functionality:**
-- Real-time description generation based on:
-  - Parte (from Code Generation section)
-  - Posición
-  - Lado
-  - Vehicle compatibility data (from Product Compatibility section)
-- Intelligent grouping of compatibilities:
-  - Groups by Marca + Sub-Modelo
-  - Displays years in ascending order within each group
-  - Example outputs:
-    * Single compatibility: "SIDE FRONT LEFT TOYOTA CAMRY 2020"
-    * Multiple years same model: "SIDE FRONT LEFT TOYOTA CAMRY 2020, 2021, 2022, 2023"
-    * Multiple models: "SIDE FRONT LEFT TOYOTA CAMRY 2020, 2021 HONDA ACCORD 2022, 2023"
-    * Multiple brands: "SIDE FRONT LEFT TOYOTA CAMRY 2020, 2021 HONDA ACCORD 2022, 2023"
-- Format: [PARTE] [POSICIÓN] [LADO] [MARCA SUB-MODELO YEARS]
-- ALL text displayed in UPPERCASE
+### Left Section: Código Rhino (flex-1)
+- Label: "CÓDIGO RHINO" (uppercase, small, gray)
+- Value: Large monospace font (2xl-3xl)
+- Real-time generation from Product Details
+
+### Middle Section: Descripción del Producto (flex-[2])
+- Label: "DESCRIPCIÓN DEL PRODUCTO" (uppercase, small, gray)
+- Value: Medium monospace font (lg-xl)
+- Real-time generation from all fields
+- Format: `[PARTE] [POSICIÓN] [LADO] [COMPATIBILITIES]`
+- Intelligent grouping:
+  - Groups by Marca + Sub-Modelo + Versión
+  - Shows years in ascending order
+  - Example: "SIDE FRONT LEFT TOYOTA CAMRY-LE 2023, 2024, 2025"
+
+### Right Section: Action Buttons (side by side)
+- **Agregar Button** (Primary blue)
+  - Icon: Circle with down arrow
+  - Action: Adds product to table
+  - Validates for duplicates
+  - Logs ProductData to console
+  
+- **Limpiar Button** (Secondary gray)
+  - Icon: Trash can
+  - Action: Clears all forms
+  - Resets compatibility list
+  - Resets all fields
+
+**Dividers:**
+- Thin vertical lines (1px, 64px height)
+- Between each section
+- Only visible on desktop (hidden lg:block)
+
+**Responsive:**
+- Desktop (lg+): Horizontal row layout
+- Mobile: Vertical stack
+- Buttons remain side-by-side on mobile
 
 **Styling:**
-- Generated description displayed in monospace bold font
-- Font size: `text-2xl lg:text-3xl font-mono font-bold`
+- Single card container with padding
+- Subtle labels in gray
+- Bold monospace fonts for values
+- Consistent spacing with gaps
+- Blue primary button (Agregar)
+- Gray secondary button (Limpiar)
+
+---
+
+## SAVED PRODUCTS TABLE
+
+**Component:** `SavedProductsTable.tsx`
+
+**UI Components:**
+- Heading: "Saved Products Table"
+- Table columns:
+  1. Product Code
+  2. Compatibility
+  3. Description
+  4. Actions (Delete button)
+
+**Functionality:**
+- Displays all added products
+- Delete individual products
+- Real-time updates when products added
+- Full-width display below generated output
+
+**Styling:**
+- Table with borders and hover effects
+- Delete button with trash icon
+- Responsive on all screen sizes
+
+---
 
 ## LAYOUT STRUCTURE
 
-**Desktop (≥1024px):** 3-column grid layout
+**Desktop (≥1024px):**
 ```
-[Global Floating Header - spans full width]
-[Code Generation] [Product Compatibility] [Product Description]
-     Column 1            Column 2              Column 3
+[Header - Full Width]
+
+Agregar Nuevos Códigos
+─────────────────────────────────────
+
+[Product Details]  [Product Compatibility]
+   (750px min)         (750px min)
+   2-column grid
+
+[Generated Output & Actions - Single Row]
+[Código] | [Descripción] | [Agregar][Limpiar]
+
+[Saved Products Table - Full Width]
 ```
 
-**Tablet (768px - 1023px):** 2-column grid with 3rd section wrapping below
+**Tablet (768px - 1023px):**
 ```
-[Global Floating Header - spans full width]
-[Code Generation] [Product Compatibility]
-[Product Description - spans full width]
+[Header - Full Width]
+
+[Product Details]  [Product Compatibility]
+   2-column grid
+
+[Generated Output & Actions - Single Row]
+(stacks vertically)
+
+[Saved Products Table]
 ```
 
-**Mobile (<768px):** Single column, stacked vertically
+**Mobile (<768px):**
 ```
-[Global Floating Header]
-[Code Generation]
+[Header]
+
+[Product Details]
+(stacked)
+
 [Product Compatibility]
-[Product Description]
+(stacked)
+
+[Generated Output & Actions]
+(stacked vertically)
+
+[Saved Products Table]
+(stacked)
 ```
+
+---
 
 ## STYLING
 
-- Professional industrial aesthetic with blue and orange accent colors
+- Professional industrial aesthetic with blue and orange accents
 - Gradient background: `from-blue-50 via-white to-slate-50`
-- White card containers with rounded corners and soft shadows
+- White card containers: `.card` class with rounded corners and shadows
 - Clean, modern form design
 - Consistent spacing and typography
-- Blue primary buttons (#2563eb - `btn btn-primary`)
-- Gray secondary buttons (#f1f5f9 - `btn btn-secondary`)
-- All generated outputs use monospace bold font for technical aesthetic
+- Blue primary buttons (#2563eb - `btn btn-primary btn-md`)
+- Gray secondary buttons (slate - `btn btn-secondary btn-md`)
+- All generated outputs use monospace bold font
 - Smooth transitions and hover effects
 - Mobile responsive with adaptive layouts
 - Tailwind CSS utility classes throughout
+- 750px minimum height on form containers
+
+---
 
 ## TECHNICAL STACK
 
-- Next.js 16.1.0 with App Router
+- Next.js 14.2.20 with App Router
+- React 18
 - TypeScript for type safety
 - Tailwind CSS for styling
 - React hooks (useState) for state management
 - Client-side components ('use client' directive)
 - Controlled components pattern throughout
+- Playwright for E2E testing
+
+---
 
 ## STATE MANAGEMENT ARCHITECTURE
 
-**Lifted State Pattern (Best Practice):**
-All clearable state is managed in the parent component (page.tsx) to enable global "Clean All" and "Guardar" functionality, ensuring predictable data flow.
+**Lifted State Pattern:**
+All state managed in parent component (page.tsx) for global control.
 
 **Parent Component (page.tsx) - Single Source of Truth:**
 
-**CodeGenerator State:**
-- `clasificacion` - Classification (D/F/R)
-- `parte` - Part type (s/b/d/q/v) - SHARED with ProductDescription
-- `numero` - 5-digit number
-- `color` - Color selection (GT/YT/YP/CL)
-- `aditamento` - Accessory (Y/N)
+**Product Code State:**
+```typescript
+const [clasificacion, setClasificacion] = useState('');
+const [parte, setParte] = useState('');
+const [numero, setNumero] = useState('');
+const [color, setColor] = useState('');
+const [aditamento, setAditamento] = useState('');
+```
 
-**ProductDescription State:**
-- `posicion` - Position (Front/Rear)
-- `lado` - Side (Left/Right)
-- Receives `parte` from parent (read-only)
-- Receives `compatibilities` from parent (read-only)
+**Product Description State:**
+```typescript
+const [posicion, setPosicion] = useState('');
+const [lado, setLado] = useState('');
+```
 
-**ProductCompatibility State:**
-- `compatibilities` - Array of Compatibility objects
-- Local form state: `marca`, `subModelo`, `modelo` (ephemeral inputs)
+**Compatibility State:**
+```typescript
+const [compatibilities, setCompatibilities] = useState<Compatibility[]>([]);
+const [compatibilityResetTrigger, setCompatibilityResetTrigger] = useState(0);
+```
+
+**Saved Products State:**
+```typescript
+const [savedProducts, setSavedProducts] = useState<ProductData[]>([]);
+```
 
 **Global Handlers:**
 ```typescript
-// Save Handler
+// Add Handler (formerly Save)
 const handleSave = () => {
   if (!hasAnyData()) {
     console.warn('No data to save - all fields are empty');
@@ -220,84 +327,124 @@ const handleSave = () => {
   }
   
   const productData: ProductData = {
-    productCode: { clasificacion, parte, numero, color, aditamento, generated },
-    compatibility: { items: compatibilities, generated },
-    description: { parte, posicion, lado, generated }
+    productCode: { /* ... */ },
+    compatibility: { /* ... */ },
+    description: { /* ... */ }
   };
   
+  // Check for duplicate
+  const isDuplicate = savedProducts.some(
+    product => product.productCode.generated === productData.productCode.generated
+  );
+  
+  if (isDuplicate) {
+    alert(`Product code "${productData.productCode.generated}" already exists`);
+    return;
+  }
+  
+  // Add to table
+  setSavedProducts(prev => [...prev, productData]);
+  
+  // Log to console
   console.log('Product Data:', productData);
 };
 
 // Clean Handler
 const handleGlobalClean = () => {
-  // Clear CodeGenerator
   setClasificacion('');
   setParte('');
   setNumero('');
   setColor('');
   setAditamento('');
-  
-  // Clear ProductDescription
   setPosicion('');
   setLado('');
-  
-  // Clear ProductCompatibility
   setCompatibilities([]);
+  setCompatibilityResetTrigger(prev => prev + 1);
 };
 ```
 
 **Helper Functions (in page.tsx):**
-Three helper functions mirror generation logic from child components:
-- `generateProductCode()` - Creates formatted code string
-- `generateCompatibilityString()` - Creates comma-separated string
-- `generateProductDescription()` - Creates description with intelligent grouping
+```typescript
+// Generate product code
+const generateProductCode = (): string => {
+  const clasificacionCode = clasificacion || '-';
+  const parteCode = parte || '-';
+  const numeroCode = numero ? numero.padStart(5, '0') : '-----';
+  const colorCode = color || '-';
+  
+  // F (Fixed) stops at color
+  if (aditamento === 'F') {
+    return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}`.toUpperCase();
+  }
+  
+  // Y/N includes aditamento
+  const aditamentoCode = aditamento || '-';
+  return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}${aditamentoCode}`.toUpperCase();
+};
 
-**Validation:**
-- `hasAnyData()` - Returns true if ANY field has data across all sections
+// Generate compatibility string
+const generateCompatibilityString = (): string => {
+  if (compatibilities.length === 0) return '---';
+  return compatibilities.map(formatEntry).join(', ').toUpperCase();
+};
 
-**Data Flow Diagram:**
+// Generate product description
+const generateProductDescription = (): string => {
+  // Complex logic with intelligent grouping
+  // Format: PARTE POSICION LADO COMPATIBILITIES
+};
+```
+
+**Data Flow:**
 ```
 page.tsx (parent - owns all state)
 │
-├── FloatingHeader
-│   ├── "Guardar" button → handleSave()
-│   └── "Clean All" button → handleGlobalClean()
+├── Header (stateless)
 │
-├── CodeGenerator (controlled component)
-│   ├── Props IN: clasificacion, parte, numero, color, aditamento + setters
-│   └── Generates: Product code string
+├── CodeGenerator (controlled)
+│   ├── Props: clasificacion, parte, numero, color, aditamento
+│   │         posicion, lado + all setters
+│   └── Renders: Form fields only
 │
-├── ProductCompatibility (controlled component)
-│   ├── Props IN: compatibilities, setCompatibilities
-│   ├── Local state: marca, subModelo, modelo (form inputs only)
-│   ├── Manages: Adding/removing compatibilities
-│   └── Generates: Compatibility string
+├── ProductCompatibility (controlled)
+│   ├── Props: compatibilities, setCompatibilities, resetTrigger
+│   ├── Local state: marca, subModelo, version, modelo (ephemeral)
+│   └── Renders: Form and list
 │
-└── ProductDescription (controlled component)
-    ├── Props IN: parte, posicion, lado, compatibilities + setters
-    ├── Computes: Intelligent grouping of compatibilities
-    └── Generates: Product description string
+├── Generated Output (inline)
+│   ├── Uses: generateProductCode(), generateProductDescription()
+│   ├── Renders: Single-row display
+│   └── Buttons: handleSave(), handleGlobalClean()
+│
+└── SavedProductsTable (controlled)
+    ├── Props: products, onDelete
+    └── Renders: Table of saved products
 ```
 
-**Key Principles:**
-1. **Single Source of Truth** - All domain state lives in parent
-2. **Unidirectional Data Flow** - Data flows down via props
-3. **Controlled Components** - Children receive state and setters
-4. **No Side Effects** - No useEffect for state synchronization
-5. **Explicit Updates** - State changes are direct and synchronous
+---
 
-## GUARDAR FEATURE (SAVE)
+## DATA STRUCTURES
+
+**Compatibility Interface:**
+```typescript
+interface Compatibility {
+  marca: string;      // Brand name
+  subModelo: string;  // Sub-model name (empty for custom)
+  version: string;    // Version (empty if not applicable)
+  modelo: string;     // Year as string
+}
+```
 
 **ProductData Interface:**
 ```typescript
-export interface ProductData {
+interface ProductData {
   productCode: {
     clasificacion: string;
     parte: string;
     numero: string;
     color: string;
     aditamento: string;
-    generated: string;  // Formatted code: "RS00123GTY"
+    generated: string;  // Formatted code: "DB12345GT"
   };
   compatibility: {
     items: Compatibility[];
@@ -312,155 +459,67 @@ export interface ProductData {
 }
 ```
 
-**Architecture Benefits:**
-- Database-ready structure (maps to Supabase JSONB columns)
-- Stores both raw values AND generated strings
-- Easy to add metadata (timestamps, user IDs, order IDs)
-- Testable helper functions (pure, no side effects)
-- Follows existing lifted state pattern
-
 **Console Output Example:**
 ```javascript
 Product Data: {
   productCode: {
-    clasificacion: "R",
-    parte: "s",
-    numero: "00123",
+    clasificacion: "D",
+    parte: "b",
+    numero: "12345",
     color: "GT",
-    aditamento: "Y",
-    generated: "RS00123GTY"
+    aditamento: "F",
+    generated: "DB12345GT"  // No suffix with F
   },
   compatibility: {
     items: [
-      { marca: "Honda", subModelo: "Accord", modelo: "2020" },
-      { marca: "Honda", subModelo: "Accord", modelo: "2021" }
+      { marca: "Honda", subModelo: "Accord", version: "EX", modelo: "2020" },
+      { marca: "Honda", subModelo: "Accord", version: "EX", modelo: "2021" }
     ],
-    generated: "HONDA ACCORD 2020, HONDA ACCORD 2021"
+    generated: "HONDA ACCORD-EX 2020, 2021"
   },
   description: {
-    parte: "s",
-    posicion: "Front",
+    parte: "b",
+    posicion: "Rear",
     lado: "Left",
-    generated: "SIDE FRONT LEFT HONDA ACCORD 2020, 2021"
+    generated: "BACK REAR LEFT HONDA ACCORD-EX 2020, 2021"
   }
 }
 ```
 
-**Future Supabase Integration:**
-When ready to connect database:
-1. Create products table with JSONB columns
-2. Replace `console.log()` with `await supabase.from('products').insert()`
-3. Add success/error toast notifications
-4. Add metadata fields (created_at, user_id, order_id, status)
-
-**Suggested Database Schema:**
-```sql
-CREATE TABLE products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  product_code_data JSONB NOT NULL,
-  compatibility_data JSONB NOT NULL,
-  description_data JSONB NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  user_id UUID REFERENCES auth.users(id),
-  order_id UUID,
-  status TEXT DEFAULT 'draft'
-);
-```
-
-## USER EXPERIENCE
-
-- All inputs provide immediate visual feedback
-- Dropdowns start with "Select..." option
-- Radio buttons clearly labeled
-- Number input has placeholder "00000"
-- Sub-Modelo dropdown disabled until Marca is selected
-- All generated outputs update in real-time (no submit buttons)
-- Validation alerts for incomplete or duplicate compatibility entries
-- Delete confirmation via X button (no modal needed)
-- Smooth animations and transitions
-- Consistent button styling across all sections
-- Clear visual hierarchy and sectioning
-- Sticky header provides easy access to "Guardar" and "Clean All" buttons
-- Guardar button silent operation (no visual feedback for now)
-
-## DATA STRUCTURE
-
-**Compatibility Interface:**
-```typescript
-interface Compatibility {
-  marca: string;      // Car brand name
-  subModelo: string;  // Sub-model name
-  modelo: string;     // Year as string
-}
-```
-
-**ProductData Interface:**
-```typescript
-interface ProductData {
-  productCode: {
-    clasificacion: string;
-    parte: string;
-    numero: string;
-    color: string;
-    aditamento: string;
-    generated: string;
-  };
-  compatibility: {
-    items: Compatibility[];
-    generated: string;
-  };
-  description: {
-    parte: string;
-    posicion: string;
-    lado: string;
-    generated: string;
-  };
-}
-```
-
-**Car Brands Data:**
-- Imported from `carBrands.tsx`
-- Structure: Array of objects with `name`, `abbr`, `subModels[]`
-- Used by Product Compatibility section
-- Example:
-```typescript
-{
-  name: "Toyota",
-  abbr: "Toyota",
-  subModels: ["Camry", "Corolla", "RAV4", ...]
-}
-```
+---
 
 ## FILE STRUCTURE
 
 ```
-app/
-├── page.tsx (parent - owns all state, save/clean handlers)
-├── layout.tsx (Next.js app layout)
-├── globals.css (global styles and Tailwind config)
-└── components/
-    ├── FloatingHeader.tsx (header with Guardar and Clean All buttons)
-    ├── CodeGenerator.tsx (controlled component - code generation)
-    ├── ProductDescription.tsx (controlled component - description)
-    └── ProductCompatibility.tsx (controlled component - compatibility)
-
-carBrands.tsx (data file - car brands and sub-models)
-
-docs/
-├── PROJECT_SPEC.md (this file)
-├── STATE_MANAGEMENT_REFACTOR.md (state architecture documentation)
-└── TESTING.md (comprehensive testing guide)
+rhino-code-generator/
+├── app/
+│   ├── page.tsx (parent - owns all state)
+│   ├── layout.tsx
+│   ├── globals.css
+│   └── components/
+│       ├── Header.tsx (static header)
+│       ├── CodeGenerator.tsx (code + description fields)
+│       ├── ProductCompatibility.tsx (compatibility management)
+│       └── SavedProductsTable.tsx (display saved products)
+├── carBrands.ts (data file)
+├── tests/
+│   ├── page-objects/
+│   │   └── RhinoCodeGeneratorPage.ts
+│   └── *.spec.ts (test files)
+├── docs/
+│   ├── PROJECT_SPEC.md (this file)
+│   └── TESTING.md (testing guide)
+└── *.md (various documentation)
 ```
+
+---
 
 ## COMPONENT PROPS (TypeScript Interfaces)
 
-**FloatingHeader:**
+**Header:**
 ```typescript
-interface FloatingHeaderProps {
-  onSave: () => void;
-  onCleanAll: () => void;
-}
+// No props - stateless component
+export default function Header() { /* ... */ }
 ```
 
 **CodeGenerator:**
@@ -476,18 +535,10 @@ interface CodeGeneratorProps {
   setColor: (value: string) => void;
   aditamento: string;
   setAditamento: (value: string) => void;
-}
-```
-
-**ProductDescription:**
-```typescript
-interface ProductDescriptionProps {
-  parte: string;
   posicion: string;
   setPosicion: (value: string) => void;
   lado: string;
   setLado: (value: string) => void;
-  compatibilities: Compatibility[];
 }
 ```
 
@@ -496,39 +547,145 @@ interface ProductDescriptionProps {
 interface ProductCompatibilityProps {
   compatibilities: Compatibility[];
   setCompatibilities: (compatibilities: Compatibility[]) => void;
+  resetTrigger?: number;
 }
 ```
 
-## FUTURE ENHANCEMENT OPPORTUNITIES
+**SavedProductsTable:**
+```typescript
+interface SavedProductsTableProps {
+  products: ProductData[];
+  onDelete: (index: number) => void;
+}
+```
 
-With current architecture, these features are easy to add:
+---
 
-**Immediate (when Supabase ready):**
-1. **Database Integration** - Replace console.log with Supabase insert
-2. **Success Toast** - Visual feedback after successful save
-3. **Error Handling** - Display errors if save fails
-4. **Timestamps** - Add created_at, updated_at to ProductData
+## USER EXPERIENCE
+
+- All inputs provide immediate visual feedback
+- Dropdowns start with "Select..." option
+- Radio buttons clearly labeled with descriptions
+- Number input has placeholder "00000"
+- Sub-Modelo dropdown disabled until Marca selected
+- Versión dropdown disabled until Sub-Modelo selected
+- All generated outputs update in real-time
+- Validation alerts for incomplete/duplicate entries
+- Delete confirmation via X button
+- Smooth animations and transitions
+- Consistent button styling
+- Clear visual hierarchy
+- Single-row output for quick scanning
+- 750px minimum height creates balanced forms
+- Agregar adds to table and logs to console
+- Limpiar resets all forms instantly
+
+---
+
+## FUTURE ENHANCEMENTS
+
+**Immediate (when ready):**
+1. Database integration (Supabase/PostgreSQL)
+2. Success toast notifications
+3. Error handling and recovery
+4. Timestamps on products
 
 **Medium-term:**
-1. **Persistence** - Save/load state to localStorage or database
-2. **Undo/Redo** - Keep history of parent state changes
-3. **URL State** - Sync state with URL query parameters
-4. **Export** - Serialize parent state to JSON/CSV/PDF
-5. **Form Validation** - Centralized validation in parent
-6. **Analytics** - Track state changes from one location
-7. **Multi-language** - Centralized state makes i18n easier
+1. Edit saved products
+2. Export to Excel/CSV/PDF
+3. Import bulk products
+4. Search/filter saved products
+5. Product templates
+6. Undo/Redo functionality
 
 **Long-term:**
-1. **User Authentication** - Link saved products to users
-2. **Order Management** - Connect products to orders
-3. **Product Library** - View/edit/delete saved products
-4. **Batch Operations** - Save multiple products at once
-5. **Product Templates** - Save common configurations
-6. **Collaboration** - Share products between users
-7. **Audit Trail** - Track who created/modified products
+1. User authentication
+2. Multi-user collaboration
+3. Order management integration
+4. Product history/audit trail
+5. Analytics and reporting
+6. API for external integrations
+
+---
+
+## VERSION HISTORY
+
+**v2.0 (Current - January 2026)**
+- Major UI restructure
+- Merged ProductDescription into CodeGenerator
+- Single-row generated output layout
+- Renamed buttons: Guardar → Agregar, Clean All → Limpiar
+- Added F (Fixed) aditamento option
+- 750px minimum height on forms
+- Spanish labels for generated output
+- Renamed FloatingHeader → Header
+- Moved buttons to main content area
+
+**v1.0 (Previous)**
+- Initial three-column layout
+- Separate ProductDescription component
+- FloatingHeader with action buttons
+- Basic Y/N aditamento options
+- Top-of-page generated outputs
+
+---
+
+## KEY DESIGN DECISIONS
+
+**Why merge Product Details and Description?**
+- Related fields logically grouped
+- Reduces visual clutter
+- Better horizontal space usage
+- All product input in one place
+
+**Why single-row generated output?**
+- 66% reduction in vertical space
+- All info visible at once
+- Professional dashboard aesthetic
+- Better scanning experience
+
+**Why 750px minimum height?**
+- Accommodates all fields comfortably
+- Creates visual balance
+- Professional aligned appearance
+- No awkward gaps
+
+**Why rename Guardar → Agregar?**
+- More accurate (adds to table, doesn't save to file)
+- Matches "Agregar Nuevos Códigos" heading
+- Consistent Spanish interface
+- Clearer user intent
+
+**Why add F (Fixed) aditamento?**
+- Supports legacy codes without suffix
+- Provides product specification flexibility
+- Cleaner codes when appropriate
+- User-requested feature
+
+---
+
+## TESTING
+
+See `/docs/TESTING.md` for comprehensive testing guide.
+
+**Test Coverage:**
+- 61+ E2E tests with Playwright
+- Code generation logic
+- Compatibility management
+- Description generation
+- Agregar/Limpiar functionality
+- Responsive layout
+- Integration workflows
+
+**Key Tests:**
+- F (Fixed) aditamento stops at color
+- Descriptive labels visible
+- Buttons in correct location
+- Single-row output displays correctly
+- All workflows end-to-end
 
 ---
 
 ## SUMMARY
 
-This application provides a professional, efficient tool for Rhino Auto Glass to generate product codes, manage compatibility data, and create product descriptions. The architecture follows React best practices with lifted state, controlled components, and a clear separation of concerns. The Guardar feature provides a foundation for future database integration while maintaining simple, testable code.
+This application provides a professional, efficient tool for Rhino Auto Glass to generate product codes, manage compatibility data, and create product descriptions. The v2.0 architecture improves upon v1.0 with better space efficiency, clearer UI organization, and enhanced functionality while maintaining React best practices with lifted state and controlled components.

@@ -21,9 +21,6 @@ test.describe('Product Compatibility Section', () => {
   test('should show empty state when no compatibilities added', async () => {
     await expect(rhinoPage.compatibilityCount).toContainText('Compatibilidades Añadidas (0)');
     await expect(rhinoPage.page.getByText('No se han añadido compatibilidades')).toBeVisible();
-    
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('---');
   });
 
   test('should disable sub-modelo until marca is selected', async () => {
@@ -52,10 +49,6 @@ test.describe('Product Compatibility Section', () => {
     
     // Check item appears in list (scoped to avoid finding it in other sections)
     await expect(rhinoPage.getCompatibilityInList('Toyota Camry 2020')).toBeVisible();
-    
-    // Check generated compatibility string
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('TOYOTA CAMRY 2020');
   });
 
   test('should add multiple compatibilities', async () => {
@@ -69,9 +62,6 @@ test.describe('Product Compatibility Section', () => {
     await expect(rhinoPage.getCompatibilityInList('Toyota Camry 2020')).toBeVisible();
     await expect(rhinoPage.getCompatibilityInList('Nissan Altima 2021')).toBeVisible();
     await expect(rhinoPage.getCompatibilityInList('Chevrolet Malibu 2022')).toBeVisible();
-
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('TOYOTA CAMRY 2020, NISSAN ALTIMA 2021, CHEVROLET MALIBU 2022');
   });
 
   test('should keep form fields populated after adding compatibility', async () => {
@@ -132,17 +122,15 @@ test.describe('Product Compatibility Section', () => {
     
     // Check second item still exists
     await expect(rhinoPage.getCompatibilityInList('Nissan Altima 2021')).toBeVisible();
-
-    // Check generated compatibility updated
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('NISSAN ALTIMA 2021');
   });
 
   test('should display compatibility in uppercase', async () => {
     await rhinoPage.addCompatibility('Toyota', 'Camry', '2020');
 
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toEqual(compatibilityText?.toUpperCase());
+    // Verify list item is uppercase
+    const listItem = rhinoPage.getCompatibilityInList('Toyota Camry 2020');
+    const listText = await listItem.textContent();
+    expect(listText?.toUpperCase()).toEqual(listText);
   });
 
   test('should handle various car brands', async () => {
@@ -153,9 +141,8 @@ test.describe('Product Compatibility Section', () => {
     await rhinoPage.addCompatibility('Mercedes-Benz', 'C-Class', '2022');
     await expect(rhinoPage.getCompatibilityInList('Mercedes-Benz C-Class 2022')).toBeVisible();
 
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toContain('BMW 3 SERIES 2023');
-    expect(compatibilityText).toContain('MERCEDES-BENZ C-CLASS 2022');
+    // Verify counter
+    await expect(rhinoPage.compatibilityCount).toContainText('Compatibilidades Añadidas (2)');
   });
 });
 
@@ -195,10 +182,6 @@ test.describe('Product Compatibility - Version Field', () => {
     
     // Check item appears in list with version format (SUBMODELO-VERSION)
     await expect(rhinoPage.getCompatibilityInList('Ram ProMaster-1500 2020')).toBeVisible();
-    
-    // Check generated compatibility string
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('RAM PROMASTER-1500 2020');
   });
 
   test('should add compatibility without version when version is optional', async () => {
@@ -206,10 +189,6 @@ test.describe('Product Compatibility - Version Field', () => {
 
     // Check item appears in list without version
     await expect(rhinoPage.getCompatibilityInList('Ram ProMaster 2020')).toBeVisible();
-    
-    // Check generated compatibility string (no hyphen)
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('RAM PROMASTER 2020');
   });
 
   test('should handle multiple compatibilities with different versions', async () => {
@@ -222,11 +201,6 @@ test.describe('Product Compatibility - Version Field', () => {
     await expect(rhinoPage.getCompatibilityInList('Ram ProMaster-1500 2020')).toBeVisible();
     await expect(rhinoPage.getCompatibilityInList('Ram ProMaster-2500 2020')).toBeVisible();
     await expect(rhinoPage.getCompatibilityInList('Ram ProMaster-3500 2021')).toBeVisible();
-
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toContain('RAM PROMASTER-1500 2020');
-    expect(compatibilityText).toContain('RAM PROMASTER-2500 2020');
-    expect(compatibilityText).toContain('RAM PROMASTER-3500 2021');
   });
 
   test('should mix compatibilities with and without versions', async () => {
@@ -240,10 +214,6 @@ test.describe('Product Compatibility - Version Field', () => {
     
     await expect(rhinoPage.getCompatibilityInList('Ram ProMaster-1500 2020')).toBeVisible();
     await expect(rhinoPage.getCompatibilityInList('Toyota Camry 2021')).toBeVisible();
-
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toContain('RAM PROMASTER-1500 2020');
-    expect(compatibilityText).toContain('TOYOTA CAMRY 2021');
   });
 
   test('should prevent duplicate compatibilities with same version', async ({ page }) => {
@@ -302,27 +272,18 @@ test.describe('Product Compatibility - Version Field', () => {
     await rhinoPage.addCompatibilityWithVersion('Ford', 'Transit', '350', '2022');
     
     await expect(rhinoPage.getCompatibilityInList('Ford Transit-350 2022')).toBeVisible();
-    
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('FORD TRANSIT-350 2022');
   });
 
   test('should test Mercedes-Benz Sprinter versions', async () => {
     await rhinoPage.addCompatibilityWithVersion('Mercedes-Benz', 'Sprinter', '2500', '2023');
     
     await expect(rhinoPage.getCompatibilityInList('Mercedes-Benz Sprinter-2500 2023')).toBeVisible();
-    
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('MERCEDES-BENZ SPRINTER-2500 2023');
   });
 
   test('should test Chevrolet Silverado versions', async () => {
     await rhinoPage.addCompatibilityWithVersion('Chevrolet', 'Silverado', '1500', '2024');
     
     await expect(rhinoPage.getCompatibilityInList('Chevrolet Silverado-1500 2024')).toBeVisible();
-    
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('CHEVROLET SILVERADO-1500 2024');
   });
 });
 
@@ -376,10 +337,6 @@ test.describe('Product Compatibility - "Otro" (Custom) Feature', () => {
       .locator('.space-y-2')
       .getByText('Personalizado');
     await expect(personalizadoBadge).toBeVisible();
-
-    // Check generated compatibility string
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('FUSO CANTER 2020');
   });
 
   test('should add multiple custom compatibility entries', async () => {
@@ -388,9 +345,6 @@ test.describe('Product Compatibility - "Otro" (Custom) Feature', () => {
     await rhinoPage.addCustomCompatibility('Shacman X3000', '2022');
 
     await expect(rhinoPage.compatibilityCount).toContainText('(3)');
-
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('FUSO CANTER 2020, HOWO SINOTRUK 2021, SHACMAN X3000 2022');
   });
 
   test('should mix regular, versioned, and custom compatibility entries', async () => {
@@ -417,13 +371,6 @@ test.describe('Product Compatibility - "Otro" (Custom) Feature', () => {
       .getByText('Fuso Canter 2020', { exact: false });
     await expect(customItem.first()).toBeVisible();
     await expect(rhinoPage.getCompatibilityInList('Nissan Sentra 2021')).toBeVisible();
-
-    // Check generated string includes all
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toContain('TOYOTA CAMRY 2023');
-    expect(compatibilityText).toContain('RAM PROMASTER-1500 2022');
-    expect(compatibilityText).toContain('FUSO CANTER 2020');
-    expect(compatibilityText).toContain('NISSAN SENTRA 2021');
   });
 
   test('should show alert when custom marca is empty', async ({ page }) => {
@@ -521,8 +468,11 @@ test.describe('Product Compatibility - "Otro" (Custom) Feature', () => {
   test('should display custom compatibility in uppercase', async () => {
     await rhinoPage.addCustomCompatibility('fuso canter', '2020');
 
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('FUSO CANTER 2020');
+    // Verify list item is uppercase
+    const customItem = rhinoPage.compatibilitySection
+      .locator('.space-y-2')
+      .getByText('FUSO CANTER 2020', { exact: false });
+    await expect(customItem.first()).toBeVisible();
   });
 
   test('should trim whitespace from custom marca input', async () => {
@@ -532,7 +482,9 @@ test.describe('Product Compatibility - "Otro" (Custom) Feature', () => {
     await rhinoPage.addCompatibilityButton.click();
 
     // The displayed text should be trimmed
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('FUSO CANTER 2020');
+    const customItem = rhinoPage.compatibilitySection
+      .locator('.space-y-2')
+      .getByText('Fuso Canter 2020', { exact: false });
+    await expect(customItem.first()).toBeVisible();
   });
 });

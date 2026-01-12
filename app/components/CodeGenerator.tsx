@@ -11,6 +11,10 @@ interface CodeGeneratorProps {
   setColor: (value: string) => void;
   aditamento: string;
   setAditamento: (value: string) => void;
+  posicion: string;
+  setPosicion: (value: string) => void;
+  lado: string;
+  setLado: (value: string) => void;
 }
 
 export default function CodeGenerator({ 
@@ -23,19 +27,12 @@ export default function CodeGenerator({
   color,
   setColor,
   aditamento,
-  setAditamento
+  setAditamento,
+  posicion,
+  setPosicion,
+  lado,
+  setLado
 }: CodeGeneratorProps) {
-  // Generate code in real-time
-  const generateCode = (): string => {
-    const clasificacionCode = clasificacion || '-';
-    const parteCode = parte || '-';
-    const numeroCode = numero ? numero.padStart(5, '0') : '-----';
-    const colorCode = color || '-';
-    const aditamentoCode = aditamento || '-';
-
-    return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}${aditamentoCode}`.toUpperCase();
-  };
-
   const handleNumeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Only allow digits and max 5 characters
@@ -45,10 +42,10 @@ export default function CodeGenerator({
   };
 
   return (
-    <div className="card p-6 lg:p-8">
+    <div className="card p-6 lg:p-8 min-h-[750px]">
       <div className="mb-6 lg:mb-8">
         <h2 className="text-2xl lg:text-2xl font-bold text-slate-900 mb-2">
-          Product Code
+          Product Details
         </h2>
       </div>
 
@@ -102,11 +99,11 @@ export default function CodeGenerator({
           </label>
           <div className="flex flex-wrap gap-4">
             {[
-              { value: 's', label: 's - Side' },
-              { value: 'b', label: 'b - Back' },
-              { value: 'd', label: 'd - Door' },
-              { value: 'q', label: 'q - Quarter' },
-              { value: 'v', label: 'v - Vent' },
+              { value: 's', label: 'S - Side' },
+              { value: 'b', label: 'B - Back' },
+              { value: 'd', label: 'D - Door' },
+              { value: 'q', label: 'Q - Quarter' },
+              { value: 'v', label: 'V - Vent' },
             ].map((option) => (
               <label key={option.value} className="flex items-center cursor-pointer">
                 <input
@@ -171,7 +168,7 @@ export default function CodeGenerator({
                 onChange={(e) => setAditamento(e.target.value)}
                 className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
               />
-              <span className="ml-2 text-sm text-slate-700">Y</span>
+              <span className="ml-2 text-sm text-slate-700">Y - Yes</span>
             </label>
             <label className="flex items-center cursor-pointer">
               <input
@@ -182,21 +179,84 @@ export default function CodeGenerator({
                 onChange={(e) => setAditamento(e.target.value)}
                 className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
               />
-              <span className="ml-2 text-sm text-slate-700">N</span>
+              <span className="ml-2 text-sm text-slate-700">N - No</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="aditamento"
+                value="F"
+                checked={aditamento === 'F'}
+                onChange={(e) => setAditamento(e.target.value)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
+              />
+              <span className="ml-2 text-sm text-slate-700">F - Fixed</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Posición */}
+        <div className="w-full">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Posición
+          </label>
+          <div className="flex gap-6">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="posicion"
+                value="Front"
+                checked={posicion === 'Front'}
+                onChange={(e) => setPosicion(e.target.value)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
+              />
+              <span className="ml-2 text-sm text-slate-700">Front</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="posicion"
+                value="Rear"
+                checked={posicion === 'Rear'}
+                onChange={(e) => setPosicion(e.target.value)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
+              />
+              <span className="ml-2 text-sm text-slate-700">Rear</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Lado */}
+        <div className="w-full">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Lado
+          </label>
+          <div className="flex gap-6">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="lado"
+                value="Left"
+                checked={lado === 'Left'}
+                onChange={(e) => setLado(e.target.value)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
+              />
+              <span className="ml-2 text-sm text-slate-700">Left</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="lado"
+                value="Right"
+                checked={lado === 'Right'}
+                onChange={(e) => setLado(e.target.value)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
+              />
+              <span className="ml-2 text-sm text-slate-700">Right</span>
             </label>
           </div>
         </div>
       </form>
-
-      {/* Generated Code Display */}
-      <div className="mt-6 lg:mt-8 p-6 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
-        <p className="text-sm text-slate-600 mb-2 text-center font-medium">
-          Generated Rhino Code
-        </p>
-        <p className="text-3xl lg:text-4xl font-mono font-bold text-center text-slate-900 tracking-wider">
-          {generateCode()}
-        </p>
-      </div>
     </div>
   );
 }

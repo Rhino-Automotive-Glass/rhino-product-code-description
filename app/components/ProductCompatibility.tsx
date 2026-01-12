@@ -170,7 +170,7 @@ export default function ProductCompatibility({
   };
 
   return (
-    <div className="card p-6 lg:p-8">
+    <div className="card p-6 lg:p-8 min-h-[750px]">
       <div className="mb-6 lg:mb-8">
         <h2 className="text-2xl lg:text-2xl font-bold text-slate-900 mb-2">
           Product Compatibility
@@ -325,7 +325,7 @@ export default function ProductCompatibility({
             </p>
           </div>
         ) : (
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+          <div className="space-y-2 max-h-20 overflow-y-auto">
             {compatibilities.map((comp, index) => (
               <div
                 key={index}
@@ -364,15 +364,7 @@ export default function ProductCompatibility({
         )}
       </div>
 
-      {/* Generated Compatibility String Display */}
-      <div className="mt-6 lg:mt-8 p-6 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
-        <p className="text-sm text-slate-600 mb-2 text-center font-medium">
-          Generated Compatibility
-        </p>
-        <p className="text-2xl lg:text-3xl font-mono font-bold text-center text-slate-900 leading-relaxed break-words">
-          {generateCompatibilityString()}
-        </p>
-      </div>
+
     </div>
   );
 }

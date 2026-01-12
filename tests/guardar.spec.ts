@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { RhinoCodeGeneratorPage } from './page-objects/RhinoCodeGeneratorPage';
 
-test.describe('Guardar Feature', () => {
+test.describe('Agregar Feature (formerly Guardar)', () => {
   let rhinoPage: RhinoCodeGeneratorPage;
 
   test.beforeEach(async ({ page }) => {
@@ -10,44 +10,44 @@ test.describe('Guardar Feature', () => {
   });
 
   test.describe('Button Visibility and Layout', () => {
-    test('should display Guardar button in header', async ({ page }) => {
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      await expect(guardarButton).toBeVisible();
+    test('should display Agregar button in generated output section', async ({ page }) => {
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      await expect(agregarButton).toBeVisible();
     });
 
-    test('should display Guardar button to the left of Clean All button', async ({ page }) => {
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      const cleanAllButton = page.getByRole('button', { name: 'Clean All' });
+    test('should display Agregar button to the left of Limpiar button', async ({ page }) => {
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      const limpiarButton = page.getByRole('button', { name: 'Limpiar' });
 
-      const guardarBox = await guardarButton.boundingBox();
-      const cleanAllBox = await cleanAllButton.boundingBox();
+      const agregarBox = await agregarButton.boundingBox();
+      const limpiarBox = await limpiarButton.boundingBox();
 
-      expect(guardarBox).not.toBeNull();
-      expect(cleanAllBox).not.toBeNull();
+      expect(agregarBox).not.toBeNull();
+      expect(limpiarBox).not.toBeNull();
       
-      // Guardar should be to the left (smaller x position)
-      expect(guardarBox!.x).toBeLessThan(cleanAllBox!.x);
+      // Agregar should be to the left (smaller x position)
+      expect(agregarBox!.x).toBeLessThan(limpiarBox!.x);
     });
 
-    test('should have primary styling on Guardar button', async ({ page }) => {
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
+    test('should have primary styling on Agregar button', async ({ page }) => {
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
       
       // Check if button has primary class (blue background)
-      const className = await guardarButton.getAttribute('class');
+      const className = await agregarButton.getAttribute('class');
       expect(className).toContain('btn-primary');
     });
 
-    test('should have secondary styling on Clean All button', async ({ page }) => {
-      const cleanAllButton = page.getByRole('button', { name: 'Clean All' });
+    test('should have secondary styling on Limpiar button', async ({ page }) => {
+      const limpiarButton = page.getByRole('button', { name: 'Limpiar' });
       
       // Check if button has secondary class (gray background)
-      const className = await cleanAllButton.getAttribute('class');
+      const className = await limpiarButton.getAttribute('class');
       expect(className).toContain('btn-secondary');
     });
   });
 
   test.describe('Console Logging - Empty Data', () => {
-    test('should log warning when clicking Guardar with no data', async ({ page }) => {
+    test('should log warning when clicking Agregar with no data', async ({ page }) => {
       const consoleMessages: string[] = [];
       
       // Capture console messages
@@ -57,8 +57,8 @@ test.describe('Guardar Feature', () => {
         }
       });
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      await guardarButton.click();
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      await agregarButton.click();
 
       // Wait a bit for console message
       await page.waitForTimeout(100);
@@ -69,7 +69,7 @@ test.describe('Guardar Feature', () => {
   });
 
   test.describe('Console Logging - With Data', () => {
-    test('should log ProductData when Guardar is clicked with code generator data', async ({ page }) => {
+    test('should log ProductData when Agregar is clicked with code generator data', async ({ page }) => {
       const consoleLogs: any[] = [];
       
       // Capture console.log messages
@@ -88,8 +88,8 @@ test.describe('Guardar Feature', () => {
         aditamento: 'Y'
       });
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      await guardarButton.click();
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      await agregarButton.click();
 
       // Wait for console message
       await page.waitForTimeout(200);
@@ -99,7 +99,7 @@ test.describe('Guardar Feature', () => {
       expect(consoleLogs[0]).toContain('Product Data');
     });
 
-    test('should log ProductData when Guardar is clicked with compatibility data', async ({ page }) => {
+    test('should log ProductData when Agregar is clicked with compatibility data', async ({ page }) => {
       const consoleLogs: any[] = [];
       
       page.on('console', msg => {
@@ -111,8 +111,8 @@ test.describe('Guardar Feature', () => {
       // Add a compatibility - Use Honda instead of Toyota
       await rhinoPage.addCompatibility('Honda', 'Accord', '2020');
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      await guardarButton.click();
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      await agregarButton.click();
 
       await page.waitForTimeout(200);
 
@@ -120,7 +120,7 @@ test.describe('Guardar Feature', () => {
       expect(consoleLogs[0]).toContain('Product Data');
     });
 
-    test('should log ProductData when Guardar is clicked with description data', async ({ page }) => {
+    test('should log ProductData when Agregar is clicked with description data', async ({ page }) => {
       const consoleLogs: any[] = [];
       
       page.on('console', msg => {
@@ -135,8 +135,8 @@ test.describe('Guardar Feature', () => {
         lado: 'Left'
       });
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      await guardarButton.click();
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      await agregarButton.click();
 
       await page.waitForTimeout(200);
 
@@ -170,8 +170,8 @@ test.describe('Guardar Feature', () => {
         lado: 'Left'
       });
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      await guardarButton.click();
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      await agregarButton.click();
 
       await page.waitForTimeout(200);
 
@@ -181,7 +181,7 @@ test.describe('Guardar Feature', () => {
   });
 
   test.describe('Button Interaction', () => {
-    test('should not clear data after clicking Guardar', async ({ page }) => {
+    test('should not clear data after clicking Agregar', async ({ page }) => {
       // Fill code generator
       await rhinoPage.fillCodeGenerator({
         clasificacion: 'R',
@@ -189,33 +189,33 @@ test.describe('Guardar Feature', () => {
         numero: '123'
       });
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      await guardarButton.click();
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      await agregarButton.click();
 
       // Data should still be there
       const generatedCode = await rhinoPage.getGeneratedCodeText();
       expect(generatedCode).toBe('RS00123--');
     });
 
-    test('should work independently from Clean All button', async ({ page }) => {
+    test('should work independently from Limpiar button', async ({ page }) => {
       // Fill some data
       await rhinoPage.fillCodeGenerator({
         clasificacion: 'R',
         parte: 's'
       });
 
-      // Click Guardar
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      await guardarButton.click();
+      // Click Agregar
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      await agregarButton.click();
 
       // Data should still be there
       let generatedCode = await rhinoPage.getGeneratedCodeText();
       expect(generatedCode).toContain('RS');
 
-      // Now click Clean All
-      await rhinoPage.clickCleanAll();
+      // Now click Limpiar
+      await rhinoPage.clickLimpiar();
 
-      // Data should be cleared - FIXED: 9 dashes not 12
+      // Data should be cleared - 9 dashes for code without F aditamento
       generatedCode = await rhinoPage.getGeneratedCodeText();
       expect(generatedCode).toBe('---------');
     });
@@ -231,16 +231,16 @@ test.describe('Guardar Feature', () => {
 
       await rhinoPage.fillCodeGenerator({ clasificacion: 'R' });
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
       
       // Click multiple times
-      await guardarButton.click();
+      await agregarButton.click();
       await page.waitForTimeout(100);
       
-      await guardarButton.click();
+      await agregarButton.click();
       await page.waitForTimeout(100);
       
-      await guardarButton.click();
+      await agregarButton.click();
       await page.waitForTimeout(100);
 
       // Should have logged 3 times
@@ -252,31 +252,31 @@ test.describe('Guardar Feature', () => {
     test('should display buttons on mobile viewport', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 }); // iPhone size
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      const cleanAllButton = page.getByRole('button', { name: 'Clean All' });
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      const limpiarButton = page.getByRole('button', { name: 'Limpiar' });
 
-      await expect(guardarButton).toBeVisible();
-      await expect(cleanAllButton).toBeVisible();
+      await expect(agregarButton).toBeVisible();
+      await expect(limpiarButton).toBeVisible();
     });
 
     test('should display buttons on tablet viewport', async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 }); // iPad size
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      const cleanAllButton = page.getByRole('button', { name: 'Clean All' });
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      const limpiarButton = page.getByRole('button', { name: 'Limpiar' });
 
-      await expect(guardarButton).toBeVisible();
-      await expect(cleanAllButton).toBeVisible();
+      await expect(agregarButton).toBeVisible();
+      await expect(limpiarButton).toBeVisible();
     });
 
     test('should display buttons on desktop viewport', async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 }); // Desktop size
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      const cleanAllButton = page.getByRole('button', { name: 'Clean All' });
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      const limpiarButton = page.getByRole('button', { name: 'Limpiar' });
 
-      await expect(guardarButton).toBeVisible();
-      await expect(cleanAllButton).toBeVisible();
+      await expect(agregarButton).toBeVisible();
+      await expect(limpiarButton).toBeVisible();
     });
   });
 
@@ -285,16 +285,16 @@ test.describe('Guardar Feature', () => {
       // Tab to focus on buttons
       await page.keyboard.press('Tab');
       
-      // Check if Guardar button can receive focus
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
+      // Check if Agregar button can receive focus
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
       
-      // Continue tabbing until we reach Guardar button
-      let focused = await guardarButton.evaluate(el => el === document.activeElement);
+      // Continue tabbing until we reach Agregar button
+      let focused = await agregarButton.evaluate(el => el === document.activeElement);
       let attempts = 0;
       
       while (!focused && attempts < 20) {
         await page.keyboard.press('Tab');
-        focused = await guardarButton.evaluate(el => el === document.activeElement);
+        focused = await agregarButton.evaluate(el => el === document.activeElement);
         attempts++;
       }
       
@@ -312,8 +312,8 @@ test.describe('Guardar Feature', () => {
 
       await rhinoPage.fillCodeGenerator({ clasificacion: 'R' });
 
-      const guardarButton = page.getByRole('button', { name: 'Guardar' });
-      await guardarButton.focus();
+      const agregarButton = page.getByRole('button', { name: 'Agregar' });
+      await agregarButton.focus();
       await page.keyboard.press('Enter');
 
       await page.waitForTimeout(200);

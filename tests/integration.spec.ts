@@ -26,8 +26,8 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     await rhinoPage.addCompatibility('Toyota', 'Camry', '2020');
     await rhinoPage.addCompatibility('Toyota', 'Camry', '2021');
 
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('TOYOTA CAMRY 2020, TOYOTA CAMRY 2021');
+    // Verify count increased
+    await expect(rhinoPage.compatibilityCount).toContainText('(2)');
 
     // Step 3: Fill Product Description
     await rhinoPage.fillProductDescription({
@@ -57,8 +57,8 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     await rhinoPage.addCompatibilityWithVersion('Ram', 'ProMaster', '1500', '2020');
     await rhinoPage.addCompatibilityWithVersion('Ram', 'ProMaster', '1500', '2021');
 
-    const compatibilityText = await rhinoPage.getGeneratedCompatibilityText();
-    expect(compatibilityText).toBe('RAM PROMASTER-1500 2020, RAM PROMASTER-1500 2021');
+    // Verify count increased
+    await expect(rhinoPage.compatibilityCount).toContainText('(2)');
 
     // Step 3: Fill Product Description
     await rhinoPage.fillProductDescription({
@@ -159,7 +159,7 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     expect(descriptionText).toContain('FUSO CANTER 2022');
   });
 
-  test('Global Clean All button should clear everything', async () => {
+  test('Global Limpiar button should clear everything', async () => {
     // Fill all sections
     await rhinoPage.fillCodeGenerator({
       clasificacion: 'R',
@@ -183,15 +183,14 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     expect(await rhinoPage.compatibilityCount.textContent()).toContain('(2)');
     expect(await rhinoPage.getGeneratedDescriptionText()).toContain('VENT FRONT LEFT');
 
-    // Click Clean All
-    await rhinoPage.clickCleanAll();
+    // Click Limpiar
+    await rhinoPage.clickLimpiar();
 
     // Verify everything is cleared
     const codeText = await rhinoPage.getGeneratedCodeText();
     expect(codeText).toMatch(/[-]{5,}/); // Should have dashes
 
     expect(await rhinoPage.compatibilityCount.textContent()).toContain('(0)');
-    expect(await rhinoPage.getGeneratedCompatibilityText()).toBe('---');
 
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
     expect(descriptionText).toContain('-');
@@ -300,7 +299,8 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
 
     // Verify complete outputs
     expect(await rhinoPage.getGeneratedCodeText()).toBe('RS50001GTY');
-    expect(await rhinoPage.getGeneratedCompatibilityText()).toBe('TOYOTA CAMRY 2018, TOYOTA CAMRY 2019, TOYOTA CAMRY 2020, TOYOTA CAMRY 2021');
+    // Verify count
+    await expect(rhinoPage.compatibilityCount).toContainText('(4)');
     expect(await rhinoPage.getGeneratedDescriptionText()).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2018, 2019, 2020, 2021');
   });
 
@@ -330,7 +330,8 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
 
     // Verify complete outputs
     expect(await rhinoPage.getGeneratedCodeText()).toBe('RS60001CLN');
-    expect(await rhinoPage.getGeneratedCompatibilityText()).toBe('RAM PROMASTER-1500 2019, RAM PROMASTER-1500 2020, RAM PROMASTER-1500 2021, RAM PROMASTER-1500 2022');
+    // Verify count
+    await expect(rhinoPage.compatibilityCount).toContainText('(4)');
     expect(await rhinoPage.getGeneratedDescriptionText()).toBe('SIDE FRONT RIGHT RAM PROMASTER-1500 2019, 2020, 2021, 2022');
   });
 });

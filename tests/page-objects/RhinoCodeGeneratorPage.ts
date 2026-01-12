@@ -14,10 +14,17 @@ export class RhinoCodeGeneratorPage {
 
   // Header elements
   readonly headerTitle: Locator;
-  readonly guardarButton: Locator;
-  readonly cleanAllButton: Locator;
 
-  // Code Generator elements
+  // Action Buttons (now in main content, below forms)
+  readonly agregarButton: Locator;
+  readonly limpiarButton: Locator;
+
+  // Generated Output Display (single row with code, description, and buttons)
+  readonly generatedOutputCard: Locator;
+  readonly generatedCode: Locator;
+  readonly generatedDescription: Locator;
+
+  // Code Generator elements (now includes Product Description fields)
   readonly codeGeneratorHeading: Locator;
   readonly clasificacionDomestico: Locator;
   readonly clasificacionForanea: Locator;
@@ -31,7 +38,11 @@ export class RhinoCodeGeneratorPage {
   readonly colorSelect: Locator;
   readonly aditamentoY: Locator;
   readonly aditamentoN: Locator;
-  readonly generatedCode: Locator;
+  readonly aditamentoF: Locator;
+  readonly posicionFront: Locator;
+  readonly posicionRear: Locator;
+  readonly ladoLeft: Locator;
+  readonly ladoRight: Locator;
 
   // Product Compatibility elements
   readonly compatibilityHeading: Locator;
@@ -47,26 +58,24 @@ export class RhinoCodeGeneratorPage {
   readonly addCompatibilityButton: Locator;
   readonly compatibilityList: Locator;
   readonly compatibilityCount: Locator;
-  readonly generatedCompatibility: Locator;
-
-  // Product Description elements
-  readonly descriptionHeading: Locator;
-  readonly posicionFront: Locator;
-  readonly posicionRear: Locator;
-  readonly ladoLeft: Locator;
-  readonly ladoRight: Locator;
-  readonly generatedDescription: Locator;
 
   constructor(page: Page) {
     this.page = page;
 
     // Header
     this.headerTitle = page.getByRole('heading', { name: 'Rhino Code Generator' });
-    this.guardarButton = page.getByRole('button', { name: 'Guardar' });
-    this.cleanAllButton = page.getByRole('button', { name: 'Clean All' });
 
-    // Code Generator
-    this.codeGeneratorHeading = page.getByRole('heading', { name: 'Product Code' });
+    // Action Buttons (in main content area, next to generated output)
+    this.agregarButton = page.getByRole('button', { name: 'Agregar' });
+    this.limpiarButton = page.getByRole('button', { name: 'Limpiar' });
+
+    // Generated Output Display (single horizontal row)
+    this.generatedOutputCard = page.locator('.card').filter({ has: page.getByText('Código Rhino') });
+    this.generatedCode = this.generatedOutputCard.locator('p.text-2xl, p.text-3xl').first();
+    this.generatedDescription = this.generatedOutputCard.locator('p.text-lg, p.text-xl').first();
+
+    // Code Generator (now includes Product Description fields)
+    this.codeGeneratorHeading = page.getByRole('heading', { name: 'Product Details' });
     this.clasificacionDomestico = page.getByRole('radio', { name: /D - Doméstico/ });
     this.clasificacionForanea = page.getByRole('radio', { name: /F - Foránea/ });
     this.clasificacionRhino = page.getByRole('radio', { name: /R - Rhino Automotive/ });
@@ -77,9 +86,13 @@ export class RhinoCodeGeneratorPage {
     this.parteVent = page.getByRole('radio', { name: /v - Vent/ });
     this.numeroInput = page.getByPlaceholder('00000');
     this.colorSelect = page.locator('select').filter({ hasText: 'Select...GT' });
-    this.aditamentoY = page.getByRole('radio', { name: 'Y', exact: true });
-    this.aditamentoN = page.getByRole('radio', { name: 'N', exact: true });
-    this.generatedCode = page.locator('div').filter({ hasText: /^Generated Rhino Code/ }).locator('p').nth(1);
+    this.aditamentoY = page.getByRole('radio', { name: /Y - Yes/ });
+    this.aditamentoN = page.getByRole('radio', { name: /N - No/ });
+    this.aditamentoF = page.getByRole('radio', { name: /F - Fixed/ });
+    this.posicionFront = page.getByRole('radio', { name: 'Front' });
+    this.posicionRear = page.getByRole('radio', { name: 'Rear' });
+    this.ladoLeft = page.getByRole('radio', { name: 'Left' });
+    this.ladoRight = page.getByRole('radio', { name: 'Right' });
 
     // Product Compatibility - Using data-testid attributes (most robust approach)
     this.compatibilityHeading = page.getByRole('heading', { name: 'Product Compatibility' });
@@ -102,16 +115,6 @@ export class RhinoCodeGeneratorPage {
     this.addCompatibilityButton = page.getByRole('button', { name: 'Añadir Compatibilidad' });
     this.compatibilityList = page.locator('div').filter({ hasText: /Compatibilidades Añadidas/ });
     this.compatibilityCount = page.getByText(/Compatibilidades Añadidas \(\d+\)/);
-    // FIXED: Changed from Spanish "Compatibilidad Generada" to English "Generated Compatibility"
-    this.generatedCompatibility = page.locator('div').filter({ hasText: /^Generated Compatibility/ }).locator('p').nth(1);
-
-    // Product Description
-    this.descriptionHeading = page.getByRole('heading', { name: 'Product Description' });
-    this.posicionFront = page.getByRole('radio', { name: 'Front' });
-    this.posicionRear = page.getByRole('radio', { name: 'Rear' });
-    this.ladoLeft = page.getByRole('radio', { name: 'Left' });
-    this.ladoRight = page.getByRole('radio', { name: 'Right' });
-    this.generatedDescription = page.locator('div').filter({ hasText: /^Generated Product Description/ }).locator('p').nth(1);
   }
 
   // Navigation
@@ -129,7 +132,7 @@ export class RhinoCodeGeneratorPage {
     parte?: 's' | 'b' | 'd' | 'q' | 'v';
     numero?: string;
     color?: 'GT' | 'YT' | 'YP' | 'CL';
-    aditamento?: 'Y' | 'N';
+    aditamento?: 'Y' | 'N' | 'F';
   }) {
     if (options.clasificacion === 'D') await this.clasificacionDomestico.click();
     if (options.clasificacion === 'F') await this.clasificacionForanea.click();
@@ -146,6 +149,7 @@ export class RhinoCodeGeneratorPage {
 
     if (options.aditamento === 'Y') await this.aditamentoY.click();
     if (options.aditamento === 'N') await this.aditamentoN.click();
+    if (options.aditamento === 'F') await this.aditamentoF.click();
   }
 
   /**
@@ -297,21 +301,17 @@ export class RhinoCodeGeneratorPage {
   }
 
   // Global actions
-  async clickGuardar() {
-    await this.guardarButton.click();
+  async clickAgregar() {
+    await this.agregarButton.click();
   }
 
-  async clickCleanAll() {
-    await this.cleanAllButton.click();
+  async clickLimpiar() {
+    await this.limpiarButton.click();
   }
 
   // Assertions helpers
   async getGeneratedCodeText() {
     return await this.generatedCode.textContent();
-  }
-
-  async getGeneratedCompatibilityText() {
-    return await this.generatedCompatibility.textContent();
   }
 
   async getGeneratedDescriptionText() {

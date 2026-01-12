@@ -12,57 +12,90 @@ test.describe('Responsive Layout Tests', () => {
   test.describe('Desktop Layout (≥1024px)', () => {
     test.use({ viewport: { width: 1920, height: 1080 } });
 
-    test('should display all three sections side by side', async ({ page }) => {
-      // All three sections should be visible
+    test('should display Product Details and Compatibility side by side', async ({ page }) => {
+      // Both sections should be visible in 2-column layout
       await expect(rhinoPage.codeGeneratorHeading).toBeVisible();
       await expect(rhinoPage.compatibilityHeading).toBeVisible();
-      await expect(rhinoPage.descriptionHeading).toBeVisible();
 
       // Get bounding boxes to verify layout
       const codeGenBox = await rhinoPage.codeGeneratorHeading.boundingBox();
       const compatibilityBox = await rhinoPage.compatibilityHeading.boundingBox();
-      const descriptionBox = await rhinoPage.descriptionHeading.boundingBox();
 
-      // Verify they're in a 3-column layout (different x positions)
+      // Verify they're in a 2-column layout (different x positions)
       expect(codeGenBox?.x).toBeDefined();
       expect(compatibilityBox?.x).toBeDefined();
-      expect(descriptionBox?.x).toBeDefined();
       
-      // Code Gen should be leftmost
+      // Product Details should be on the left
       expect(codeGenBox!.x).toBeLessThan(compatibilityBox!.x);
-      // Compatibility should be in middle
-      expect(compatibilityBox!.x).toBeLessThan(descriptionBox!.x);
+      
+      // Should be roughly at same y position (side by side)
+      expect(Math.abs(codeGenBox!.y - compatibilityBox!.y)).toBeLessThan(50);
     });
 
-    test('should keep header sticky on scroll', async ({ page }) => {
-      // Scroll down
-      await page.evaluate(() => window.scrollTo(0, 500));
+    test('should display generated output in single row below forms', async ({ page }) => {
+      // Fill some data to make output visible
+      await rhinoPage.fillCodeGenerator({
+        clasificacion: 'D',
+        parte: 'b',
+        numero: '12345',
+        color: 'GT',
+        aditamento: 'F'
+      });
 
-      // Header should still be visible
+      // Verify generated output card is visible
+      await expect(rhinoPage.generatedOutputCard).toBeVisible();
+      
+      // Verify single-row layout with code and description side by side
+      await expect(rhinoPage.generatedCode).toBeVisible();
+      await expect(rhinoPage.generatedDescription).toBeVisible();
+    });
+
+    test('should display action buttons side by side', async ({ page }) => {
+      // Buttons should be visible
+      await expect(rhinoPage.agregarButton).toBeVisible();
+      await expect(rhinoPage.limpiarButton).toBeVisible();
+
+      // Get bounding boxes
+      const agregarBox = await rhinoPage.agregarButton.boundingBox();
+      const limpiarBox = await rhinoPage.limpiarButton.boundingBox();
+
+      // Agregar should be to the left of Limpiar
+      expect(agregarBox!.x).toBeLessThan(limpiarBox!.x);
+      
+      // Should be at roughly same y position (side by side)
+      expect(Math.abs(agregarBox!.y - limpiarBox!.y)).toBeLessThan(10);
+    });
+
+    test('should have header at top', async ({ page }) => {
       await expect(rhinoPage.headerTitle).toBeVisible();
-      await expect(rhinoPage.cleanAllButton).toBeVisible();
     });
   });
 
   test.describe('Tablet Layout (768px - 1023px)', () => {
     test.use({ viewport: { width: 800, height: 1024 } });
 
-    test('should display in 2-column layout with description below', async () => {
+    test('should display in 2-column layout', async () => {
+      // Product Details and Compatibility should still be side by side
       await expect(rhinoPage.codeGeneratorHeading).toBeVisible();
       await expect(rhinoPage.compatibilityHeading).toBeVisible();
-      await expect(rhinoPage.descriptionHeading).toBeVisible();
 
       const codeGenBox = await rhinoPage.codeGeneratorHeading.boundingBox();
       const compatibilityBox = await rhinoPage.compatibilityHeading.boundingBox();
-      const descriptionBox = await rhinoPage.descriptionHeading.boundingBox();
 
-      // First row: Code Gen and Compatibility side by side
+      // Should still be side by side at tablet size
       expect(codeGenBox!.x).toBeLessThan(compatibilityBox!.x);
-      expect(codeGenBox!.y).toBeCloseTo(compatibilityBox!.y, 50);
+      expect(Math.abs(codeGenBox!.y - compatibilityBox!.y)).toBeLessThan(50);
+    });
 
-      // Second row: Description should be below both
-      expect(descriptionBox!.y).toBeGreaterThan(codeGenBox!.y);
-      expect(descriptionBox!.y).toBeGreaterThan(compatibilityBox!.y);
+    test('should display buttons side by side', async () => {
+      await expect(rhinoPage.agregarButton).toBeVisible();
+      await expect(rhinoPage.limpiarButton).toBeVisible();
+
+      const agregarBox = await rhinoPage.agregarButton.boundingBox();
+      const limpiarBox = await rhinoPage.limpiarButton.boundingBox();
+
+      // Still side by side on tablet
+      expect(agregarBox!.x).toBeLessThan(limpiarBox!.x);
     });
   });
 
@@ -72,19 +105,43 @@ test.describe('Responsive Layout Tests', () => {
     test('should display sections stacked vertically', async () => {
       await expect(rhinoPage.codeGeneratorHeading).toBeVisible();
       await expect(rhinoPage.compatibilityHeading).toBeVisible();
-      await expect(rhinoPage.descriptionHeading).toBeVisible();
 
       const codeGenBox = await rhinoPage.codeGeneratorHeading.boundingBox();
       const compatibilityBox = await rhinoPage.compatibilityHeading.boundingBox();
-      const descriptionBox = await rhinoPage.descriptionHeading.boundingBox();
 
-      // All should be roughly at the same x position (stacked)
-      expect(codeGenBox!.x).toBeCloseTo(compatibilityBox!.x, 50);
-      expect(compatibilityBox!.x).toBeCloseTo(descriptionBox!.x, 50);
+      // Should be roughly at the same x position (stacked)
+      expect(Math.abs(codeGenBox!.x - compatibilityBox!.x)).toBeLessThan(50);
 
       // Should be stacked vertically (different y positions)
       expect(codeGenBox!.y).toBeLessThan(compatibilityBox!.y);
-      expect(compatibilityBox!.y).toBeLessThan(descriptionBox!.y);
+    });
+
+    test('should stack generated output vertically on mobile', async () => {
+      // Fill some data
+      await rhinoPage.fillCodeGenerator({
+        clasificacion: 'D',
+        parte: 'b',
+        numero: '12345',
+        color: 'GT',
+        aditamento: 'Y'
+      });
+
+      // Output should still be visible
+      await expect(rhinoPage.generatedOutputCard).toBeVisible();
+      await expect(rhinoPage.generatedCode).toBeVisible();
+      await expect(rhinoPage.generatedDescription).toBeVisible();
+    });
+
+    test('should keep buttons side by side even on mobile', async () => {
+      // Buttons remain side by side on mobile
+      await expect(rhinoPage.agregarButton).toBeVisible();
+      await expect(rhinoPage.limpiarButton).toBeVisible();
+
+      const agregarBox = await rhinoPage.agregarButton.boundingBox();
+      const limpiarBox = await rhinoPage.limpiarButton.boundingBox();
+
+      // Should still be side by side (though they may be full width)
+      expect(agregarBox!.x).toBeLessThan(limpiarBox!.x);
     });
 
     test('should have responsive form elements', async () => {
@@ -111,9 +168,6 @@ test.describe('Responsive Layout Tests', () => {
 
       await rhinoPage.addCompatibility('Toyota', 'Camry', '2020');
 
-      // Scroll to see Product Description
-      await rhinoPage.descriptionHeading.scrollIntoViewIfNeeded();
-      
       await rhinoPage.fillProductDescription({
         posicion: 'Front',
         lado: 'Left'
@@ -124,15 +178,16 @@ test.describe('Responsive Layout Tests', () => {
       expect(await rhinoPage.getGeneratedDescriptionText()).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2020');
     });
 
-    test('should have accessible Clean All button on mobile', async () => {
-      // Header should be sticky and visible
-      await expect(rhinoPage.cleanAllButton).toBeVisible();
+    test('should have accessible Limpiar button on mobile', async () => {
+      // Button should be visible
+      await expect(rhinoPage.limpiarButton).toBeVisible();
 
       // Scroll down
       await rhinoPage.page.evaluate(() => window.scrollTo(0, 500));
 
-      // Button should still be visible (sticky header)
-      await expect(rhinoPage.cleanAllButton).toBeVisible();
+      // Button should still be accessible (scroll back up or within viewport)
+      await rhinoPage.limpiarButton.scrollIntoViewIfNeeded();
+      await expect(rhinoPage.limpiarButton).toBeVisible();
     });
   });
 
@@ -142,9 +197,8 @@ test.describe('Responsive Layout Tests', () => {
     test('should handle iPad portrait orientation', async () => {
       await expect(rhinoPage.codeGeneratorHeading).toBeVisible();
       await expect(rhinoPage.compatibilityHeading).toBeVisible();
-      await expect(rhinoPage.descriptionHeading).toBeVisible();
 
-      // Should work like desktop (3 columns) at 1024px
+      // Should work like desktop (2 columns) at 1024px
       const codeGenBox = await rhinoPage.codeGeneratorHeading.boundingBox();
       const compatibilityBox = await rhinoPage.compatibilityHeading.boundingBox();
 
@@ -199,6 +253,33 @@ test.describe('Responsive Layout Tests', () => {
         window.getComputedStyle(el).fontWeight
       );
       expect(parseInt(codeWeight)).toBeGreaterThanOrEqual(700);
+    });
+  });
+
+  test.describe('Minimum Height on Forms', () => {
+    test.use({ viewport: { width: 1920, height: 1080 } });
+
+    test('should have 750px minimum height on both form containers', async ({ page }) => {
+      // Get the card containers
+      const productDetailsCard = page.locator('.card').filter({
+        has: page.getByRole('heading', { name: 'Product Details' })
+      });
+      
+      const compatibilityCard = page.locator('.card').filter({
+        has: page.getByRole('heading', { name: 'Product Compatibility' })
+      });
+
+      // Both should be visible
+      await expect(productDetailsCard).toBeVisible();
+      await expect(compatibilityCard).toBeVisible();
+
+      // Get heights
+      const detailsBox = await productDetailsCard.boundingBox();
+      const compatBox = await compatibilityCard.boundingBox();
+
+      // Both should be at least 750px (with some tolerance for padding)
+      expect(detailsBox!.height).toBeGreaterThanOrEqual(740);
+      expect(compatBox!.height).toBeGreaterThanOrEqual(740);
     });
   });
 });

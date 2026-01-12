@@ -2,20 +2,22 @@
 
 ## Overview
 
-This project uses **Playwright** for end-to-end testing. The test suite includes **59 E2E tests** covering all application features.
+This project uses **Playwright** for end-to-end testing. The test suite includes **61+ E2E tests** covering all application features.
+
+**Last Updated:** January 2026 - After major UI restructure (v2.0)
 
 ## Test Coverage Summary
 
-**Total: 59 E2E tests** across **6 browser configurations**
+**Total: 61+ E2E tests** across **6 browser configurations**
 
-| Test File | Tests | Focus |
-|-----------|-------|-------|
-| `code-generator.spec.ts` | 7 | Code generation logic |
-| `product-compatibility.spec.ts` | 10 | Compatibility management |
-| `product-description.spec.ts` | 10 | Description generation |
-| `guardar.spec.ts` | 16 | Save functionality |
-| `integration.spec.ts` | 8 | Cross-section workflows |
-| `responsive.spec.ts` | 8 | Layout responsiveness |
+| Test File | Tests | Status | Focus |
+|-----------|-------|--------|-------|
+| `code-generator.spec.ts` | 9 | ✅ Updated | Code generation + F aditamento |
+| `guardar.spec.ts` | 20 | ✅ Updated | Agregar feature (renamed) |
+| `product-compatibility.spec.ts` | 10 | ⚠️ Needs Review | Compatibility management |
+| `product-description.spec.ts` | 10 | ⚠️ Needs Review | Description (merged component) |
+| `integration.spec.ts` | 8 | ⚠️ Needs Review | Cross-section workflows |
+| `responsive.spec.ts` | 8 | ⚠️ Needs Review | Layout responsiveness |
 
 **Browser Coverage:**
 - Chromium (Chrome/Edge)
@@ -54,46 +56,65 @@ npm run test:report
 
 ---
 
+## Recent Changes (v2.0)
+
+### Major UI Restructure
+
+The application underwent a major UI restructure that affects all tests:
+
+**Button Changes:**
+- ❌ `Guardar` → ✅ `Agregar` (Save → Add)
+- ❌ `Clean All` → ✅ `Limpiar` (Clean)
+- Buttons moved from header to generated output section
+- Now side-by-side (not stacked)
+
+**Component Changes:**
+- ❌ `ProductDescription` component removed
+- ✅ Fields merged into `CodeGenerator`
+- ❌ `FloatingHeader` → ✅ `Header` (renamed)
+
+**Layout Changes:**
+- Forms: 3-column → 2-column grid
+- Generated output: 2 separate boxes → 1 single-row layout
+- Minimum height: 750px on both form containers
+
+**New Features:**
+- F (Fixed) aditamento option - code stops at color
+- Descriptive labels: "Y - Yes", "N - No", "F - Fixed"
+- Spanish labels: "Código Rhino", "Descripción del Producto"
+
+---
+
 ## Test Files Breakdown
 
-### `code-generator.spec.ts` (7 tests)
+### ✅ `code-generator.spec.ts` (9 tests) - UPDATED
 **Code Generator section functionality:**
 - Field display validation
 - Real-time code generation
 - Number padding and validation
 - Uppercase conversion
 - Complete workflow
+- **NEW:** F (Fixed) aditamento test
+- **NEW:** Descriptive label visibility test
 - Empty state handling
 
-### `product-compatibility.spec.ts` (10 tests)
-**Product Compatibility section functionality:**
-- Form validation (all fields required)
-- Add/delete compatibility entries
-- Duplicate prevention
-- Multi-brand support
-- Real-time updates to Product Description
-- Custom compatibility ("Otro" option)
-- Counter updates
-- List display
+**Key Updates:**
+```typescript
+// New test for F (Fixed) aditamento
+test('should support F (Fixed) aditamento option - code stops at color')
 
-### `product-description.spec.ts` (10 tests)
-**Product Description section functionality:**
-- Description generation
-- Parte field integration (shared with Code Generator)
-- Intelligent compatibility grouping
-- Year sorting (ascending order)
-- Cross-section updates
-- Multiple brands handling
-- Real-time updates
+// Verifies all three aditamento options visible
+test('should display Aditamento options with descriptive labels')
+```
 
-### `guardar.spec.ts` (16 tests) ✨
-**Guardar (Save) feature functionality:**
+### ✅ `guardar.spec.ts` (20 tests) - RENAMED TO AGREGAR FEATURE
+**Agregar (Add) feature functionality:**
 
 **Button Visibility & Layout (4 tests):**
-- Guardar button appears in header
-- Positioned left of Clean All button
+- Agregar button in generated output section (not header)
+- Positioned left of Limpiar button
 - Primary blue styling (`btn-primary`)
-- Clean All has secondary gray styling (`btn-secondary`)
+- Limpiar has secondary gray styling (`btn-secondary`)
 
 **Console Logging - Empty Data (1 test):**
 - Warning when clicking with no data
@@ -105,8 +126,8 @@ npm run test:report
 - Logs complete ProductData with all sections
 
 **Button Interactions (3 tests):**
-- Data persists after save (doesn't clear)
-- Works independently from Clean All
+- Data persists after add (doesn't clear)
+- Works independently from Limpiar
 - Can be clicked multiple times
 
 **Responsive Behavior (3 tests):**
@@ -118,21 +139,78 @@ npm run test:report
 - Accessible via Tab navigation
 - Clickable via Enter key
 
-### `integration.spec.ts` (8 tests)
+**Key Updates:**
+```typescript
+// All references updated
+page.getByRole('button', { name: 'Agregar' })  // was 'Guardar'
+page.getByRole('button', { name: 'Limpiar' })  // was 'Clean All'
+await rhinoPage.clickAgregar();  // was clickGuardar()
+await rhinoPage.clickLimpiar();  // was clickCleanAll()
+```
+
+### ⚠️ `product-compatibility.spec.ts` (10 tests) - NEEDS REVIEW
+**Product Compatibility section functionality:**
+- Form validation (all fields required)
+- Add/delete compatibility entries
+- Duplicate prevention
+- Multi-brand support
+- Custom compatibility ("Otro" option)
+- Counter updates
+- List display
+
+**Potential Issues:**
+- May reference old "generatedCompatibility" display (removed)
+- Compatibility now only in main generated output
+- Tests should focus on list within component
+
+**Recommended Updates:**
+- Remove inline generated compatibility display checks
+- Verify compatibility list in component
+- Check final description includes compatibility
+
+### ⚠️ `product-description.spec.ts` (10 tests) - NEEDS REVIEW
+**Product Description section functionality:**
+- Description generation
+- Parte field integration (shared with Code Generator)
+- Intelligent compatibility grouping
+- Year sorting (ascending order)
+- Cross-section updates
+
+**Potential Issues:**
+- ProductDescription component no longer exists
+- Fields merged into CodeGenerator
+- Generated description in single-row output
+
+**Recommended Updates:**
+- Update locators to find Posición/Lado in CodeGenerator
+- Remove ProductDescription heading references
+- Verify description in single-row output card
+
+### ⚠️ `integration.spec.ts` (8 tests) - NEEDS REVIEW
 **Cross-section integration workflows:**
 - End-to-end user flows
 - State synchronization between sections
-- Global Clean All functionality
+- Global Limpiar functionality (was Clean All)
 - Complex multi-section scenarios
 - Parte field sharing between sections
 
-### `responsive.spec.ts` (8 tests)
+**Recommended Updates:**
+- Update button names (Agregar/Limpiar)
+- Update generated output location expectations
+- Verify full workflow with new structure
+
+### ⚠️ `responsive.spec.ts` (8 tests) - NEEDS REVIEW
 **Responsive layout behavior:**
-- Desktop layout (3 columns, ≥1024px)
+- Desktop layout (2 columns, ≥1024px) - was 3 columns
 - Tablet layout (2 columns + wrapped, 768-1023px)
 - Mobile layout (stacked, <768px)
 - Font size consistency across viewports
 - Button visibility on all screen sizes
+
+**Recommended Updates:**
+- Update grid assertions (3-col → 2-col)
+- Verify single-row generated output on mobile
+- Check buttons are side-by-side (not stacked)
 
 ---
 
@@ -141,13 +219,67 @@ npm run test:report
 ```
 tests/
 ├── page-objects/
-│   └── RhinoCodeGeneratorPage.ts   # Page Object Model
-├── code-generator.spec.ts           # Code Generator tests (7)
-├── product-compatibility.spec.ts    # Compatibility tests (10)
-├── product-description.spec.ts      # Description tests (10)
-├── guardar.spec.ts                  # Save feature tests (16)
-├── integration.spec.ts              # Integration tests (8)
-└── responsive.spec.ts               # Responsive tests (8)
+│   └── RhinoCodeGeneratorPage.ts   # Page Object Model (UPDATED)
+├── code-generator.spec.ts           # ✅ Updated (9 tests)
+├── guardar.spec.ts                  # ✅ Updated (20 tests)
+├── product-compatibility.spec.ts    # ⚠️ Needs review (10 tests)
+├── product-description.spec.ts      # ⚠️ Needs review (10 tests)
+├── integration.spec.ts              # ⚠️ Needs review (8 tests)
+└── responsive.spec.ts               # ⚠️ Needs review (8 tests)
+```
+
+---
+
+## Updated Page Object Model
+
+The `RhinoCodeGeneratorPage` class has been updated with new methods:
+
+```typescript
+const rhinoPage = new RhinoCodeGeneratorPage(page);
+await rhinoPage.goto();
+
+// Fill Code Generator (includes description fields now)
+await rhinoPage.fillCodeGenerator({
+  clasificacion: 'R',
+  parte: 's',
+  numero: '12345',
+  color: 'GT',
+  aditamento: 'F'  // NEW: F option available
+});
+
+// Description fields (now in CodeGenerator)
+await rhinoPage.fillProductDescription({
+  posicion: 'Front',
+  lado: 'Left'
+});
+
+// Add Compatibility (unchanged)
+await rhinoPage.addCompatibility('Honda', 'Accord', '2020');
+
+// NEW: Updated button methods
+await rhinoPage.clickAgregar();   // was clickGuardar()
+await rhinoPage.clickLimpiar();   // was clickCleanAll()
+
+// Get generated values (updated locators)
+const code = await rhinoPage.getGeneratedCodeText();
+const description = await rhinoPage.getGeneratedDescriptionText();
+```
+
+**New Locators:**
+```typescript
+// Aditamento options (updated labels)
+rhinoPage.aditamentoY  // matches "Y - Yes"
+rhinoPage.aditamentoN  // matches "N - No"
+rhinoPage.aditamentoF  // NEW: matches "F - Fixed"
+
+// Buttons (renamed)
+rhinoPage.agregarButton  // was guardarButton
+rhinoPage.limpiarButton  // was cleanAllButton
+
+// Generated output (single row)
+rhinoPage.generatedOutputCard  // single card container
+rhinoPage.generatedCode        // código rhino text
+rhinoPage.generatedDescription // descripción text
 ```
 
 ---
@@ -180,46 +312,6 @@ projects: [
 
 ---
 
-## Page Object Model
-
-The `RhinoCodeGeneratorPage` class provides reusable methods for interacting with the app:
-
-```typescript
-const rhinoPage = new RhinoCodeGeneratorPage(page);
-await rhinoPage.goto();
-
-// Fill Code Generator
-await rhinoPage.fillCodeGenerator({
-  clasificacion: 'R',
-  parte: 's',
-  numero: '12345',
-  color: 'GT',
-  aditamento: 'Y'
-});
-
-// Add Compatibility
-await rhinoPage.addCompatibility('Honda', 'Accord', '2020');
-
-// Fill Product Description
-await rhinoPage.fillProductDescription({
-  posicion: 'Front',
-  lado: 'Left'
-});
-
-// Click Guardar button
-await rhinoPage.clickGuardar();
-
-// Click Clean All button
-await rhinoPage.clickCleanAll();
-
-// Get generated values
-const code = await rhinoPage.getGeneratedCodeText();
-const compatibility = await rhinoPage.getGeneratedCompatibilityText();
-const description = await rhinoPage.getGeneratedDescriptionText();
-```
-
----
-
 ## Writing New Tests
 
 ### Basic Test Structure
@@ -238,43 +330,76 @@ test.describe('Feature Name', () => {
 
   test('should do something specific', async () => {
     // Arrange
-    await rhinoPage.fillCodeGenerator({ parte: 's' });
+    await rhinoPage.fillCodeGenerator({ 
+      parte: 's',
+      aditamento: 'F'  // Use F for Fixed option
+    });
     
     // Act
     await rhinoPage.addCompatibility('Honda', 'Accord', '2020');
     
     // Assert
-    const text = await rhinoPage.getGeneratedCompatibilityText();
-    expect(text).toBe('HONDA ACCORD 2020');
+    const code = await rhinoPage.getGeneratedCodeText();
+    expect(code).toBe('RS00000GT'); // No aditamento with F
   });
 });
 ```
 
-### Available Test Data
+### Testing F (Fixed) Aditamento
 
-Use brands from `carBrands.tsx`:
-- **Honda** (Accord, Civic, CR-V, etc.) ✅ Use this for tests
-- Toyota (Camry, Corolla, RAV4, etc.)
-- Nissan (Altima, Sentra, Maxima, etc.)
-- Chevrolet (Malibu, Silverado, etc.)
-- BMW (3 Series, 5 Series, X5, etc.)
-- Mercedes-Benz (C-Class, E-Class, etc.)
-- Ford, Volkswagen, Hyundai, Kia, Mazda, etc.
+```typescript
+test('should generate code without aditamento when F is selected', async () => {
+  await rhinoPage.fillCodeGenerator({
+    clasificacion: 'D',
+    parte: 'b',
+    numero: '12345',
+    color: 'GT',
+    aditamento: 'F'
+  });
+  
+  const code = await rhinoPage.getGeneratedCodeText();
+  expect(code).toBe('DB12345GT'); // Stops at color
+});
+```
 
-**Important:** Brand names are case-sensitive. Use exact matches from `carBrands.tsx`.
+### Testing New Button Names
+
+```typescript
+test('should add product when Agregar is clicked', async () => {
+  await rhinoPage.fillCodeGenerator({
+    clasificacion: 'D',
+    parte: 's',
+    numero: '123',
+    color: 'GT',
+    aditamento: 'Y'
+  });
+  
+  await rhinoPage.clickAgregar(); // Not clickGuardar
+  
+  // Verify product added to table
+  const tableRow = page.getByText('DS00123GTY');
+  await expect(tableRow).toBeVisible();
+});
+```
 
 ---
 
 ## Running Specific Tests
 
 ```bash
-# Run single test file
+# Run updated tests first
+npm test -- code-generator.spec.ts
 npm test -- guardar.spec.ts
-npx playwright test product-compatibility.spec.ts
+
+# Run tests needing review
+npm test -- product-compatibility.spec.ts
+npm test -- product-description.spec.ts
+npm test -- integration.spec.ts
+npm test -- responsive.spec.ts
 
 # Run tests matching pattern
-npm test -- -g "should add compatibility"
-npx playwright test -g "Guardar"
+npm test -- -g "should support F"
+npm test -- -g "Agregar"
 
 # Run specific test group
 npm test -- guardar.spec.ts -g "Button Visibility"
@@ -286,99 +411,84 @@ npm test -- guardar.spec.ts -g "Button Visibility"
 
 ### Common Issues and Solutions
 
-#### 1. "did not find some options" Error
+#### 1. Button not found: "Guardar"
 
-**Cause**: Trying to select an option that doesn't exist in the dropdown.
+**Cause**: Button has been renamed to "Agregar"
 
 **Solution**: 
-- Verify the brand/model exists in `carBrands.tsx`
-- Check for typos in test data (case-sensitive!)
-- Ensure you're waiting for options to load
-
 ```typescript
-// ✅ Correct - Honda exists in carBrands.tsx
-await rhinoPage.addCompatibility('Honda', 'Accord', '2020');
+// ❌ Old
+page.getByRole('button', { name: 'Guardar' })
 
-// ❌ Wrong - TOYOTA doesn't match "Toyota" (case sensitive)
-await rhinoPage.addCompatibility('TOYOTA', 'CAMRY', '2020');
+// ✅ New
+page.getByRole('button', { name: 'Agregar' })
 ```
 
-#### 2. Empty code format error
+#### 2. Button not found: "Clean All"
 
-**Issue**: Expected `------------` but got `---------`
+**Cause**: Button has been renamed to "Limpiar"
 
-**Solution**: Empty code format is 9 characters, not 12:
-- Format: `[C][P][-----][CC][A]`
-- Example: `---------` (1 + 1 + 5 + 1 + 1 = 9 chars)
-
+**Solution**:
 ```typescript
-// ✅ Correct
-expect(generatedCode).toBe('---------');
+// ❌ Old
+page.getByRole('button', { name: 'Clean All' })
 
-// ❌ Wrong
-expect(generatedCode).toBe('------------');
+// ✅ New
+page.getByRole('button', { name: 'Limpiar' })
 ```
 
-#### 3. "strict mode violation: resolved to N elements"
+#### 3. Aditamento radio button not found
 
-**Cause**: Selector matches multiple elements.
+**Cause**: Labels now include descriptions
 
-**Solution**: Make selector more specific or use `.nth(index)`:
-
+**Solution**:
 ```typescript
-// Instead of finding multiple buttons
-const deleteButtons = section.getByRole('button', { name: 'Remove' });
-await deleteButtons.nth(0).click(); // Click first one
+// ❌ Old
+page.getByRole('radio', { name: 'Y', exact: true })
+
+// ✅ New
+page.getByRole('radio', { name: /Y - Yes/ })
 ```
 
-#### 4. Tests timeout waiting for element
+#### 4. Generated code locator not working
 
-**Cause**: Element not visible or selector is wrong.
+**Cause**: Output structure changed to single-row layout
 
-**Solutions**:
-- Run in headed mode to see what's happening: `npm run test:headed`
-- Check the error screenshot in `test-results/`
-- Verify selector matches the actual DOM structure
-- Increase timeout if needed: `await element.waitFor({ timeout: 10000 })`
+**Solution**:
+```typescript
+// ❌ Old (looking for separate boxes)
+page.locator('div').filter({ hasText: /^Generated Rhino Code/ })
 
-#### 5. Tests pass locally but fail in CI
-
-**Cause**: Timing issues, slower CI machines.
-
-**Solutions**:
-- Increase timeouts in config
-- Add explicit waits for state changes
-- Reduce parallelism in CI
-- Use `waitFor` for dynamic content
-
-### Debugging Commands
-
-```bash
-# See the browser while tests run
-npm run test:headed
-
-# Step through tests interactively
-npm run test:debug
-
-# Run single test file
-npx playwright test product-compatibility.spec.ts
-
-# Run single test by name
-npx playwright test -g "should add compatibility"
-
-# Generate test by recording actions
-npm run test:codegen
-
-# Run in UI mode (best for debugging)
-npm run test:ui
+// ✅ New (single row card)
+page.locator('.card').filter({ has: page.getByText('Código Rhino') })
+  .locator('p.text-2xl, p.text-3xl').first()
 ```
 
-### Checking Failed Tests
+#### 5. ProductDescription component not found
 
-1. **Screenshots**: Check `test-results/*/test-failed-*.png`
-2. **Error Context**: Check `test-results/*/error-context.md` for DOM snapshot
-3. **Traces**: Run `npx playwright show-trace test-results/*/trace.zip`
-4. **HTML Report**: Run `npm run test:report` to view detailed results
+**Cause**: Component merged into CodeGenerator
+
+**Solution**:
+```typescript
+// Fields are now in CodeGenerator component
+await rhinoPage.fillCodeGenerator({
+  posicion: 'Front',  // Was in ProductDescription
+  lado: 'Left'        // Was in ProductDescription
+})
+```
+
+#### 6. Empty code format error
+
+**Issue**: Expected format has changed
+
+**Solution**: Empty code with F aditamento option:
+```typescript
+// Standard (with Y or N): 9 characters
+expect(generatedCode).toBe('---------'); // [C][P][-----][CC][A]
+
+// Fixed (with F): 8 characters  
+expect(generatedCode).toBe('--------'); // [C][P][-----][CC]
+```
 
 ---
 
@@ -388,13 +498,14 @@ npm run test:ui
 
 1. **`getByRole()`** - Best for accessibility
    ```typescript
-   page.getByRole('button', { name: 'Guardar' })
+   page.getByRole('button', { name: 'Agregar' })
    page.getByRole('combobox').nth(0)
    ```
 
 2. **`getByText()`** - For visible text
    ```typescript
    page.getByText('Honda Accord 2020')
+   page.getByText('Código Rhino')
    ```
 
 3. **`getByPlaceholder()`** - For inputs
@@ -421,8 +532,8 @@ await expect(subModeloSelect).toBeEnabled();
 await addButton.click();
 await expect(page.getByText('Compatibilidades Añadidas (1)')).toBeVisible();
 
-// After clicking Guardar, wait for console message
-await rhinoPage.clickGuardar();
+// After clicking Agregar, wait for console message
+await rhinoPage.clickAgregar();
 await page.waitForTimeout(200); // Small buffer for console.log
 ```
 
@@ -433,6 +544,34 @@ Each test should:
 - Not depend on other tests
 - Clean up after itself (or rely on page reload)
 - Be runnable in isolation
+
+---
+
+## Migration Checklist
+
+When updating remaining tests:
+
+### For all test files:
+- [ ] Replace `Guardar` with `Agregar`
+- [ ] Replace `Clean All` with `Limpiar`
+- [ ] Replace `clickGuardar()` with `clickAgregar()`
+- [ ] Replace `clickCleanAll()` with `clickLimpiar()`
+- [ ] Update aditamento selectors for new labels
+
+### For product-description.spec.ts:
+- [ ] Remove references to ProductDescription heading
+- [ ] Update field locators to CodeGenerator section
+- [ ] Update generated description locator (single-row)
+
+### For responsive.spec.ts:
+- [ ] Update grid assertions (3-col → 2-col)
+- [ ] Verify single-row generated output layout
+- [ ] Check button layout (side-by-side, not stacked)
+
+### For integration.spec.ts:
+- [ ] Update button references
+- [ ] Update generated output expectations
+- [ ] Verify cross-section state management still works
 
 ---
 
@@ -450,7 +589,7 @@ GitHub Actions workflow is configured in `.github/workflows/playwright.yml`:
 
 | Command | Description |
 |---------|-------------|
-| `npm test` | Run all tests (59 tests) |
+| `npm test` | Run all tests (61+ tests) |
 | `npm run test:ui` | Interactive UI mode ⭐ RECOMMENDED |
 | `npm run test:headed` | Run with visible browser |
 | `npm run test:debug` | Debug mode (step through) |
@@ -467,9 +606,9 @@ GitHub Actions workflow is configured in `.github/workflows/playwright.yml`:
 
 **Test Execution Times** (approximate):
 - Single test: 1-3 seconds
-- Single file (7-16 tests): 10-30 seconds
-- Full suite (59 tests): ~45 seconds
-- With all browsers (6 configs): ~4-5 minutes
+- Single file (9-20 tests): 10-40 seconds
+- Full suite (61+ tests): ~50-60 seconds
+- With all browsers (6 configs): ~5-6 minutes
 
 **Tips for faster tests:**
 - Run only changed test files during development
@@ -491,7 +630,13 @@ GitHub Actions workflow is configured in `.github/workflows/playwright.yml`:
 
 ## Additional Documentation
 
+- **Test Updates**: `/TEST_UPDATES.md` (migration guide)
+- **Project Spec**: `/docs/PROJECT_SPEC.md` (feature requirements)
 - **Test Overview**: `/tests/README.md`
-- **Guardar Testing Guide**: `/docs/GUARDAR_TESTING.md`
-- **Quick Reference**: `/docs/GUARDAR_TESTING_QUICK_REF.md`
-- **Project Spec**: `/docs/PROJECT_SPEC.md` (for feature requirements)
+- **Button Updates**: `/BUTTON_UPDATES.md`
+- **Layout Changes**: `/SINGLE_ROW_DESIGN.md`
+
+---
+
+**Last Updated:** January 2026  
+**Version:** 2.0 (After UI restructure)
