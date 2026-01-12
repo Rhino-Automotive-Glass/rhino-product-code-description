@@ -130,7 +130,8 @@ test.describe('Product Compatibility Section', () => {
     // Verify list item is uppercase
     const listItem = rhinoPage.getCompatibilityInList('Toyota Camry 2020');
     const listText = await listItem.textContent();
-    expect(listText?.toUpperCase()).toEqual(listText);
+    // The text should already be uppercase
+    expect(listText).toEqual(listText?.toUpperCase());
   });
 
   test('should handle various car brands', async () => {

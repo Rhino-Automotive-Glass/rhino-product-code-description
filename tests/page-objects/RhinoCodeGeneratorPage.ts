@@ -70,20 +70,24 @@ export class RhinoCodeGeneratorPage {
     this.limpiarButton = page.getByRole('button', { name: 'Limpiar' });
 
     // Generated Output Display (single horizontal row)
-    this.generatedOutputCard = page.locator('.card').filter({ has: page.getByText('Código Rhino') });
-    this.generatedCode = this.generatedOutputCard.locator('p.text-2xl, p.text-3xl').first();
-    this.generatedDescription = this.generatedOutputCard.locator('p.text-lg, p.text-xl').first();
+    // More specific locators to avoid ambiguity
+    this.generatedOutputCard = page.locator('.card').filter({ 
+      has: page.getByText('CÓDIGO RHINO', { exact: false }) 
+    });
+    // Use more specific selectors based on the actual structure
+    this.generatedCode = page.getByText('Código Rhino').locator('..').locator('p.font-mono').first();
+    this.generatedDescription = page.getByText('Descripción del Producto').locator('..').locator('p.font-mono').first();
 
     // Code Generator (now includes Product Description fields)
     this.codeGeneratorHeading = page.getByRole('heading', { name: 'Product Details' });
     this.clasificacionDomestico = page.getByRole('radio', { name: /D - Doméstico/ });
     this.clasificacionForanea = page.getByRole('radio', { name: /F - Foránea/ });
     this.clasificacionRhino = page.getByRole('radio', { name: /R - Rhino Automotive/ });
-    this.parteSide = page.getByRole('radio', { name: /s - Side/ });
-    this.parteBack = page.getByRole('radio', { name: /b - Back/ });
-    this.parteDoor = page.getByRole('radio', { name: /d - Door/ });
-    this.parteQuarter = page.getByRole('radio', { name: /q - Quarter/ });
-    this.parteVent = page.getByRole('radio', { name: /v - Vent/ });
+    this.parteSide = page.getByRole('radio', { name: /S - Side/ });
+    this.parteBack = page.getByRole('radio', { name: /B - Back/ });
+    this.parteDoor = page.getByRole('radio', { name: /D - Door/ });
+    this.parteQuarter = page.getByRole('radio', { name: /Q - Quarter/ });
+    this.parteVent = page.getByRole('radio', { name: /V - Vent/ });
     this.numeroInput = page.getByPlaceholder('00000');
     this.colorSelect = page.locator('select').filter({ hasText: 'Select...GT' });
     this.aditamentoY = page.getByRole('radio', { name: /Y - Yes/ });
