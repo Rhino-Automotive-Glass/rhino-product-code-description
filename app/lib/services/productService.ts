@@ -32,6 +32,7 @@ export interface ProductData {
     lado: string;
     generated: string;
   };
+  verified: boolean;
 }
 
 export interface SavedProduct extends ProductData {
@@ -55,6 +56,7 @@ export class ProductService {
       productCode: row.product_code_data as unknown as ProductData['productCode'],
       compatibility: row.compatibility_data as unknown as ProductData['compatibility'],
       description: row.description_data as unknown as ProductData['description'],
+      verified: (row.verified as boolean) ?? false,
       created_at: row.created_at,
       updated_at: row.updated_at,
       status: row.status || undefined,
@@ -67,6 +69,7 @@ export class ProductService {
       product_code_data: productData.productCode as any,
       compatibility_data: productData.compatibility as any,
       description_data: productData.description as any,
+      verified: productData.verified,
       status: 'active',
     };
   }
@@ -150,7 +153,7 @@ export class ProductService {
   }> {
     try {
       const updateData: any = {};
-      
+
       if (productData.productCode) {
         updateData.product_code_data = productData.productCode;
       }
@@ -159,6 +162,9 @@ export class ProductService {
       }
       if (productData.description) {
         updateData.description_data = productData.description;
+      }
+      if (productData.verified !== undefined) {
+        updateData.verified = productData.verified;
       }
 
       const { data, error } = await this.supabase
@@ -221,6 +227,7 @@ export class ProductService {
         productCode: item.product_code_data,
         compatibility: item.compatibility_data,
         description: item.description_data,
+        verified: item.verified ?? false,
         created_at: item.created_at,
         updated_at: item.updated_at || item.created_at,
       }));

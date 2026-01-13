@@ -33,6 +33,7 @@ export interface ProductData {
     lado: string;
     generated: string;
   };
+  verified: boolean;
 }
 
 export interface SavedProduct extends ProductData {
@@ -204,6 +205,7 @@ export default function Home() {
         lado,
         generated: generateProductDescription(),
       },
+      verified: false,
     };
 
     const generatedCode = productData.productCode.generated;
@@ -247,12 +249,62 @@ export default function Home() {
         alert('Error al eliminar producto');
         return;
       }
-      
+
       setDbProducts(prev => prev.filter((_, i) => i !== index));
       alert('Producto eliminado exitosamente');
     } catch (error) {
       console.error('Unexpected error deleting:', error);
       alert('Error inesperado al eliminar');
+    }
+  };
+
+  const handleToggleVerified = (index: number) => {
+    setSavedProducts(prev =>
+      prev.map((product, i) =>
+        i === index ? { ...product, verified: !product.verified } : product
+      )
+    );
+  };
+
+  const handleToggleDbVerified = async (index: number) => {
+    const product = dbProducts[index];
+    const newVerifiedStatus = !product.verified;
+
+    console.log('Toggling verified for product:', product.id, 'to:', newVerifiedStatus);
+
+    // Optimistically update UI
+    setDbProducts(prev =>
+      prev.map((p, i) =>
+        i === index ? { ...p, verified: newVerifiedStatus } : p
+      )
+    );
+
+    try {
+      // Update in database - only send the verified field
+      console.log('Calling updateProduct...');
+      const { error } = await productService.updateProduct(product.id, {
+        verified: newVerifiedStatus,
+      });
+      console.log('Update result:', error ? 'ERROR' : 'SUCCESS');
+
+      if (error) {
+        console.error('Error updating verified status:', error);
+        // Revert on error
+        setDbProducts(prev =>
+          prev.map((p, i) =>
+            i === index ? { ...p, verified: !newVerifiedStatus } : p
+          )
+        );
+        alert('Error al actualizar el estado de verificación');
+      }
+    } catch (error) {
+      console.error('Unexpected error updating verified status:', error);
+      // Revert on error
+      setDbProducts(prev =>
+        prev.map((p, i) =>
+          i === index ? { ...p, verified: !newVerifiedStatus } : p
+        )
+      );
     }
   };
 
@@ -288,6 +340,7 @@ export default function Home() {
           productCode: product.productCode,
           compatibility: product.compatibility,
           description: product.description,
+          verified: product.verified,
         };
 
         const { data, error } = await productService.saveProduct(productData);
@@ -434,9 +487,10 @@ export default function Home() {
             </div>
 
             <div className="mb-6 lg:mb-8">
-              <SavedProductsTable 
+              <SavedProductsTable
                 products={savedProducts}
                 onDelete={handleDeleteProduct}
+                onToggleVerified={handleToggleVerified}
               />
             </div>
 
@@ -455,7 +509,7 @@ export default function Home() {
                     <span>Guardando...</span>
                   </>
                 ) : (
-                  <span>Guardar en Base de Datos</span>
+                  <span>Guardar todo en Base de Datos</span>
                 )}
               </button>
             </div>
@@ -483,9 +537,10 @@ export default function Home() {
                 <p className="mt-4 text-slate-600">Cargando productos...</p>
               </div>
             ) : (
-              <SavedProductsTable 
+              <SavedProductsTable
                 products={dbProducts}
                 onDelete={handleDeleteDbProduct}
+                onToggleVerified={handleToggleDbVerified}
               />
             )}
           </>
