@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CodeGenerator from './components/CodeGenerator';
 import ProductCompatibility from './components/ProductCompatibility';
 import Header from './components/Header';
 import SavedProductsTable from './components/SavedProductsTable';
+import { productService } from './lib/services/productService';
 
 export interface Compatibility {
   marca: string;
@@ -34,71 +35,88 @@ export interface ProductData {
   };
 }
 
+export interface SavedProduct extends ProductData {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  status?: string;
+}
+
 export default function Home() {
-  // CodeGenerator state
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'agregar' | 'db'>('agregar');
+
+  // Form state
   const [clasificacion, setClasificacion] = useState('');
   const [parte, setParte] = useState('');
   const [numero, setNumero] = useState('');
   const [color, setColor] = useState('');
   const [aditamento, setAditamento] = useState('');
-
-  // ProductDescription state
   const [posicion, setPosicion] = useState('');
   const [lado, setLado] = useState('');
-
-  // ProductCompatibility state
   const [compatibilities, setCompatibilities] = useState<Compatibility[]>([]);
   const [compatibilityResetTrigger, setCompatibilityResetTrigger] = useState(0);
 
-  // Saved Products state
-  const [savedProducts, setSavedProducts] = useState<ProductData[]>([]);
+  // Local products (Agregar tab)
+  const [savedProducts, setSavedProducts] = useState<SavedProduct[]>([]);
+  const [isSavingAll, setIsSavingAll] = useState(false);
 
-  // ========================================
-  // HELPER FUNCTIONS - Generate formatted strings
-  // ========================================
+  // DB products (DB Codigos tab)
+  const [dbProducts, setDbProducts] = useState<SavedProduct[]>([]);
+  const [isLoadingDb, setIsLoadingDb] = useState(false);
 
-  /**
-   * Generate product code string
-   * If aditamento is 'F' (Fixed), the code ends at color without adding aditamento
-   */
+  // Load DB products when switching to DB tab
+  useEffect(() => {
+    if (activeTab === 'db') {
+      loadDbProducts();
+    }
+  }, [activeTab]);
+
+  const loadDbProducts = async () => {
+    setIsLoadingDb(true);
+    try {
+      const { data, error } = await productService.getProducts();
+      if (error) {
+        console.error('Error loading DB products:', error);
+        alert('Error al cargar productos de la base de datos');
+        setDbProducts([]);
+      } else if (data) {
+        setDbProducts(data);
+      }
+    } catch (error) {
+      console.error('Unexpected error loading DB products:', error);
+      setDbProducts([]);
+    } finally {
+      setIsLoadingDb(false);
+    }
+  };
+
   const generateProductCode = (): string => {
     const clasificacionCode = clasificacion || '-';
     const parteCode = parte || '-';
     const numeroCode = numero ? numero.padStart(5, '0') : '-----';
-    const colorCode = color || '-';
+    const colorCode = color || '--';
     
-    // If aditamento is 'F' (Fixed), don't add it to the code
     if (aditamento === 'F') {
       return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}`.toUpperCase();
     }
     
-    // Otherwise, include aditamento in the code
     const aditamentoCode = aditamento || '-';
     return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}${aditamentoCode}`.toUpperCase();
   };
 
-  /**
-   * Format a single compatibility entry for display
-   * Format: MARCA SUBMODELO-VERSION YEAR or MARCA SUBMODELO YEAR (if no version)
-   */
   const formatCompatibilityEntry = (comp: Compatibility): string => {
-    // Handle custom entries (no subModelo)
     if (!comp.subModelo) {
       return `${comp.marca} ${comp.modelo}`;
     }
     
-    // If version exists, format as SUBMODELO-VERSION
     if (comp.version) {
       return `${comp.marca} ${comp.subModelo}-${comp.version} ${comp.modelo}`;
     }
     
-    // No version, standard format
     return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
   };
 
-  /**
-   * Generate compatibility string (mirrors ProductCompatibility logic)
-   */
   const generateCompatibilityString = (): string => {
     if (compatibilities.length === 0) return '---';
     
@@ -108,11 +126,7 @@ export default function Home() {
       .toUpperCase();
   };
 
-  /**
-   * Generate product description (mirrors ProductDescription logic)
-   */
   const generateProductDescription = (): string => {
-    // Parte options mapping
     const parteOptions = [
       { value: 's', label: 'Side' },
       { value: 'b', label: 'Back' },
@@ -125,19 +139,14 @@ export default function Home() {
     const posicionText = posicion || '-';
     const ladoText = lado || '-';
     
-    // Base description
     let description = `${parteLabel} ${posicionText} ${ladoText}`;
     
-    // Add grouped compatibilities if any exist
     if (compatibilities.length > 0) {
-      // Group by marca + subModelo + version
       const grouped = new Map<string, string[]>();
       
       compatibilities.forEach(comp => {
-        // Create key based on marca, subModelo, and version
         let key: string;
         if (!comp.subModelo) {
-          // Custom entry
           key = comp.marca;
         } else if (comp.version) {
           key = `${comp.marca} ${comp.subModelo}-${comp.version}`;
@@ -151,7 +160,6 @@ export default function Home() {
         grouped.get(key)!.push(comp.modelo);
       });
 
-      // Build compatibility text
       const parts: string[] = [];
       grouped.forEach((years, key) => {
         const sortedYears = years.sort((a, b) => parseInt(a) - parseInt(b));
@@ -164,41 +172,19 @@ export default function Home() {
     return description.toUpperCase();
   };
 
-  // ========================================
-  // VALIDATION
-  // ========================================
-
-  /**
-   * Check if any data exists across all three sections
-   */
   const hasAnyData = (): boolean => {
-    // Check CodeGenerator fields
     const hasCodeData = !!(clasificacion || parte || numero || color || aditamento);
-    
-    // Check ProductCompatibility
     const hasCompatibilityData = compatibilities.length > 0;
-    
-    // Check ProductDescription fields
     const hasDescriptionData = !!(posicion || lado);
-
     return hasCodeData || hasCompatibilityData || hasDescriptionData;
   };
 
-  // ========================================
-  // HANDLERS
-  // ========================================
-
-  /**
-   * Add handler - collects all data, adds to table, and logs to console
-   */
   const handleSave = () => {
-    // Validate that at least some data exists
     if (!hasAnyData()) {
       console.warn('No data to save - all fields are empty');
       return;
     }
 
-    // Build the ProductData object
     const productData: ProductData = {
       productCode: {
         clasificacion,
@@ -213,171 +199,297 @@ export default function Home() {
         generated: generateCompatibilityString(),
       },
       description: {
-        parte, // Shared with productCode
+        parte,
         posicion,
         lado,
         generated: generateProductDescription(),
       },
     };
 
-    // Check if product code already exists in saved products
+    const generatedCode = productData.productCode.generated;
     const isDuplicate = savedProducts.some(
-      product => product.productCode.generated === productData.productCode.generated
+      product => product.productCode.generated === generatedCode
     );
 
     if (isDuplicate) {
-      alert(`Product code "${productData.productCode.generated}" already exists in the table.`);
+      alert(`El código "${generatedCode}" ya existe en la tabla`);
       return;
     }
 
-    // Add to saved products table
-    setSavedProducts(prev => [...prev, productData]);
+    const localProduct: SavedProduct = {
+      ...productData,
+      id: `local-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      status: 'active',
+    };
 
-    // Log to console
-    console.log('Product Data:', productData);
+    setSavedProducts(prev => [localProduct, ...prev]);
+    console.log('Product Data:', localProduct);
   };
 
-  /**
-   * Delete handler - removes a product from the saved products table
-   */
   const handleDeleteProduct = (index: number) => {
+    const product = savedProducts[index];
+    const confirmed = confirm(`¿Eliminar el producto "${product.productCode.generated}"?`);
+    if (!confirmed) return;
     setSavedProducts(prev => prev.filter((_, i) => i !== index));
   };
 
-  /**
-   * Global clean handler - clears everything
-   */
+  const handleDeleteDbProduct = async (index: number) => {
+    const product = dbProducts[index];
+    const confirmed = confirm(`¿Eliminar el producto "${product.productCode.generated}" de la base de datos?`);
+    if (!confirmed) return;
+
+    try {
+      const { error } = await productService.deleteProduct(product.id, true);
+      if (error) {
+        console.error('Error deleting from database:', error);
+        alert('Error al eliminar producto');
+        return;
+      }
+      
+      setDbProducts(prev => prev.filter((_, i) => i !== index));
+      alert('Producto eliminado exitosamente');
+    } catch (error) {
+      console.error('Unexpected error deleting:', error);
+      alert('Error inesperado al eliminar');
+    }
+  };
+
   const handleGlobalClean = () => {
-    // Clear CodeGenerator
     setClasificacion('');
     setParte('');
     setNumero('');
     setColor('');
     setAditamento('');
-    
-    // Clear ProductDescription
     setPosicion('');
     setLado('');
-    
-    // Clear ProductCompatibility (list and form fields)
     setCompatibilities([]);
-    setCompatibilityResetTrigger(prev => prev + 1); // Trigger form reset
+    setCompatibilityResetTrigger(prev => prev + 1);
+  };
+
+  const handleGuardarTodos = async () => {
+    if (savedProducts.length === 0) {
+      alert('No hay productos para guardar');
+      return;
+    }
+    
+    const confirmed = confirm(`¿Guardar ${savedProducts.length} producto(s) a la base de datos?`);
+    if (!confirmed) return;
+
+    setIsSavingAll(true);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    for (const product of savedProducts) {
+      try {
+        const productData: ProductData = {
+          productCode: product.productCode,
+          compatibility: product.compatibility,
+          description: product.description,
+        };
+
+        const { data, error } = await productService.saveProduct(productData);
+
+        if (error) {
+          errorCount++;
+          errors.push(`${product.productCode.generated}: ${error.message}`);
+          console.error('Error saving product:', product.productCode.generated, error);
+        } else {
+          successCount++;
+          console.log('Saved:', product.productCode.generated);
+        }
+      } catch (error) {
+        errorCount++;
+        errors.push(`${product.productCode.generated}: Error inesperado`);
+        console.error('Unexpected error saving product:', error);
+      }
+    }
+
+    setIsSavingAll(false);
+
+    if (errorCount === 0) {
+      alert(`✅ Todos los productos guardados exitosamente (${successCount})`);
+      setSavedProducts([]);
+    } else if (successCount === 0) {
+      alert(`❌ Error al guardar todos los productos\n\n${errors.join('\n')}`);
+    } else {
+      alert(`⚠️ Guardados: ${successCount}\nErrores: ${errorCount}\n\n${errors.join('\n')}`);
+    }
   };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
-      {/* Header */}
       <Header />
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-8 ">
-        <h1 className="text-3xl font-bold text-slate-900 mb-8 text-gray-500">Agregar Nuevos Códigos</h1>
-        <hr className="w-full border-t border-gray-300 my-6" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-          {/* Code Generator Section - merged with Product Description */}
-          <div>
-            <CodeGenerator 
-              clasificacion={clasificacion}
-              setClasificacion={setClasificacion}
-              parte={parte}
-              setParte={setParte}
-              numero={numero}
-              setNumero={setNumero}
-              color={color}
-              setColor={setColor}
-              aditamento={aditamento}
-              setAditamento={setAditamento}
-              posicion={posicion}
-              setPosicion={setPosicion}
-              lado={lado}
-              setLado={setLado}
-            />
-          </div>
-
-          {/* Product Compatibility Section */}
-          <div>
-            <ProductCompatibility 
-              compatibilities={compatibilities}
-              setCompatibilities={setCompatibilities}
-              resetTrigger={compatibilityResetTrigger}
-            />
-          </div>
+      {/* Tabs Navigation */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-8">
+        <div className="flex w-full">
+          <button
+            onClick={() => setActiveTab('agregar')}
+            className={`flex-1 py-4 font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'agregar'
+                ? 'border-b-4 !border-[#f97316] text-orange-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+            </svg>
+            Agregar Códigos
+          </button>
+          <button
+            onClick={() => setActiveTab('db')}
+            className={`flex-1 py-4 font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'db'
+                ? 'border-b-4 !border-[#f97316] text-orange-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
+              <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
+              <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
+            </svg>
+            BD Códigos
+          </button>
         </div>
+      </div>
 
-        {/* Generated Output Display with Action Buttons - Single Row Design */}
-        <div className="card p-6 lg:p-8 mb-8 mt-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-8">
-            {/* Generated Rhino Code */}
-            <div className="flex-1">
-              <p className="text-xs text-slate-500 mb-1.5 uppercase tracking-wide font-medium">
-                Código Rhino
-              </p>
-              <p className="text-2xl lg:text-3xl font-mono font-bold text-slate-900 tracking-wider">
-                {generateProductCode()}
-              </p>
+      {/* Tab Content */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-8">
+        {activeTab === 'agregar' ? (
+          // AGREGAR TAB
+          <>            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+              <div>
+                <CodeGenerator 
+                  clasificacion={clasificacion}
+                  setClasificacion={setClasificacion}
+                  parte={parte}
+                  setParte={setParte}
+                  numero={numero}
+                  setNumero={setNumero}
+                  color={color}
+                  setColor={setColor}
+                  aditamento={aditamento}
+                  setAditamento={setAditamento}
+                  posicion={posicion}
+                  setPosicion={setPosicion}
+                  lado={lado}
+                  setLado={setLado}
+                />
+              </div>
+              <div>
+                <ProductCompatibility 
+                  compatibilities={compatibilities}
+                  setCompatibilities={setCompatibilities}
+                  resetTrigger={compatibilityResetTrigger}
+                />
+              </div>
             </div>
 
-            {/* Vertical Divider - Hidden on mobile */}
-            <div className="hidden lg:block w-px h-16 bg-slate-200"></div>
-
-            {/* Generated Product Description */}
-            <div className="flex-[2]">
-              <p className="text-xs text-slate-500 mb-1.5 uppercase tracking-wide font-medium">
-                Descripción del Producto
-              </p>
-              <p className="text-lg lg:text-xl font-mono font-bold text-slate-900 leading-relaxed">
-                {generateProductDescription()}
-              </p>
+            <div className="card p-6 lg:p-8 mb-8 mt-8">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-8">
+                <div className="flex-1">
+                  <p className="text-xs text-slate-500 mb-1.5 uppercase tracking-wide font-medium">
+                    Código Rhino
+                  </p>
+                  <p className="text-2xl lg:text-3xl font-mono font-bold text-slate-900 tracking-wider">
+                    {generateProductCode()}
+                  </p>
+                </div>
+                <div className="hidden lg:block w-px h-16 bg-slate-200"></div>
+                <div className="flex-[2]">
+                  <p className="text-xs text-slate-500 mb-1.5 uppercase tracking-wide font-medium">
+                    Descripción del Producto
+                  </p>
+                  <p className="text-lg lg:text-xl font-mono font-bold text-slate-900 leading-relaxed">
+                    {generateProductDescription()}
+                  </p>
+                </div>
+                <div className="hidden lg:block w-px h-16 bg-slate-200"></div>
+                <div className="flex gap-3 w-full lg:w-auto">
+                  <button
+                    onClick={handleSave}
+                    className="btn btn-md flex-1 lg:flex-none flex items-center justify-center gap-2 !border-2 !border-[#2563eb] text-blue-600 hover:bg-blue-50 bg-white"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-semibold">Agregar</span>
+                  </button>
+                  <button
+                    onClick={handleGlobalClean}
+                    className="btn btn-secondary btn-md flex-1 lg:flex-none flex items-center justify-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-semibold">Limpiar</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Vertical Divider - Hidden on mobile */}
-            <div className="hidden lg:block w-px h-16 bg-slate-200"></div>
+            <div className="mb-6 lg:mb-8">
+              <SavedProductsTable 
+                products={savedProducts}
+                onDelete={handleDeleteProduct}
+              />
+            </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 w-full lg:w-auto">
+            <div className="flex justify-center mb-8 w-full px-4 lg:px-0">
               <button
-                onClick={handleSave}
-                className="btn btn-primary btn-md flex-1 lg:flex-none flex items-center justify-center gap-2"
+                onClick={handleGuardarTodos}
+                disabled={savedProducts.length === 0 || isSavingAll}
+                className="btn btn-primary btn-xl w-full lg:w-auto lg:min-w-[500px] py-5 text-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" />
-                </svg>
-                <span className="font-semibold">Agregar</span>
-              </button>
-              <button
-                onClick={handleGlobalClean}
-                className="btn btn-secondary btn-md flex-1 lg:flex-none flex items-center justify-center gap-2"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="font-semibold">Limpiar</span>
+                {isSavingAll ? (
+                  <>
+                    <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <span>Guardar en Base de Datos</span>
+                )}
               </button>
             </div>
-          </div>
-        </div>
+          </>
+        ) : (
+          // DB CÓDIGOS TAB
+          <>
+            <div className="flex justify-between items-center mb-8">
+              <button
+                onClick={loadDbProducts}
+                disabled={isLoadingDb}
+                className="btn btn-secondary btn-md flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+                <span>Actualizar</span>
+              </button>
+            </div>
+            <hr className="w-full border-t border-gray-300 my-6" />
 
-        {/* Saved Products Table */}
-        <div className="mb-6 lg:mb-8">
-          <SavedProductsTable 
-            products={savedProducts}
-            onDelete={handleDeleteProduct}
-          />
-        </div>        
+            {isLoadingDb ? (
+              <div className="card p-8 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-4 text-slate-600">Cargando productos...</p>
+              </div>
+            ) : (
+              <SavedProductsTable 
+                products={dbProducts}
+                onDelete={handleDeleteDbProduct}
+              />
+            )}
+          </>
+        )}
       </div>
     </main>
   );

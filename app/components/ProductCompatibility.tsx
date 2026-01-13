@@ -305,9 +305,9 @@ export default function ProductCompatibility({
           <button
             type="button"
             onClick={handleAddCompatibility}
-            className="btn btn-primary btn-md w-full"
+            className="btn btn-md w-full !border-2 !border-[#2563eb] text-blue-600 hover:bg-blue-50 bg-white"
           >
-            Añadir Compatibilidad
+            Agregar Compatibilidad
           </button>
         </div>
       </form>
