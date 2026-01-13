@@ -52,9 +52,9 @@ export class ProductService {
   private transformProduct(row: ProductRow): SavedProduct {
     return {
       id: row.id,
-      productCode: row.product_code_data as ProductData['productCode'],
-      compatibility: row.compatibility_data as ProductData['compatibility'],
-      description: row.description_data as ProductData['description'],
+      productCode: row.product_code_data as unknown as ProductData['productCode'],
+      compatibility: row.compatibility_data as unknown as ProductData['compatibility'],
+      description: row.description_data as unknown as ProductData['description'],
       created_at: row.created_at,
       updated_at: row.updated_at,
       status: row.status || undefined,
