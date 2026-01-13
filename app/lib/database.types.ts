@@ -17,6 +17,7 @@ export type Database = {
           product_code_data: Json
           compatibility_data: Json
           description_data: Json
+          verified: boolean
           status: string | null
           notes: string | null
         }
@@ -27,6 +28,7 @@ export type Database = {
           product_code_data: Json
           compatibility_data: Json
           description_data: Json
+          verified?: boolean
           status?: string | null
           notes?: string | null
         }
@@ -37,6 +39,7 @@ export type Database = {
           product_code_data?: Json
           compatibility_data?: Json
           description_data?: Json
+          verified?: boolean
           status?: string | null
           notes?: string | null
         }
@@ -56,6 +59,7 @@ export type Database = {
           product_code_data: Json
           compatibility_data: Json
           description_data: Json
+          verified: boolean
           created_at: string
         }[]
       }
