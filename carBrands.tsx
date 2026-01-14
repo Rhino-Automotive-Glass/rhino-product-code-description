@@ -554,7 +554,8 @@ export const carBrandsWithSubModels = [
       { name: "i6S", versions: ["12.9m", "13.9m", "15m"], additional: [] },
       { name: "i8", versions: ["12.9m", "14m", "15m"], additional: [] },
       { name: "ie bus", versions: [], additional: [] },
-      { name: "ie tram", versions: [], additional: [] }
+      { name: "ie tram", versions: [], additional: [] },
+      { name: "Pb", versions: ["3.50", "3.70"], additional: [] }
     ]
   },
   {
