@@ -5,6 +5,7 @@ import CodeGenerator from './components/CodeGenerator';
 import ProductCompatibility from './components/ProductCompatibility';
 import Header from './components/Header';
 import SavedProductsTable from './components/SavedProductsTable';
+import EditProductModal from './components/EditProductModal';
 import { productService } from './lib/services/productService';
 
 export interface Compatibility {
@@ -65,6 +66,11 @@ export default function Home() {
   // DB products (DB Codigos tab)
   const [dbProducts, setDbProducts] = useState<SavedProduct[]>([]);
   const [isLoadingDb, setIsLoadingDb] = useState(false);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<SavedProduct | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Load DB products when switching to DB tab
   useEffect(() => {
@@ -243,9 +249,13 @@ export default function Home() {
     if (!confirmed) return;
 
     try {
-      const { error } = await productService.deleteProduct(product.id, true);
-      if (error) {
-        console.error('Error deleting from database:', error);
+      const response = await fetch(`/api/products/${product.id}?hard=true`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error deleting from database:', errorData);
         alert('Error al eliminar producto');
         return;
       }
@@ -308,6 +318,51 @@ export default function Home() {
     }
   };
 
+  const handleEditDbProduct = (index: number) => {
+    const product = dbProducts[index];
+    setEditingProduct(product);
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateDbProduct = async (updatedProduct: SavedProduct) => {
+    setIsUpdating(true);
+    try {
+      const response = await fetch(`/api/products/${updatedProduct.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productCode: updatedProduct.productCode,
+          compatibility: updatedProduct.compatibility,
+          description: updatedProduct.description,
+          verified: updatedProduct.verified,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error updating product:', errorData);
+        alert('Error al actualizar el producto');
+        return;
+      }
+
+      // Update local state
+      setDbProducts(prev =>
+        prev.map(p => (p.id === updatedProduct.id ? updatedProduct : p))
+      );
+
+      setEditModalOpen(false);
+      setEditingProduct(null);
+      alert('Producto actualizado exitosamente');
+    } catch (error) {
+      console.error('Unexpected error updating product:', error);
+      alert('Error inesperado al actualizar');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleGlobalClean = () => {
     setClasificacion('');
     setParte('');
@@ -336,19 +391,24 @@ export default function Home() {
 
     for (const product of savedProducts) {
       try {
-        const productData: ProductData = {
-          productCode: product.productCode,
-          compatibility: product.compatibility,
-          description: product.description,
-          verified: product.verified,
-        };
+        const response = await fetch('/api/products', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            productCode: product.productCode,
+            compatibility: product.compatibility,
+            description: product.description,
+            verified: product.verified,
+          }),
+        });
 
-        const { data, error } = await productService.saveProduct(productData);
-
-        if (error) {
+        if (!response.ok) {
+          const errorData = await response.json();
           errorCount++;
-          errors.push(`${product.productCode.generated}: ${error.message}`);
-          console.error('Error saving product:', product.productCode.generated, error);
+          errors.push(`${product.productCode.generated}: ${errorData.error}`);
+          console.error('Error saving product:', product.productCode.generated, errorData);
         } else {
           successCount++;
           console.log('Saved:', product.productCode.generated);
@@ -541,11 +601,24 @@ export default function Home() {
                 products={dbProducts}
                 onDelete={handleDeleteDbProduct}
                 onToggleVerified={handleToggleDbVerified}
+                onEdit={handleEditDbProduct}
               />
             )}
           </>
         )}
       </div>
+
+      {/* Edit Product Modal */}
+      <EditProductModal
+        isOpen={editModalOpen}
+        product={editingProduct}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingProduct(null);
+        }}
+        onUpdate={handleUpdateDbProduct}
+        isUpdating={isUpdating}
+      />
     </main>
   );
 }
