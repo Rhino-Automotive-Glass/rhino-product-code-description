@@ -18,14 +18,14 @@ export default function SavedProductsTable({ products, onDelete, onToggleVerifie
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Verified
-              </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Product Code
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Product Description
+              </th>
+              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Verified
               </th>
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -42,15 +42,6 @@ export default function SavedProductsTable({ products, onDelete, onToggleVerifie
             ) : (
               products.map((product, index) => (
                 <tr key={index} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <input
-                      type="checkbox"
-                      checked={product.verified}
-                      onChange={() => onToggleVerified(index)}
-                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-                      aria-label="Mark as verified"
-                    />
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm font-mono font-semibold text-gray-900">
                       {product.productCode.generated}
@@ -60,6 +51,15 @@ export default function SavedProductsTable({ products, onDelete, onToggleVerifie
                     <span className="text-sm font-mono text-gray-900">
                       {product.description.generated}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <input
+                      type="checkbox"
+                      checked={product.verified}
+                      onChange={() => onToggleVerified(index)}
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                      aria-label="Mark as verified"
+                    />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
