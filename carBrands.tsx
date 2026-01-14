@@ -153,6 +153,7 @@ export const carBrandsWithSubModels = [
       { name: "CS55", versions: [], additional: [] },
       { name: "CS75", versions: [], additional: [] },
       { name: "Eado", versions: [], additional: [] },
+      { name: "Honor", versions: [], additional: [] },
       { name: "Hunter", versions: [], additional: [] },
       { name: "UNI-K", versions: [], additional: [] },
       { name: "UNI-T", versions: [], additional: [] },
@@ -172,7 +173,7 @@ export const carBrandsWithSubModels = [
       { name: "Chevy", versions: [], additional: [] },
       { name: "Corvette", versions: [], additional: [] },
       { name: "Equinox", versions: [], additional: [] },
-      { name: "Express", versions: ["2500 Cargo", "2500 Pasajeros", "3500 Cargo", "3500 Pasajeros"], additional: [] },
+      { name: "Express", versions: ["2500 Cargo", "2500 Pasajeros", "3500 Cargo", "3500 Pasajeros", "Van", "Van Max", "Solati", "Victory"], additional: [] },
       { name: "Impala", versions: [], additional: [] },
       { name: "Malibu", versions: [], additional: [] },
       { name: "Onix", versions: [], additional: [] },
@@ -282,6 +283,7 @@ export const carBrandsWithSubModels = [
     name: "Dongfeng",
     abbr: "Dongfeng",
     subModels: [
+      { name: "DFAC", versions: [], additional: [] },
       { name: "MAGE", versions: [], additional: [] },
       { name: "MAGE-HEV", versions: [], additional: [] },
       { name: "MAGE-EV", versions: [], additional: [] },
@@ -306,7 +308,7 @@ export const carBrandsWithSubModels = [
       { name: "500", versions: [], additional: [] },
       { name: "500L", versions: [], additional: [] },
       { name: "500X", versions: [], additional: [] },
-      { name: "Ducato", versions: [], additional: [] },
+      { name: "Ducato", versions: ["L1H2", "L2H2", "L3H3","L4H4", "L3H2" ], additional: [] },
       { name: "Fiorino", versions: [], additional: [] },
       { name: "Mobi", versions: [], additional: [] },
       { name: "Palio", versions: [], additional: [] },
@@ -331,9 +333,11 @@ export const carBrandsWithSubModels = [
     subModels: [
       { name: "Bronco", versions: ["Big Bend", "Outer Banks", "Badlands", "Wildtrak", "Raptor"], additional: [] },
       { name: "Bronco Sport", versions: ["Big Bend", "Heritage", "Badlands"], additional: [] },
+      { name: "Custom", versions: [], additional: [] },
       { name: "EcoSport", versions: [], additional: [] },
       { name: "Edge", versions: [], additional: [] },
       { name: "Escape", versions: [], additional: [] },
+      { name: "Electric", versions: [], additional: [] },
       { name: "Expedition", versions: [], additional: [] },
       { name: "Explorer", versions: [], additional: [] },
       { name: "F-150", versions: ["XL", "XLT", "Lariat", "King Ranch", "Platinum", "Limited", "Raptor", "Tremor"], additional: [] },
@@ -347,7 +351,8 @@ export const carBrandsWithSubModels = [
       { name: "Maverick", versions: ["XL", "XLT", "Lariat", "Tremor"], additional: [] },
       { name: "Mustang", versions: [], additional: [] },
       { name: "Ranger", versions: ["XL", "XLT", "Lariat", "Raptor"], additional: [] },
-      { name: "Transit", versions: ["150", "250", "350", "350 HD", "Van", "Pasajeros", "Chasis", "Jumbo", "Techo Bajo", "Techo Alto"], additional: [] },
+      { name: "Tornado", versions: [], additional: [] },
+      { name: "Transit", versions: ["150", "250", "350", "350 HD", "Van", "Pasajeros", "Chasis", "Jumbo", "Techo Bajo", "Techo Alto" ], additional: ["83.2", "100.8", "110.2",] },
       { name: "Transit Connect", versions: [], additional: [] }
     ]
   },
@@ -361,7 +366,7 @@ export const carBrandsWithSubModels = [
       { name: "Sauvana", versions: [], additional: [] },
       { name: "Toano", versions: [], additional: [] },
       { name: "Tunland", versions: [], additional: [] },
-      { name: "View", versions: [], additional: [] }
+      { name: "View", versions: ["SC2", "C" ], additional: [] }
     ]
   },
   {
@@ -638,6 +643,15 @@ export const carBrandsWithSubModels = [
     ]
   },
   {
+    name: "Joylong",
+    abbr: "Joylong",
+    subModels: [
+      { name: "Serie A", versions: [], additional: [] },
+      { name: "Serie C", versions: [], additional: [] },
+      { name: "Serie MPV", versions: [], additional: [] },
+      { name: "Serie E", versions: [], additional: [] },]
+  },
+  {
     name: "Kenworth",
     abbr: "Kenworth",
     subModels: [
@@ -819,11 +833,11 @@ export const carBrandsWithSubModels = [
       { name: "OF", versions: [], additional: [] },
       { name: "S-Class", versions: [], additional: [] },
       { name: "Sprinter", versions: ["1500", "2500", "3500", "3500 XD", "4500", "Cargo Van", "Pasajeros", "Chasis", "314",
-        "316",
+        "316", "318",
         "319",
-        "519", "Techo Bajo", "Techo Alto", "Techo Super Alto", "Distribución", "Furgón"], "additional": [
-        "118",
-        "144",
+        "519", "Techo Bajo", "Techo Alto", "Techo Super Alto", "Distribución", "Furgón", "WB"], "additional": [
+        "118", "140",
+        "144", "158",
         "170",
         "170ext"
       ] },
@@ -944,7 +958,7 @@ export const carBrandsWithSubModels = [
       { name: "E-Partner", versions: [], additional: [] },
       { name: "E-Rifter", versions: [], additional: [] },
       { name: "Expert", versions: [], additional: [] },
-      { name: "Manager", versions: [], additional: [] },
+      { name: "Manager", versions: ["L2H2", "L4H2"], additional: [] },
       { name: "Partner", versions: [], additional: [] },
       { name: "Partner Tepee", versions: [], additional: [] },
       { name: "Rifter", versions: [], additional: [] }
@@ -959,7 +973,7 @@ export const carBrandsWithSubModels = [
       // { name: "3500", versions: ["Tradesman", "Big Horn", "Laramie", "Limited"], additional: [] },
       // { name: "4000", versions: ["Chasis", "Estacas"], additional: [] },
       // { name: "700", versions: ["SLT", "Bighorn", "Laramie"], additional: [] },
-      { name: "ProMaster", versions: ["700","1500", "2500", "3500", "4000", "Rapid", "City", "Window Van", "Techo Bajo", "Techo Alto"], additional: [] },
+      { name: "ProMaster", versions: ["700","1500", "2500", "3500", "4000", "Rapid", "City", "Window Van", "Techo Bajo", "Techo Alto", "L1H1"], additional: [] },
       { name: "ProMaster City", versions: [], additional: [] },
       { name: "ProMaster Rapid", versions: ["Base", "Plus"], additional: [] }
     ]
@@ -976,7 +990,7 @@ export const carBrandsWithSubModels = [
       { name: "Koleos", versions: [], additional: [] },
       { name: "Kwid", versions: [], additional: [] },
       { name: "Logan", versions: [], additional: [] },
-      { name: "Master", versions: ["Furgón", "Pasajeros", "Chasis"], additional: [] },
+      { name: "Master", versions: ["Furgón", "Pasajeros", "Chasis", "L3H3", "L3H2"], additional: [] },
       { name: "Megane E-Tech", versions: [], additional: [] },
       { name: "Oroch", versions: [], additional: [] },
       { name: "Sandero", versions: [], additional: [] },
@@ -1153,7 +1167,7 @@ export const carBrandsWithSubModels = [
       { name: "Caravelle", versions: [], additional: [] },
       { name: "Combi", versions: [], additional: [] },
       { name: "Constellation", versions: [], additional: [] },
-      { name: "Crafter", versions: [], additional: [] },
+      { name: "Crafter", versions: [], additional: ["3.9", "4.9", "5.0"] },
       { name: "Delivery", versions: [], additional: [] },
       { name: "Gol", versions: [], additional: [] },
       { name: "Golf", versions: [], additional: [] },
