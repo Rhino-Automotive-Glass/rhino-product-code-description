@@ -105,7 +105,7 @@ export default function CodeGenerator({
               { value: 'q', label: 'Q - Quarter' },
               { value: 'v', label: 'V - Vent' },
               { value: 'w', label: 'W - Windshield'},
-              { value: 'r', label: 'R - Roof'},
+              { value: 'r', label: 'R - Roof.'},
             ].map((option) => (
               <label key={option.value} className="flex items-center cursor-pointer">
                 <input
