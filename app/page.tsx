@@ -12,6 +12,7 @@ export interface Compatibility {
   marca: string;
   subModelo: string;
   version: string;
+  additional: string;
   modelo: string;
 }
 
@@ -116,12 +117,16 @@ export default function Home() {
     if (!comp.subModelo) {
       return `${comp.marca} ${comp.modelo}`;
     }
-    
+
+    let modelPart = comp.subModelo;
     if (comp.version) {
-      return `${comp.marca} ${comp.subModelo}-${comp.version} ${comp.modelo}`;
+      modelPart += `-${comp.version}`;
     }
-    
-    return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
+    if (comp.additional) {
+      modelPart += `-${comp.additional}`;
+    }
+
+    return `${comp.marca} ${modelPart} ${comp.modelo}`;
   };
 
   const generateCompatibilityString = (): string => {
@@ -150,17 +155,22 @@ export default function Home() {
     
     if (compatibilities.length > 0) {
       const grouped = new Map<string, string[]>();
-      
+
       compatibilities.forEach(comp => {
         let key: string;
         if (!comp.subModelo) {
           key = comp.marca;
-        } else if (comp.version) {
-          key = `${comp.marca} ${comp.subModelo}-${comp.version}`;
         } else {
-          key = `${comp.marca} ${comp.subModelo}`;
+          let modelPart = comp.subModelo;
+          if (comp.version) {
+            modelPart += `-${comp.version}`;
+          }
+          if (comp.additional) {
+            modelPart += `-${comp.additional}`;
+          }
+          key = `${comp.marca} ${modelPart}`;
         }
-        
+
         if (!grouped.has(key)) {
           grouped.set(key, []);
         }

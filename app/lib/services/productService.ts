@@ -10,6 +10,7 @@ export interface Compatibility {
   marca: string;
   subModelo: string;
   version: string;
+  additional: string;
   modelo: string;
 }
 

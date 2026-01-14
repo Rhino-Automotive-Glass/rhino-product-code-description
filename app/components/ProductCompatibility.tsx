@@ -14,6 +14,7 @@ interface ProductCompatibilityProps {
 interface SubModel {
   name: string;
   versions: string[];
+  additional: string[];
 }
 
 export default function ProductCompatibility({ 
@@ -24,6 +25,7 @@ export default function ProductCompatibility({
   const [marca, setMarca] = useState('');
   const [subModelo, setSubModelo] = useState('');
   const [version, setVersion] = useState('');
+  const [additional, setAdditional] = useState('');
   const [modelo, setModelo] = useState('');
   const [customMarca, setCustomMarca] = useState(''); // Custom brand/model input
 
@@ -52,16 +54,32 @@ export default function ProductCompatibility({
     return getVersions().length > 0;
   };
 
-  // Reset subModelo, version, and customMarca when marca changes
+  // Get additional options for the selected subModelo
+  const getAdditional = (): string[] => {
+    if (isOtroSelected || !subModelo) return [];
+    const subModels = getSubModelos();
+    const selectedSubModel = subModels.find(sm => sm.name === subModelo);
+    if (!selectedSubModel) return [];
+    return selectedSubModel.additional;
+  };
+
+  // Check if current subModelo has additional options available
+  const hasAdditional = (): boolean => {
+    return getAdditional().length > 0;
+  };
+
+  // Reset subModelo, version, additional, and customMarca when marca changes
   useEffect(() => {
     setSubModelo('');
     setVersion('');
+    setAdditional('');
     setCustomMarca('');
   }, [marca]);
 
-  // Reset version when subModelo changes
+  // Reset version and additional when subModelo changes
   useEffect(() => {
     setVersion('');
+    setAdditional('');
   }, [subModelo]);
 
   // Reset form fields when resetTrigger changes
@@ -70,6 +88,7 @@ export default function ProductCompatibility({
       setMarca('');
       setSubModelo('');
       setVersion('');
+      setAdditional('');
       setModelo('');
       setCustomMarca('');
     }
@@ -85,10 +104,11 @@ export default function ProductCompatibility({
   // Check if compatibility already exists
   const isDuplicate = (newCompatibility: Compatibility): boolean => {
     return compatibilities.some(
-      comp => 
-        comp.marca === newCompatibility.marca && 
-        comp.subModelo === newCompatibility.subModelo && 
+      comp =>
+        comp.marca === newCompatibility.marca &&
+        comp.subModelo === newCompatibility.subModelo &&
         comp.version === newCompatibility.version &&
+        comp.additional === newCompatibility.additional &&
         comp.modelo === newCompatibility.modelo
     );
   };
@@ -114,12 +134,14 @@ export default function ProductCompatibility({
           marca: customMarca.trim(),
           subModelo: '', // Empty for custom entries
           version: '', // Empty for custom entries
+          additional: '', // Empty for custom entries
           modelo
         }
       : {
           marca,
           subModelo,
           version, // Can be empty string if not selected
+          additional, // Can be empty string if not selected
           modelo
         };
 
@@ -149,14 +171,17 @@ export default function ProductCompatibility({
     if (!comp.subModelo) {
       return `${comp.marca} ${comp.modelo}`;
     }
-    
-    // If version exists, format as SUBMODELO-VERSION
+
+    // Build the model part: SUBMODELO[-VERSION][-ADDITIONAL]
+    let modelPart = comp.subModelo;
     if (comp.version) {
-      return `${comp.marca} ${comp.subModelo}-${comp.version} ${comp.modelo}`;
+      modelPart += `-${comp.version}`;
     }
-    
-    // No version, standard format
-    return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
+    if (comp.additional) {
+      modelPart += `-${comp.additional}`;
+    }
+
+    return `${comp.marca} ${modelPart} ${comp.modelo}`;
   };
 
   // Generate compatibility string (comma-separated)
@@ -263,16 +288,45 @@ export default function ProductCompatibility({
                 className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
               >
                 <option value="">
-                  {!subModelo 
-                    ? 'Selecciona un Sub-Modelo primero...' 
-                    : !hasVersions() 
-                      ? 'No hay versiones disponibles' 
+                  {!subModelo
+                    ? 'Selecciona un Sub-Modelo primero...'
+                    : !hasVersions()
+                      ? 'No hay versiones disponibles'
                       : 'Seleccionar... (opcional)'
                   }
                 </option>
                 {getVersions().map((ver) => (
                   <option key={ver} value={ver}>
                     {ver}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Adicional */}
+            <div className="w-full" data-testid="additional-container">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Adicional
+                <span className="ml-1 text-xs text-slate-400 font-normal">(opcional)</span>
+              </label>
+              <select
+                data-testid="additional-select"
+                value={additional}
+                onChange={(e) => setAdditional(e.target.value)}
+                disabled={!subModelo || !hasAdditional()}
+                className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+              >
+                <option value="">
+                  {!subModelo
+                    ? 'Selecciona un Sub-Modelo primero...'
+                    : !hasAdditional()
+                      ? 'No hay opciones adicionales'
+                      : 'Seleccionar... (opcional)'
+                  }
+                </option>
+                {getAdditional().map((add) => (
+                  <option key={add} value={add}>
+                    {add}
                   </option>
                 ))}
               </select>

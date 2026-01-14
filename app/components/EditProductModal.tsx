@@ -15,6 +15,7 @@ interface EditProductModalProps {
 interface SubModel {
   name: string;
   versions: string[];
+  additional: string[];
 }
 
 export default function EditProductModal({
@@ -38,6 +39,7 @@ export default function EditProductModal({
   const [marca, setMarca] = useState('');
   const [subModelo, setSubModelo] = useState('');
   const [version, setVersion] = useState('');
+  const [additional, setAdditional] = useState('');
   const [modelo, setModelo] = useState('');
   const [customMarca, setCustomMarca] = useState('');
 
@@ -56,6 +58,7 @@ export default function EditProductModal({
       setMarca('');
       setSubModelo('');
       setVersion('');
+      setAdditional('');
       setModelo('');
       setCustomMarca('');
     }
@@ -82,15 +85,29 @@ export default function EditProductModal({
     return getVersions().length > 0;
   };
 
+  const getAdditional = (): string[] => {
+    if (isOtroSelected || !subModelo) return [];
+    const subModels = getSubModelos();
+    const selectedSubModel = subModels.find(sm => sm.name === subModelo);
+    if (!selectedSubModel) return [];
+    return selectedSubModel.additional;
+  };
+
+  const hasAdditional = (): boolean => {
+    return getAdditional().length > 0;
+  };
+
   // Reset dependent fields when parent changes
   useEffect(() => {
     setSubModelo('');
     setVersion('');
+    setAdditional('');
     setCustomMarca('');
   }, [marca]);
 
   useEffect(() => {
     setVersion('');
+    setAdditional('');
   }, [subModelo]);
 
   const handleNumeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,6 +129,7 @@ export default function EditProductModal({
         comp.marca === newCompatibility.marca &&
         comp.subModelo === newCompatibility.subModelo &&
         comp.version === newCompatibility.version &&
+        comp.additional === newCompatibility.additional &&
         comp.modelo === newCompatibility.modelo
     );
   };
@@ -134,12 +152,14 @@ export default function EditProductModal({
           marca: customMarca.trim(),
           subModelo: '',
           version: '',
+          additional: '',
           modelo,
         }
       : {
           marca,
           subModelo,
           version,
+          additional,
           modelo,
         };
 
@@ -164,10 +184,16 @@ export default function EditProductModal({
     if (!comp.subModelo) {
       return `${comp.marca} ${comp.modelo}`;
     }
+
+    let modelPart = comp.subModelo;
     if (comp.version) {
-      return `${comp.marca} ${comp.subModelo}-${comp.version} ${comp.modelo}`;
+      modelPart += `-${comp.version}`;
     }
-    return `${comp.marca} ${comp.subModelo} ${comp.modelo}`;
+    if (comp.additional) {
+      modelPart += `-${comp.additional}`;
+    }
+
+    return `${comp.marca} ${modelPart} ${comp.modelo}`;
   };
 
   const generateProductCode = (): string => {
@@ -215,10 +241,15 @@ export default function EditProductModal({
         let key: string;
         if (!comp.subModelo) {
           key = comp.marca;
-        } else if (comp.version) {
-          key = `${comp.marca} ${comp.subModelo}-${comp.version}`;
         } else {
-          key = `${comp.marca} ${comp.subModelo}`;
+          let modelPart = comp.subModelo;
+          if (comp.version) {
+            modelPart += `-${comp.version}`;
+          }
+          if (comp.additional) {
+            modelPart += `-${comp.additional}`;
+          }
+          key = `${comp.marca} ${modelPart}`;
         }
 
         if (!grouped.has(key)) {
@@ -553,6 +584,34 @@ export default function EditProductModal({
                           {getVersions().map((ver) => (
                             <option key={ver} value={ver}>
                               {ver}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Adicional */}
+                      <div className="w-full">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Adicional
+                          <span className="ml-1 text-xs text-slate-400 font-normal">(opcional)</span>
+                        </label>
+                        <select
+                          value={additional}
+                          onChange={(e) => setAdditional(e.target.value)}
+                          disabled={!subModelo || !hasAdditional()}
+                          className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                        >
+                          <option value="">
+                            {!subModelo
+                              ? 'Selecciona un Sub-Modelo primero...'
+                              : !hasAdditional()
+                              ? 'No hay opciones adicionales'
+                              : 'Seleccionar... (opcional)'
+                            }
+                          </option>
+                          {getAdditional().map((add) => (
+                            <option key={add} value={add}>
+                              {add}
                             </option>
                           ))}
                         </select>
