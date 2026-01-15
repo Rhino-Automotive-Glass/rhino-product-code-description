@@ -239,7 +239,11 @@ export default function Home() {
       finalGrouped.forEach((years, displayKey) => {
         const uniqueYears = [...new Set(years)];
         const sortedYears = uniqueYears.sort((a, b) => parseInt(a) - parseInt(b));
-        parts.push(`${displayKey} ${sortedYears.join(', ')}`);
+        // Show year range (min-max) instead of listing all years
+        const yearDisplay = sortedYears.length === 1
+          ? sortedYears[0]
+          : `${sortedYears[0]}-${sortedYears[sortedYears.length - 1]}`;
+        parts.push(`${displayKey} ${yearDisplay}`);
       });
 
       description += ` ${parts.join(' ')}`;
