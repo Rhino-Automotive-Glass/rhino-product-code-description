@@ -192,9 +192,39 @@ export default function Home() {
         } else {
           let modelPart = subModelo;
           if (pairs.size > 0) {
-            // Sort and join pairs with ", " separator
+            // Group pairs by version prefix to combine additionals
             const sortedPairs = Array.from(pairs).sort();
-            modelPart += `-${sortedPairs.join(', ')}`;
+
+            // Group by version (part before first -)
+            const versionGroups = new Map<string, string[]>();
+            sortedPairs.forEach(pair => {
+              const dashIndex = pair.indexOf('-');
+              if (dashIndex > 0) {
+                const version = pair.substring(0, dashIndex);
+                const additional = pair.substring(dashIndex + 1);
+                if (!versionGroups.has(version)) {
+                  versionGroups.set(version, []);
+                }
+                versionGroups.get(version)!.push(additional);
+              } else {
+                // No additional, just version
+                if (!versionGroups.has(pair)) {
+                  versionGroups.set(pair, []);
+                }
+              }
+            });
+
+            // Build combined version strings (e.g., 314-140,144 instead of 314-140, 314-144)
+            const combinedPairs: string[] = [];
+            versionGroups.forEach((additionals, version) => {
+              if (additionals.length === 0) {
+                combinedPairs.push(version);
+              } else {
+                combinedPairs.push(`${version}-${additionals.join(',')}`);
+              }
+            });
+
+            modelPart += `-${combinedPairs.join(', ')}`;
           }
           displayKey = `${marca} ${modelPart}`;
         }
