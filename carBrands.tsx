@@ -308,7 +308,7 @@ export const carBrandsWithSubModels = [
       { name: "500", versions: [], additional: [] },
       { name: "500L", versions: [], additional: [] },
       { name: "500X", versions: [], additional: [] },
-      { name: "Ducato", versions: ["L1H2", "L2H2", "L3H3","L4H4", "L3H2" ], additional: [] },
+      { name: "Ducato", versions: ["L1H2", "L2H2", "L3H3", "L3H2", "L4H2" ], additional: [] },
       { name: "Fiorino", versions: [], additional: [] },
       { name: "Mobi", versions: [], additional: [] },
       { name: "Palio", versions: [], additional: [] },
