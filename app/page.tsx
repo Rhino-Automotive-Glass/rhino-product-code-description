@@ -363,15 +363,20 @@ export default function Home() {
     );
 
     try {
-      // Update in database - only send the verified field
-      console.log('Calling updateProduct...');
-      const { error } = await productService.updateProduct(product.id, {
-        verified: newVerifiedStatus,
+      // Update via API route to avoid CORS issues with direct Supabase calls
+      const response = await fetch(`/api/products/${product.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ verified: newVerifiedStatus }),
       });
-      console.log('Update result:', error ? 'ERROR' : 'SUCCESS');
 
-      if (error) {
-        console.error('Error updating verified status:', error);
+      console.log('Update result:', response.ok ? 'SUCCESS' : 'ERROR');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error updating verified status:', errorData);
         // Revert on error
         setDbProducts(prev =>
           prev.map((p, i) =>
