@@ -235,33 +235,62 @@ export default function EditProductModal({
     let description = `${parteLabel} ${posicionText} ${ladoText}`;
 
     if (compatibilities.length > 0) {
-      const grouped = new Map<string, string[]>();
+      // Step 1: Group by marca+subModelo+year to collect version-additional pairs
+      const pairsByGroup = new Map<string, Set<string>>();
 
       compatibilities.forEach(comp => {
-        let key: string;
-        if (!comp.subModelo) {
-          key = comp.marca;
-        } else {
-          let modelPart = comp.subModelo;
-          if (comp.version) {
-            modelPart += `-${comp.version}`;
-          }
-          if (comp.additional) {
-            modelPart += `-${comp.additional}`;
-          }
-          key = `${comp.marca} ${modelPart}`;
+        const key = `${comp.marca}|${comp.subModelo}|${comp.modelo}`;
+        if (!pairsByGroup.has(key)) {
+          pairsByGroup.set(key, new Set());
         }
 
-        if (!grouped.has(key)) {
-          grouped.set(key, []);
+        // Build version-additional pair
+        let pair = '';
+        if (comp.version) {
+          pair = comp.version;
+          if (comp.additional) {
+            pair += `-${comp.additional}`;
+          }
+        } else if (comp.additional) {
+          pair = `-${comp.additional}`;
         }
-        grouped.get(key)!.push(comp.modelo);
+
+        if (pair) {
+          pairsByGroup.get(key)!.add(pair);
+        }
+      });
+
+      // Step 2: Build display strings with combined pairs, then group by years
+      const finalGrouped = new Map<string, string[]>();
+
+      pairsByGroup.forEach((pairs, key) => {
+        const [marca, subModelo, modelo] = key.split('|');
+
+        let displayKey: string;
+        if (!subModelo) {
+          // Custom entry (no subModel)
+          displayKey = marca;
+        } else {
+          let modelPart = subModelo;
+          if (pairs.size > 0) {
+            // Sort and join pairs with ", " separator
+            const sortedPairs = Array.from(pairs).sort();
+            modelPart += `-${sortedPairs.join(', ')}`;
+          }
+          displayKey = `${marca} ${modelPart}`;
+        }
+
+        if (!finalGrouped.has(displayKey)) {
+          finalGrouped.set(displayKey, []);
+        }
+        finalGrouped.get(displayKey)!.push(modelo);
       });
 
       const parts: string[] = [];
-      grouped.forEach((years, key) => {
-        const sortedYears = years.sort((a, b) => parseInt(a) - parseInt(b));
-        parts.push(`${key} ${sortedYears.join(', ')}`);
+      finalGrouped.forEach((years, displayKey) => {
+        const uniqueYears = [...new Set(years)];
+        const sortedYears = uniqueYears.sort((a, b) => parseInt(a) - parseInt(b));
+        parts.push(`${displayKey} ${sortedYears.join(', ')}`);
       });
 
       description += ` ${parts.join(' ')}`;
