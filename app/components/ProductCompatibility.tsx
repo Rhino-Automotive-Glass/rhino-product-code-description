@@ -195,7 +195,7 @@ export default function ProductCompatibility({
   };
 
   return (
-    <div className="card p-6 lg:p-8 min-h-[750px]">
+    <div className="p-6 lg:p-8 min-h-[750px]">
       <div className="mb-6 lg:mb-8">
         <h2 className="text-2xl lg:text-2xl font-bold text-slate-900 mb-2">
           Product Compatibility

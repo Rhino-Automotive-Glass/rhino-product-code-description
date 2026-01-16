@@ -586,41 +586,50 @@ export default function Home() {
       <Header />
 
       {/* Tabs Navigation */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-8">
-        <div className="flex w-full">
-          <button
-            onClick={() => setActiveTab('agregar')}
-            className={`flex-1 py-4 font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
-              activeTab === 'agregar'
-                ? 'border-b-4 !border-[#f97316] text-orange-600'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-            </svg>
-            Agregar Códigos
-          </button>
-          <button
-            onClick={() => setActiveTab('db')}
-            className={`flex-1 py-4 font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
-              activeTab === 'db'
-                ? 'border-b-4 !border-[#f97316] text-orange-600'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
-              <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
-              <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
-            </svg>
-            BD Códigos
-          </button>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-0">
+        <div className="bg-white rounded-t-xl shadow-sm border border-slate-200 border-b-0">
+          <div className="flex w-full">
+            <button
+              onClick={() => setActiveTab('agregar')}
+              className={`flex-1 py-4 px-6 font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2.5 relative ${
+                activeTab === 'agregar'
+                  ? 'text-orange-600 bg-gradient-to-b from-orange-50 to-white'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+              </svg>
+              <span>Agregar Códigos</span>
+              {activeTab === 'agregar' && (
+                <span className="absolute bottom-0 left-0 right-0 h-1 bg-orange-500 rounded-t-sm"></span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('db')}
+              className={`flex-1 py-4 px-6 font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2.5 relative ${
+                activeTab === 'db'
+                  ? 'text-orange-600 bg-gradient-to-b from-orange-50 to-white'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
+                <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
+                <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
+              </svg>
+              <span>BD Códigos</span>
+              {activeTab === 'db' && (
+                <span className="absolute bottom-0 left-0 right-0 h-1 bg-orange-500 rounded-t-sm"></span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Tab Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div className="bg-white rounded-b-xl shadow-sm border border-slate-200 border-t-0 p-6 lg:p-8">
         {activeTab === 'agregar' ? (
           // AGREGAR TAB
           <>            
@@ -652,22 +661,23 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="card p-6 lg:p-8 mb-8 mt-8">
+            <div className="card p-6 lg:p-8 mt-8 mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Código Generado</h2>
               <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-8">
                 <div className="flex-1">
-                  <p className="text-xs text-slate-500 mb-1.5 uppercase tracking-wide font-medium">
+                  <p className="text-xs text-slate-500 mb-2 uppercase tracking-wide font-semibold">
                     Código Rhino
                   </p>
-                  <p className="text-2xl lg:text-3xl font-mono font-bold text-slate-900 tracking-wider">
+                  <p className="text-xl lg:text-2xl font-mono font-bold text-slate-900 tracking-wide">
                     {generateProductCode()}
                   </p>
                 </div>
                 <div className="hidden lg:block w-px h-16 bg-slate-200"></div>
                 <div className="flex-[2]">
-                  <p className="text-xs text-slate-500 mb-1.5 uppercase tracking-wide font-medium">
+                  <p className="text-xs text-slate-500 mb-2 uppercase tracking-wide font-semibold">
                     Descripción del Producto
                   </p>
-                  <p className="text-lg lg:text-xl font-mono font-bold text-slate-900 leading-relaxed">
+                  <p className="text-base lg:text-lg font-mono font-semibold text-slate-900 leading-relaxed">
                     {generateProductDescription()}
                   </p>
                 </div>
@@ -675,27 +685,27 @@ export default function Home() {
                 <div className="flex gap-3 w-full lg:w-auto">
                   <button
                     onClick={handleSave}
-                    className="btn btn-md flex-1 lg:flex-none flex items-center justify-center gap-2 !border-2 !border-[#2563eb] text-blue-600 hover:bg-blue-50 bg-white"
+                    className="btn btn-primary btn-md flex-1 lg:flex-none gap-2"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
                     </svg>
-                    <span className="font-semibold">Agregar</span>
+                    <span>Agregar</span>
                   </button>
                   <button
                     onClick={handleGlobalClean}
-                    className="btn btn-secondary btn-md flex-1 lg:flex-none flex items-center justify-center gap-2"
+                    className="btn btn-secondary btn-md flex-1 lg:flex-none gap-2"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
-                    <span className="font-semibold">Limpiar</span>
+                    <span>Limpiar</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="mb-6 lg:mb-8">
+            <div className="mb-6">
               <SavedProductsTable
                 products={savedProducts}
                 onDelete={handleDeleteProduct}
@@ -703,15 +713,15 @@ export default function Home() {
               />
             </div>
 
-            <div className="flex justify-center mb-8 w-full px-4 lg:px-0">
+            <div className="flex justify-center mt-6">
               <button
                 onClick={handleGuardarTodos}
                 disabled={savedProducts.length === 0 || isSavingAll}
-                className="btn btn-primary btn-xl w-full lg:w-auto lg:min-w-[500px] py-5 text-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+                className="btn btn-accent btn-lg w-full lg:w-auto lg:min-w-[400px] gap-3"
               >
                 {isSavingAll ? (
                   <>
-                    <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -745,7 +755,7 @@ export default function Home() {
                     value={searchTerm}
                     onChange={(e) => handleSearch(e.target.value)}
                     placeholder="Buscar por código o descripción..."
-                    className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                   />
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -774,9 +784,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <hr className="w-full border-t border-gray-300 my-6" />
 
-            <div className="relative min-h-[600px]">
+            <div className="relative min-h-[600px] mt-6">
               {dbProducts.length === 0 && !isLoadingDb ? (
                 <div className="card p-8 text-center">
                   {searchTerm ? (
@@ -828,6 +837,7 @@ export default function Home() {
             </div>
           </>
         )}
+        </div>
       </div>
 
       {/* Edit Product Modal */}
