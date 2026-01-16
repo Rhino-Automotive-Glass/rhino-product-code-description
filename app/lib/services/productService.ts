@@ -116,16 +116,25 @@ export class ProductService {
 
   async getProducts(
     status: string = 'active',
-    pagination?: PaginationParams
+    pagination?: PaginationParams,
+    searchTerm?: string
   ): Promise<PaginatedResponse<SavedProduct>> {
     try {
       let query = this.supabase
         .from('product_codes')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       if (status) {
         query = query.eq('status', status);
+      }
+
+      // Apply search filter if provided
+      if (searchTerm && searchTerm.trim()) {
+        const searchPattern = `%${searchTerm.trim()}%`;
+        query = query.or(
+          `product_code_data->>generated.ilike.${searchPattern},description_data->>generated.ilike.${searchPattern}`
+        );
       }
 
       // Apply pagination if provided
@@ -135,20 +144,14 @@ export class ProductService {
         query = query.range(from, to);
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
 
       if (error) throw error;
 
       const products = data.map(item => this.transformProduct(item));
 
-      // Get total count for pagination metadata
-      let totalCount = 0;
-      if (pagination) {
-        const { count } = await this.getProductsCount(status);
-        totalCount = count;
-      } else {
-        totalCount = products.length;
-      }
+      // Get total count from query or fallback
+      const totalCount = count ?? products.length;
 
       // Calculate pagination metadata
       const totalPages = pagination ? Math.ceil(totalCount / pagination.pageSize) : 1;
