@@ -44,6 +44,22 @@ export interface SavedProduct extends ProductData {
   notes?: string;
 }
 
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+  status?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[] | null;
+  error: Error | null;
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
 export class ProductService {
   private supabase;
 
@@ -98,10 +114,10 @@ export class ProductService {
     }
   }
 
-  async getProducts(status: string = 'active'): Promise<{ 
-    data: SavedProduct[] | null; 
-    error: Error | null 
-  }> {
+  async getProducts(
+    status: string = 'active',
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<SavedProduct>> {
     try {
       let query = this.supabase
         .from('product_codes')
@@ -112,15 +128,54 @@ export class ProductService {
         query = query.eq('status', status);
       }
 
+      // Apply pagination if provided
+      if (pagination) {
+        const from = (pagination.page - 1) * pagination.pageSize;
+        const to = from + pagination.pageSize - 1;
+        query = query.range(from, to);
+      }
+
       const { data, error } = await query;
 
       if (error) throw error;
 
       const products = data.map(item => this.transformProduct(item));
-      return { data: products, error: null };
+
+      // Get total count for pagination metadata
+      let totalCount = 0;
+      if (pagination) {
+        const { count } = await this.getProductsCount(status);
+        totalCount = count;
+      } else {
+        totalCount = products.length;
+      }
+
+      // Calculate pagination metadata
+      const totalPages = pagination ? Math.ceil(totalCount / pagination.pageSize) : 1;
+      const currentPage = pagination?.page || 1;
+      const hasNextPage = pagination ? currentPage < totalPages : false;
+      const hasPreviousPage = pagination ? currentPage > 1 : false;
+
+      return {
+        data: products,
+        error: null,
+        totalCount,
+        totalPages,
+        currentPage,
+        hasNextPage,
+        hasPreviousPage,
+      };
     } catch (error) {
       console.error('Error fetching products:', error);
-      return { data: null, error: error as Error };
+      return {
+        data: null,
+        error: error as Error,
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      };
     }
   }
 

@@ -6,6 +6,7 @@ import ProductCompatibility from './components/ProductCompatibility';
 import Header from './components/Header';
 import SavedProductsTable from './components/SavedProductsTable';
 import EditProductModal from './components/EditProductModal';
+import Pagination from './components/Pagination';
 import { productService } from './lib/services/productService';
 
 export interface Compatibility {
@@ -68,6 +69,12 @@ export default function Home() {
   const [dbProducts, setDbProducts] = useState<SavedProduct[]>([]);
   const [isLoadingDb, setIsLoadingDb] = useState(false);
 
+  // Pagination state for BD Códigos tab
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const PAGE_SIZE = 30;
+
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SavedProduct | null>(null);
@@ -76,26 +83,59 @@ export default function Home() {
   // Load DB products when switching to DB tab
   useEffect(() => {
     if (activeTab === 'db') {
-      loadDbProducts();
+      setCurrentPage(1);
+      loadDbProducts(1);
     }
   }, [activeTab]);
 
-  const loadDbProducts = async () => {
+  const loadDbProducts = async (page: number = 1) => {
     setIsLoadingDb(true);
     try {
-      const { data, error } = await productService.getProducts();
-      if (error) {
-        console.error('Error loading DB products:', error);
+      const response = await productService.getProducts('active', {
+        page,
+        pageSize: PAGE_SIZE,
+        status: 'active',
+      });
+
+      if (response.error) {
+        console.error('Error loading DB products:', response.error);
         alert('Error al cargar productos de la base de datos');
         setDbProducts([]);
-      } else if (data) {
-        setDbProducts(data);
+        setTotalPages(0);
+        setTotalCount(0);
+      } else if (response.data) {
+        setDbProducts(response.data);
+        setCurrentPage(response.currentPage);
+        setTotalPages(response.totalPages);
+        setTotalCount(response.totalCount);
       }
     } catch (error) {
       console.error('Unexpected error loading DB products:', error);
       setDbProducts([]);
+      setTotalPages(0);
+      setTotalCount(0);
     } finally {
       setIsLoadingDb(false);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      const nextPage = currentPage + 1;
+      loadDbProducts(nextPage);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      const prevPage = currentPage - 1;
+      loadDbProducts(prevPage);
+    }
+  };
+
+  const handleGoToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      loadDbProducts(page);
     }
   };
 
@@ -333,7 +373,18 @@ export default function Home() {
         return;
       }
 
-      setDbProducts(prev => prev.filter((_, i) => i !== index));
+      // After successful deletion, calculate new page count
+      const newTotalCount = totalCount - 1;
+      const newTotalPages = Math.ceil(newTotalCount / PAGE_SIZE);
+
+      // If current page is now beyond total pages, go to last page
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        loadDbProducts(newTotalPages);
+      } else {
+        // Reload current page
+        loadDbProducts(currentPage);
+      }
+
       alert('Producto eliminado exitosamente');
     } catch (error) {
       console.error('Unexpected error deleting:', error);
@@ -657,7 +708,7 @@ export default function Home() {
           <>
             <div className="flex justify-between items-center mb-8">
               <button
-                onClick={loadDbProducts}
+                onClick={() => loadDbProducts(currentPage)}
                 disabled={isLoadingDb}
                 className="btn btn-secondary btn-md flex items-center gap-2"
               >
@@ -669,19 +720,46 @@ export default function Home() {
             </div>
             <hr className="w-full border-t border-gray-300 my-6" />
 
-            {isLoadingDb ? (
-              <div className="card p-8 text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="mt-4 text-slate-600">Cargando productos...</p>
-              </div>
-            ) : (
-              <SavedProductsTable
-                products={dbProducts}
-                onDelete={handleDeleteDbProduct}
-                onToggleVerified={handleToggleDbVerified}
-                onEdit={handleEditDbProduct}
-              />
-            )}
+            <div className="relative min-h-[600px]">
+              {dbProducts.length === 0 && !isLoadingDb ? (
+                <div className="card p-8 text-center">
+                  <p className="text-slate-600">No hay productos en la base de datos</p>
+                </div>
+              ) : (
+                <>
+                  <div className={`mb-6 transition-opacity duration-200 ${isLoadingDb ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                    <SavedProductsTable
+                      products={dbProducts}
+                      onDelete={handleDeleteDbProduct}
+                      onToggleVerified={handleToggleDbVerified}
+                      onEdit={handleEditDbProduct}
+                    />
+                  </div>
+
+                  {totalPages > 0 && (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      totalItems={totalCount}
+                      itemsPerPage={PAGE_SIZE}
+                      onPageChange={handleGoToPage}
+                      onNextPage={handleNextPage}
+                      onPreviousPage={handlePreviousPage}
+                      isLoading={isLoadingDb}
+                    />
+                  )}
+
+                  {isLoadingDb && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+                      <div className="bg-white rounded-lg shadow-lg p-6 flex items-center gap-3">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        <p className="text-slate-700 font-medium">Cargando productos...</p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </>
         )}
       </div>
