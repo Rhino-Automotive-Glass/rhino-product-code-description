@@ -180,10 +180,10 @@ export default function Home() {
 
     let modelPart = comp.subModelo;
     if (comp.version) {
-      modelPart += `-${comp.version}`;
+      modelPart += ` ${comp.version}`;
     }
     if (comp.additional) {
-      modelPart += `-${comp.additional}`;
+      modelPart += ` ${comp.additional}`;
     }
 
     return `${comp.marca} ${modelPart} ${comp.modelo}`;
@@ -228,10 +228,10 @@ export default function Home() {
         if (comp.version) {
           pair = comp.version;
           if (comp.additional) {
-            pair += `-${comp.additional}`;
+            pair += ` ${comp.additional}`;
           }
         } else if (comp.additional) {
-          pair = `-${comp.additional}`;
+          pair = ` ${comp.additional}`;
         }
 
         if (pair) {
@@ -255,36 +255,36 @@ export default function Home() {
             // Group pairs by version prefix to combine additionals
             const sortedPairs = Array.from(pairs).sort();
 
-            // Group by version (part before first -)
+            // Group by version (part before first space)
             const versionGroups = new Map<string, string[]>();
             sortedPairs.forEach(pair => {
-              const dashIndex = pair.indexOf('-');
-              if (dashIndex > 0) {
-                const version = pair.substring(0, dashIndex);
-                const additional = pair.substring(dashIndex + 1);
+              const spaceIndex = pair.indexOf(' ');
+              if (spaceIndex > 0) {
+                const version = pair.substring(0, spaceIndex);
+                const additional = pair.substring(spaceIndex + 1);
                 if (!versionGroups.has(version)) {
                   versionGroups.set(version, []);
                 }
                 versionGroups.get(version)!.push(additional);
               } else {
                 // No additional, just version
-                if (!versionGroups.has(pair)) {
-                  versionGroups.set(pair, []);
+                if (!versionGroups.has(pair.trim())) {
+                  versionGroups.set(pair.trim(), []);
                 }
               }
             });
 
-            // Build combined version strings (e.g., 314-140,144 instead of 314-140, 314-144)
+            // Build combined version strings (e.g., 314 140,144 instead of 314 140, 314 144)
             const combinedPairs: string[] = [];
             versionGroups.forEach((additionals, version) => {
               if (additionals.length === 0) {
                 combinedPairs.push(version);
               } else {
-                combinedPairs.push(`${version}-${additionals.join(',')}`);
+                combinedPairs.push(`${version} ${additionals.join(',')}`);
               }
             });
 
-            modelPart += `-${combinedPairs.join(', ')}`;
+            modelPart += ` ${combinedPairs.join(', ')}`;
           }
           displayKey = `${marca} ${modelPart}`;
         }
