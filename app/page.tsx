@@ -78,6 +78,13 @@ export default function Home() {
   // Search state for BD Códigos tab
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Rhino auto-number state
+  const [isRhinoAutoMode, setIsRhinoAutoMode] = useState(false);
+  const [isLoadingRhinoNumber, setIsLoadingRhinoNumber] = useState(false);
+  const [rhinoNumberReserved, setRhinoNumberReserved] = useState(false);
+  const [localRhinoCounter, setLocalRhinoCounter] = useState<number | null>(null);
+  const [latestDbRhinoNumber, setLatestDbRhinoNumber] = useState<string>('');
+
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SavedProduct | null>(null);
@@ -91,6 +98,58 @@ export default function Home() {
       loadDbProducts(1, '');
     }
   }, [activeTab]);
+
+  // Watch for Rhino Automotive selection and show number preview
+  useEffect(() => {
+    const handleClasificacionChange = async () => {
+      if (clasificacion === 'R') {
+        // Rhino Automotive selected - get PREVIEW of next number (no increment)
+        setIsRhinoAutoMode(true);
+        setIsLoadingRhinoNumber(true);
+
+        try {
+          const response = await fetch('/api/counters/rhino-preview');
+          const data = await response.json();
+
+          if (response.ok) {
+            // Set numero to raw integer value (e.g., "5")
+            // Formatting to "00005" happens in UI component for display only
+            setNumero(data.rawValue.toString());
+            setLocalRhinoCounter(data.rawValue); // Initialize local counter
+            setRhinoNumberReserved(false); // Not reserved yet, just a preview
+
+            // Calculate latest DB number (preview - 1)
+            const latestInDb = data.rawValue - 1;
+            const formattedLatest = latestInDb > 0 ? latestInDb.toString().padStart(5, '0') : '00000';
+            setLatestDbRhinoNumber(formattedLatest);
+          } else {
+            console.error('Failed to get Rhino number preview:', data.error);
+            alert('Error al obtener el número Rhino. Por favor, intente de nuevo.');
+            // Reset to allow manual entry
+            setIsRhinoAutoMode(false);
+            setNumero('');
+          }
+        } catch (error) {
+          console.error('Error fetching Rhino number preview:', error);
+          alert('Error de conexión al obtener número Rhino. Por favor, intente de nuevo.');
+          // Reset to allow manual entry
+          setIsRhinoAutoMode(false);
+          setNumero('');
+        } finally {
+          setIsLoadingRhinoNumber(false);
+        }
+      } else {
+        // Other clasificacion selected - enable manual entry
+        setIsRhinoAutoMode(false);
+        setRhinoNumberReserved(false);
+        setLocalRhinoCounter(null); // Reset local counter
+        setLatestDbRhinoNumber(''); // Reset latest DB number
+        // Don't clear numero - let user keep it if they want
+      }
+    };
+
+    handleClasificacionChange();
+  }, [clasificacion]);
 
   const loadDbProducts = async (page: number = 1, search: string = searchTerm) => {
     setIsLoadingDb(true);
@@ -164,12 +223,26 @@ export default function Home() {
     const parteCode = parte || '-';
     const numeroCode = numero ? numero.padStart(5, '0') : '-----';
     const colorCode = color || '--';
-    
+
     if (aditamento === 'F') {
       return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}`.toUpperCase();
     }
-    
+
     const aditamentoCode = aditamento || '-';
+    return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}${aditamentoCode}`.toUpperCase();
+  };
+
+  const generateProductCodeForSave = (product: SavedProduct, newNumero: string): string => {
+    const clasificacionCode = product.productCode.clasificacion || '-';
+    const parteCode = product.productCode.parte || '-';
+    const numeroCode = newNumero ? newNumero.padStart(5, '0') : '-----';
+    const colorCode = product.productCode.color || '--';
+
+    if (product.productCode.aditamento === 'F') {
+      return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}`.toUpperCase();
+    }
+
+    const aditamentoCode = product.productCode.aditamento || '-';
     return `${clasificacionCode}${parteCode}${numeroCode}${colorCode}${aditamentoCode}`.toUpperCase();
   };
 
@@ -367,6 +440,13 @@ export default function Home() {
 
     setSavedProducts(prev => [localProduct, ...prev]);
     console.log('Product Data:', localProduct);
+
+    // If Rhino mode, increment local counter for next product
+    if (isRhinoAutoMode && localRhinoCounter !== null) {
+      const nextNumber = localRhinoCounter + 1;
+      setLocalRhinoCounter(nextNumber);
+      setNumero(nextNumber.toString());
+    }
   };
 
   const handleDeleteProduct = (index: number) => {
@@ -522,6 +602,13 @@ export default function Home() {
     setLado('');
     setCompatibilities([]);
     setCompatibilityResetTrigger(prev => prev + 1);
+
+    // Reset Rhino auto-number states
+    setIsRhinoAutoMode(false);
+    setIsLoadingRhinoNumber(false);
+    setRhinoNumberReserved(false);
+    setLocalRhinoCounter(null);
+    setLatestDbRhinoNumber('');
   };
 
   const handleGuardarTodos = async () => {
@@ -529,7 +616,7 @@ export default function Home() {
       alert('No hay productos para guardar');
       return;
     }
-    
+
     const confirmed = confirm(`¿Guardar ${savedProducts.length} producto(s) a la base de datos?`);
     if (!confirmed) return;
 
@@ -540,27 +627,58 @@ export default function Home() {
 
     for (const product of savedProducts) {
       try {
+        let productToSave = product;
+
+        // If this is a Rhino product, reserve the actual number NOW
+        if (product.productCode.clasificacion === 'R') {
+          try {
+            const rhinoResponse = await fetch('/api/counters/rhino-next');
+            const rhinoData = await rhinoResponse.json();
+
+            if (rhinoResponse.ok) {
+              // Update product with the reserved number (store raw integer)
+              productToSave = {
+                ...product,
+                productCode: {
+                  ...product.productCode,
+                  numero: rhinoData.rawValue.toString(),
+                  // Regenerate the product code with the new number
+                  generated: generateProductCodeForSave(product, rhinoData.rawValue.toString()),
+                },
+              };
+              console.log(`Reserved Rhino number ${rhinoData.rawValue} for product`);
+            } else {
+              throw new Error('Failed to reserve Rhino number');
+            }
+          } catch (rhinoError) {
+            errorCount++;
+            errors.push(`${product.productCode.generated}: Error al reservar número Rhino`);
+            console.error('Error reserving Rhino number:', rhinoError);
+            continue; // Skip this product
+          }
+        }
+
         const response = await fetch('/api/products', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            productCode: product.productCode,
-            compatibility: product.compatibility,
-            description: product.description,
-            verified: product.verified,
+            productCode: productToSave.productCode,
+            compatibility: productToSave.compatibility,
+            description: productToSave.description,
+            verified: productToSave.verified,
           }),
         });
 
         if (!response.ok) {
           const errorData = await response.json();
           errorCount++;
-          errors.push(`${product.productCode.generated}: ${errorData.error}`);
-          console.error('Error saving product:', product.productCode.generated, errorData);
+          errors.push(`${productToSave.productCode.generated}: ${errorData.error}`);
+          console.error('Error saving product:', productToSave.productCode.generated, errorData);
         } else {
           successCount++;
-          console.log('Saved:', product.productCode.generated);
+          console.log('Saved:', productToSave.productCode.generated);
         }
       } catch (error) {
         errorCount++;
@@ -635,7 +753,7 @@ export default function Home() {
           <>            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
               <div>
-                <CodeGenerator 
+                <CodeGenerator
                   clasificacion={clasificacion}
                   setClasificacion={setClasificacion}
                   parte={parte}
@@ -650,6 +768,9 @@ export default function Home() {
                   setPosicion={setPosicion}
                   lado={lado}
                   setLado={setLado}
+                  isRhinoAutoMode={isRhinoAutoMode}
+                  isLoadingRhinoNumber={isLoadingRhinoNumber}
+                  latestDbRhinoNumber={latestDbRhinoNumber}
                 />
               </div>
               <div>
