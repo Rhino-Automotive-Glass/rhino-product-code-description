@@ -476,16 +476,23 @@ export default function EditProductModal({
                     </label>
                     <input
                       type="text"
-                      value={isRhinoProduct && numero ? numero.padStart(5, '0') : numero}
+                      value={numero}
                       onChange={handleNumeroChange}
                       placeholder="00000"
                       maxLength={5}
                       className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
                     />
                     {isRhinoProduct && (
-                      <p className="mt-1.5 text-xs text-orange-600">
-                        Número automático sugerido. Puedes editarlo si es necesario.
-                      </p>
+                      <div className="mt-1.5">
+                        <p className="text-xs text-orange-600">
+                          Número automático sugerido. Puedes editarlo si es necesario.
+                        </p>
+                        {numero && (
+                          <p className="text-s text-slate-500 mt-0.5">
+                            Se mostrará en el código como: <span className="font-mono font-semibold text-slate-700">{numero.padStart(5, '0')}</span>
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
 

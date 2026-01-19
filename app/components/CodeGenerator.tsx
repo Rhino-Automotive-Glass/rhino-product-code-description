@@ -155,7 +155,7 @@ export default function CodeGenerator({
           <div className="relative">
             <input
               type="text"
-              value={isRhinoAutoMode && numero ? numero.padStart(5, '0') : numero}
+              value={numero}
               onChange={handleNumeroChange}
               placeholder={isLoadingRhinoNumber ? 'Obteniendo número...' : '00000'}
               maxLength={5}
@@ -192,9 +192,16 @@ export default function CodeGenerator({
             )}
           </div>
           {isRhinoAutoMode && !isLoadingRhinoNumber && (
-            <p className="mt-1.5 text-xs text-orange-600">
-              Número automático sugerido. Puedes editarlo si es necesario.
-            </p>
+            <div className="mt-1.5">
+              <p className="text-xs text-orange-600">
+                Número automático sugerido. Puedes editarlo si es necesario.
+              </p>
+              {numero && (
+                <p className="text-s text-slate-500 mt-0.5">
+                  Se mostrará en el código como: <span className="font-mono font-semibold text-slate-700">{numero.padStart(5, '0')}</span>
+                </p>
+              )}
+            </div>
           )}
         </div>
 
