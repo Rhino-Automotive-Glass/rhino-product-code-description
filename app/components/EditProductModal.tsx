@@ -138,13 +138,18 @@ export default function EditProductModal({
 
   const handleNumeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    // Only allow digits and max 5 characters
+    // Allow any digit input while typing (including leading zeros)
     if (/^\d*$/.test(value) && value.length <= 5) {
-      // Store as integer (remove leading zeros) unless it's empty or just "0"
-      if (value === '' || value === '0') {
-        setNumero(value);
-      } else {
-        // Parse to integer to remove leading zeros, then convert back to string
-        const intValue = parseInt(value, 10);
+      setNumero(value);
+    }
+  };
+
+  const handleNumeroBlur = () => {
+    // When user leaves the field, normalize to integer (remove leading zeros)
+    if (numero && numero !== '0') {
+      const intValue = parseInt(numero, 10);
+      if (!isNaN(intValue)) {
         setNumero(intValue.toString());
       }
     }
@@ -478,6 +483,7 @@ export default function EditProductModal({
                       type="text"
                       value={numero}
                       onChange={handleNumeroChange}
+                      onBlur={handleNumeroBlur}
                       placeholder="00000"
                       maxLength={5}
                       className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
