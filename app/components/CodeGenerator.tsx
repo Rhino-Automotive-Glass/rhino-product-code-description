@@ -15,9 +15,6 @@ interface CodeGeneratorProps {
   setPosicion: (value: string) => void;
   lado: string;
   setLado: (value: string) => void;
-  isRhinoAutoMode?: boolean;
-  isLoadingRhinoNumber?: boolean;
-  latestDbRhinoNumber?: string;
 }
 
 export default function CodeGenerator({
@@ -35,9 +32,6 @@ export default function CodeGenerator({
   setPosicion,
   lado,
   setLado,
-  isRhinoAutoMode = false,
-  isLoadingRhinoNumber = false,
-  latestDbRhinoNumber = ''
 }: CodeGeneratorProps) {
   const handleNumeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -143,71 +137,16 @@ export default function CodeGenerator({
         <div className="w-full">
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Número
-            {isRhinoAutoMode && (
-              <>
-                <span className="ml-2 text-xs text-orange-600 font-semibold">
-                  (Auto-generado)
-                </span>
-                {latestDbRhinoNumber && (
-                  <span className="ml-2 text-xs text-slate-500">
-                    Último número en BD: <span className="font-mono font-bold text-slate-700">{latestDbRhinoNumber}</span>
-                  </span>
-                )}
-              </>
-            )}
           </label>
-          <div className="relative">
-            <input
-              type="text"
-              value={numero}
-              onChange={handleNumeroChange}
-              onBlur={handleNumeroBlur}
-              placeholder={isLoadingRhinoNumber ? 'Obteniendo número...' : '00000'}
-              maxLength={5}
-              disabled={isLoadingRhinoNumber}
-              className={`block w-full px-4 py-2.5 text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 ${
-                isLoadingRhinoNumber
-                  ? 'bg-slate-100 cursor-not-allowed text-slate-600'
-                  : 'bg-white'
-              }`}
-            />
-            {isLoadingRhinoNumber && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <svg
-                  className="animate-spin h-5 w-5 text-orange-600"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              </div>
-            )}
-          </div>
-          {isRhinoAutoMode && !isLoadingRhinoNumber && (
-            <div className="mt-1.5">
-              <p className="text-xs text-orange-600">
-                Número automático sugerido. Puedes editarlo si es necesario.
-              </p>
-              {numero && (
-                <p className="text-s text-slate-500 mt-0.5">
-                  Se mostrará en el código como: <span className="font-mono font-semibold text-slate-700">{numero.padStart(5, '0')}</span>
-                </p>
-              )}
-            </div>
-          )}
+          <input
+            type="text"
+            value={numero}
+            onChange={handleNumeroChange}
+            onBlur={handleNumeroBlur}
+            placeholder="00000"
+            maxLength={5}
+            className="block w-full px-4 py-2.5 text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 bg-white"
+          />
         </div>
 
         {/* Color */}

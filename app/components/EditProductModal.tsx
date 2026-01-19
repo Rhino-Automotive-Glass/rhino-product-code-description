@@ -43,9 +43,6 @@ export default function EditProductModal({
   const [modelo, setModelo] = useState('');
   const [customMarca, setCustomMarca] = useState('');
 
-  // Rhino auto-number state
-  const [latestDbRhinoNumber, setLatestDbRhinoNumber] = useState<string>('');
-
   // Load product data when modal opens
   useEffect(() => {
     if (product && isOpen) {
@@ -64,31 +61,8 @@ export default function EditProductModal({
       setAdditional('');
       setModelo('');
       setCustomMarca('');
-
-      // Fetch latest DB number if Rhino product
-      if (product.productCode.clasificacion === 'R') {
-        fetchLatestDbNumber();
-      } else {
-        setLatestDbRhinoNumber('');
-      }
     }
   }, [product, isOpen]);
-
-  // Fetch latest Rhino number from database
-  const fetchLatestDbNumber = async () => {
-    try {
-      const response = await fetch('/api/counters/rhino-preview');
-      const data = await response.json();
-
-      if (response.ok) {
-        const latestInDb = data.rawValue - 1;
-        const formattedLatest = latestInDb > 0 ? latestInDb.toString().padStart(5, '0') : '00000';
-        setLatestDbRhinoNumber(formattedLatest);
-      }
-    } catch (error) {
-      console.error('Error fetching latest Rhino number:', error);
-    }
-  };
 
   const isOtroSelected = marca === 'Otro';
 
@@ -154,9 +128,6 @@ export default function EditProductModal({
       }
     }
   };
-
-  // Check if this is a Rhino product
-  const isRhinoProduct = clasificacion === 'R';
 
   const currentYear = new Date().getFullYear();
   const years = Array.from(
@@ -466,18 +437,6 @@ export default function EditProductModal({
                   <div className="w-full">
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       Número
-                      {isRhinoProduct && (
-                        <>
-                          <span className="ml-2 text-xs text-orange-600 font-semibold">
-                            (Auto-generado)
-                          </span>
-                          {latestDbRhinoNumber && (
-                            <span className="ml-2 text-xs text-slate-500">
-                              Último número en BD: <span className="font-mono font-bold text-slate-700">{latestDbRhinoNumber}</span>
-                            </span>
-                          )}
-                        </>
-                      )}
                     </label>
                     <input
                       type="text"
@@ -488,18 +447,6 @@ export default function EditProductModal({
                       maxLength={5}
                       className="block w-full px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200"
                     />
-                    {isRhinoProduct && (
-                      <div className="mt-1.5">
-                        <p className="text-xs text-orange-600">
-                          Número automático sugerido. Puedes editarlo si es necesario.
-                        </p>
-                        {numero && (
-                          <p className="text-s text-slate-500 mt-0.5">
-                            Se mostrará en el código como: <span className="font-mono font-semibold text-slate-700">{numero.padStart(5, '0')}</span>
-                          </p>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   {/* Color */}
