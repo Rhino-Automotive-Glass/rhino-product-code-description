@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import CodeGenerator from './components/CodeGenerator';
-import ProductCompatibility from './components/ProductCompatibility';
-import Header from './components/Header';
-import SavedProductsTable from './components/SavedProductsTable';
-import EditProductModal from './components/EditProductModal';
-import Pagination from './components/Pagination';
-import { productService } from './lib/services/productService';
+import CodeGenerator from '../components/CodeGenerator';
+import ProductCompatibility from '../components/ProductCompatibility';
+import Header from '../components/Header';
+import SavedProductsTable from '../components/SavedProductsTable';
+import EditProductModal from '../components/EditProductModal';
+import Pagination from '../components/Pagination';
+import { productService } from '../lib/services/productService';
 
 export interface Compatibility {
   marca: string;
