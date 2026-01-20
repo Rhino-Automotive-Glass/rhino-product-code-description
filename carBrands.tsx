@@ -173,7 +173,7 @@ export const carBrandsWithSubModels = [
       { name: "Chevy", versions: [], additional: [] },
       { name: "Corvette", versions: [], additional: [] },
       { name: "Equinox", versions: [], additional: [] },
-      { name: "Express", versions: ["2500 Cargo", "2500 Pasajeros", "3500 Cargo", "3500 Pasajeros", "Van", "Van Max", "Solati", "Victory"], additional: [] },
+      { name: "Express", versions: ["2500 Cargo", "2500 Pasajeros", "3500 Cargo", "3500 Pasajeros", "Van", "Van Max" ], additional: [] },
       { name: "Impala", versions: [], additional: [] },
       { name: "Malibu", versions: [], additional: [] },
       { name: "Onix", versions: [], additional: [] },
@@ -505,10 +505,12 @@ export const carBrandsWithSubModels = [
       { name: "Kona", versions: [], additional: [] },
       { name: "Palisade", versions: [], additional: [] },
       { name: "Santa Fe", versions: [], additional: [] },
+      { name: "Solati", versions: [], additional: [] },
       { name: "Sonata", versions: [], additional: [] },
       { name: "Starex", versions: ["12 Pasajeros", "9 Pasajeros", "Carga", "Lujo"], additional: [] },
       { name: "Tucson", versions: [], additional: [] },
-      { name: "Venue", versions: [], additional: [] }
+      { name: "Venue", versions: [], additional: [] },
+      { name: "Victory", versions: [], additional: [] }
     ]
   },
   {
@@ -1150,6 +1152,13 @@ export const carBrandsWithSubModels = [
       { name: "Croner", versions: [], additional: [] },
       { name: "Quester", versions: [], additional: [] },
       { name: "Kazet", versions: [], additional: [] }
+    ]
+  },
+  {
+    name: "Vizeon",
+    abbr: "Vizeon",
+    subModels: [
+      { name: "Up Van", versions: [], additional: [] }
     ]
   },
   {
