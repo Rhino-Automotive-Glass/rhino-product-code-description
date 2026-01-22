@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SavedProduct, Compatibility } from '../page';
+import { SavedProduct, Compatibility } from '../(dashboard)/page';
 import { carBrandsWithSubModels } from '../../carBrands';
 
 interface EditProductModalProps {

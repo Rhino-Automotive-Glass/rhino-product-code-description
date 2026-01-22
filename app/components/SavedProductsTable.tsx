@@ -1,6 +1,6 @@
 'use client';
 
-import { ProductData } from '../page';
+import { ProductData } from '../(dashboard)/page';
 
 interface SavedProductsTableProps {
   products: ProductData[];

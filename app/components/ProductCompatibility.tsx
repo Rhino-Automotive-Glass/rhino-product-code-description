@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { carBrandsWithSubModels } from '../../carBrands';
-import { Compatibility } from '../page';
+import { Compatibility } from '../(dashboard)/page';
 
 interface ProductCompatibilityProps {
   compatibilities: Compatibility[];
