@@ -28,6 +28,8 @@ export async function PUT(
       role: role,
       assigned_by: user.id,
       updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'user_id'
     });
 
     if (error) {
