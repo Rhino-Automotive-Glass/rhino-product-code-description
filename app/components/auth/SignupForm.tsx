@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { signUp } from '@/app/lib/auth/actions'
 import { AuthErrorMessage } from './AuthErrorMessage'
 import Link from 'next/link'
@@ -8,6 +9,7 @@ import Link from 'next/link'
 export function SignupForm() {
   const [error, setError] = useState<string>()
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -30,6 +32,11 @@ export function SignupForm() {
     if (result?.error) {
       setError(result.error)
       setLoading(false)
+    } else if (result?.success) {
+      // Show success alert
+      alert('Te has registrado, confirma tu correo electrónico')
+      // Redirect to home
+      router.push('/')
     }
   }
 

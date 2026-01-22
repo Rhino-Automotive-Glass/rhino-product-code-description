@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/app/lib/supabase/server';
+import { requireRole } from '@/app/lib/rbac/apiMiddleware';
 
 export async function POST(request: NextRequest) {
+  // Only admins can create products
+  const authResult = await requireRole(request, ['admin']);
+  if (authResult instanceof NextResponse) {
+    return authResult; // Access denied
+  }
+
   try {
     const body = await request.json();
 
-    const supabase = await createClient();
+    const { supabase } = authResult;
 
     const insertData = {
       product_code_data: body.productCode,

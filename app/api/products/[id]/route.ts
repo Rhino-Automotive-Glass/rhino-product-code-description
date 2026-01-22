@@ -1,29 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/app/lib/supabase/server';
+import { requireRole } from '@/app/lib/rbac/apiMiddleware';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Allow both admin and qa, but with different permissions
+  const authResult = await requireRole(request, ['admin', 'qa']);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
 
-    const supabase = await createClient();
+    const { supabase, role } = authResult;
 
     const updateData: Record<string, unknown> = {};
 
-    if (body.productCode) {
-      updateData.product_code_data = body.productCode;
-    }
-    if (body.compatibility) {
-      updateData.compatibility_data = body.compatibility;
-    }
-    if (body.description) {
-      updateData.description_data = body.description;
-    }
-    if (body.verified !== undefined) {
+    // QA users can ONLY update the verified field
+    if (role === 'qa') {
+      if (Object.keys(body).length !== 1 || body.verified === undefined) {
+        return NextResponse.json(
+          { error: 'QA users can only toggle verified status' },
+          { status: 403 }
+        );
+      }
       updateData.verified = body.verified;
+    } else {
+      // Admins can update everything
+      if (body.productCode) {
+        updateData.product_code_data = body.productCode;
+      }
+      if (body.compatibility) {
+        updateData.compatibility_data = body.compatibility;
+      }
+      if (body.description) {
+        updateData.description_data = body.description;
+      }
+      if (body.verified !== undefined) {
+        updateData.verified = body.verified;
+      }
     }
 
     const { data, error } = await supabase
@@ -55,12 +74,18 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Only admins can delete
+  const authResult = await requireRole(request, ['admin']);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const hardDelete = searchParams.get('hard') === 'true';
 
-    const supabase = await createClient();
+    const { supabase } = authResult;
 
     if (hardDelete) {
       const { error } = await supabase

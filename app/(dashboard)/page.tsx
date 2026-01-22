@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import CodeGenerator from '../components/CodeGenerator';
 import ProductCompatibility from '../components/ProductCompatibility';
-import Header from '../components/Header';
 import SavedProductsTable from '../components/SavedProductsTable';
 import EditProductModal from '../components/EditProductModal';
 import Pagination from '../components/Pagination';
 import { productService } from '../lib/services/productService';
+import { useRole } from '../contexts/RoleContext';
 
 export interface Compatibility {
   marca: string;
@@ -47,8 +47,11 @@ export interface SavedProduct extends ProductData {
 }
 
 export default function Home() {
-  // Tab state
-  const [activeTab, setActiveTab] = useState<'agregar' | 'db'>('agregar');
+  // Role and permissions
+  const { role, permissions, isLoading: roleLoading } = useRole();
+
+  // Tab state - default to 'db' for non-admins
+  const [activeTab, setActiveTab] = useState<'agregar' | 'db'>('db');
 
   // Form state
   const [clasificacion, setClasificacion] = useState('');
@@ -82,6 +85,13 @@ export default function Home() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SavedProduct | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Update tab if user doesn't have permission
+  useEffect(() => {
+    if (!roleLoading && permissions && !permissions.canViewAgregarTab && activeTab === 'agregar') {
+      setActiveTab('db');
+    }
+  }, [permissions, roleLoading, activeTab]);
 
   // Load DB products when switching to DB tab
   useEffect(() => {
@@ -421,6 +431,11 @@ export default function Home() {
   };
 
   const handleToggleDbVerified = async (index: number) => {
+    if (!permissions?.canToggleVerified) {
+      alert('No tienes permisos para cambiar el estado de verificación');
+      return;
+    }
+
     const product = dbProducts[index];
     const newVerifiedStatus = !product.verified;
 
@@ -581,30 +596,43 @@ export default function Home() {
     }
   };
 
+  // Show loading state while role is being fetched
+  if (roleLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-slate-50">
+        <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="text-slate-700 font-medium">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
-      <Header />
-
       {/* Tabs Navigation */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-0">
         <div className="bg-white rounded-t-xl shadow-sm border border-slate-200 border-b-0">
           <div className="flex w-full">
-            <button
-              onClick={() => setActiveTab('agregar')}
-              className={`flex-1 py-4 px-6 font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2.5 relative ${
-                activeTab === 'agregar'
-                  ? 'text-orange-600 bg-gradient-to-b from-orange-50 to-white'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-              </svg>
-              <span>Agregar Códigos</span>
-              {activeTab === 'agregar' && (
-                <span className="absolute bottom-0 left-0 right-0 h-1 bg-orange-500 rounded-t-sm"></span>
-              )}
-            </button>
+            {/* Only show Agregar tab if user has permission */}
+            {permissions?.canViewAgregarTab && (
+              <button
+                onClick={() => setActiveTab('agregar')}
+                className={`flex-1 py-4 px-6 font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2.5 relative ${
+                  activeTab === 'agregar'
+                    ? 'text-orange-600 bg-gradient-to-b from-orange-50 to-white'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                </svg>
+                <span>Agregar Códigos</span>
+                {activeTab === 'agregar' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-1 bg-orange-500 rounded-t-sm"></span>
+                )}
+              </button>
+            )}
             <button
               onClick={() => setActiveTab('db')}
               className={`flex-1 py-4 px-6 font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2.5 relative ${
@@ -630,7 +658,7 @@ export default function Home() {
       {/* Tab Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <div className="bg-white rounded-b-xl shadow-sm border border-slate-200 border-t-0 p-6 lg:p-8">
-        {activeTab === 'agregar' ? (
+        {activeTab === 'agregar' && permissions?.canViewAgregarTab ? (
           // AGREGAR TAB
           <>            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
@@ -805,9 +833,10 @@ export default function Home() {
                   <div className={`mb-6 transition-opacity duration-200 ${isLoadingDb ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                     <SavedProductsTable
                       products={dbProducts}
-                      onDelete={handleDeleteDbProduct}
+                      onDelete={permissions?.canDeleteProducts ? handleDeleteDbProduct : undefined}
                       onToggleVerified={handleToggleDbVerified}
-                      onEdit={handleEditDbProduct}
+                      onEdit={permissions?.canEditProducts ? handleEditDbProduct : undefined}
+                      canToggleVerified={permissions?.canToggleVerified || false}
                     />
                   </div>
 

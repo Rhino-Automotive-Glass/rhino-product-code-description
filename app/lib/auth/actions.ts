@@ -33,7 +33,7 @@ export async function signUp(email: string, password: string) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  return { success: true }
 }
 
 export async function signOut() {
