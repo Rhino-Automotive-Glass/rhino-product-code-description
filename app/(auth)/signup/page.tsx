@@ -6,7 +6,7 @@ export default function SignupPage() {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-slate-900 mb-2">Create Account</h2>
         <p className="text-sm text-slate-600">
-          Get started with Rhino Code Generator
+          Get started with Rhino Code
         </p>
       </div>
 

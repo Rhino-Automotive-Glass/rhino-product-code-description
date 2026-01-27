@@ -2,28 +2,79 @@
 
 import { ProductData } from '../(dashboard)/page';
 
+export type SortField = 'productCode' | 'description' | null;
+export type SortDirection = 'asc' | 'desc';
+
 interface SavedProductsTableProps {
   products: ProductData[];
   onDelete?: (index: number) => void;
   onToggleVerified: (index: number) => void;
   onEdit?: (index: number) => void;
   canToggleVerified?: boolean;
+  sortField?: SortField;
+  sortDirection?: SortDirection;
+  onSort?: (field: SortField) => void;
 }
 
-export default function SavedProductsTable({ products, onDelete, onToggleVerified, onEdit, canToggleVerified = true }: SavedProductsTableProps) {
+export default function SavedProductsTable({
+  products,
+  onDelete,
+  onToggleVerified,
+  onEdit,
+  canToggleVerified = true,
+  sortField,
+  sortDirection,
+  onSort
+}: SavedProductsTableProps) {
+  const SortIcon = ({ field }: { field: SortField }) => {
+    const isActive = sortField === field;
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className={`h-4 w-4 ml-1 inline-block transition-colors ${
+          isActive ? 'text-blue-600' : 'text-gray-400'
+        }`}
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        {isActive && sortDirection === 'asc' ? (
+          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+        ) : isActive && sortDirection === 'desc' ? (
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        ) : (
+          <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+        )}
+      </svg>
+    );
+  };
+
   return (
     <div className="bg-white card p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Lista de Códigos</h2>
-      
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                  onSort ? 'cursor-pointer hover:bg-gray-100 select-none' : ''
+                }`}
+                onClick={() => onSort?.('productCode')}
+              >
                 Product Code
+                {onSort && <SortIcon field="productCode" />}
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                  onSort ? 'cursor-pointer hover:bg-gray-100 select-none' : ''
+                }`}
+                onClick={() => onSort?.('description')}
+              >
                 Product Description
+                {onSort && <SortIcon field="description" />}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Verified

@@ -25,7 +25,7 @@ export default function AuthLayout({
       <div className="relative z-10 w-full max-w-md p-4">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-white mb-2">
-            Rhino Code Generator
+            Rhino Code
           </h1>
           <p className="text-md text-blue-100">
             Automotive Glass Production Code Catalog

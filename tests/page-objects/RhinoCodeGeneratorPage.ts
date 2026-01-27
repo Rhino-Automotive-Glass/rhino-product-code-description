@@ -63,7 +63,7 @@ export class RhinoCodeGeneratorPage {
     this.page = page;
 
     // Header
-    this.headerTitle = page.getByRole('heading', { name: 'Rhino Code Generator' });
+    this.headerTitle = page.getByRole('heading', { name: 'Rhino Code' });
 
     // Action Buttons (in main content area, next to generated output)
     this.agregarButton = page.getByRole('button', { name: 'Agregar' });

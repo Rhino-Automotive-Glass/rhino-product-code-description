@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { useRole } from '../contexts/RoleContext'
@@ -11,63 +12,85 @@ interface HeaderProps {
 
 export default function Header({ user, onSignOut }: HeaderProps) {
   const { role, permissions } = useRole();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <header className="bg-white border-b border-slate-200 shadow-sm">
+    <header className="bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-slate-900">
-                Rhino Code Generator
-              </h1>
-              <p className="text-sm text-slate-600">
-                Automotive Glass Production Catalog
-              </p>
-            </div>
-
-            {user && (
-              <nav className="hidden md:flex items-center gap-4">
-                <Link href="/" className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
-                  Dashboard
-                </Link>
-                {permissions?.canManageUsers && (
-                  <Link href="/admin" className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
-                    Admin Panel
-                  </Link>
-                )}
-              </nav>
-            )}
+          {/* Left: App name and tagline */}
+          <div>
+            <h1 className="text-xl lg:text-2xl font-bold text-slate-900">
+              🦏 Rhino Code
+            </h1>
+            <p className="text-sm text-slate-600">
+              Automotive Glass Production Catalog
+            </p>
           </div>
 
+          {/* Right: User menu button */}
           {user && onSignOut && (
-            <div className="flex items-center gap-4">
-              {role && (
-                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 uppercase">
-                  {role === 'qa' ? 'QA' : role}
-                </span>
-              )}
-              <div className="text-right hidden sm:block">
-                <p className="text-sm text-slate-600">Signed in as</p>
-                <p className="text-sm font-medium text-slate-900">{user.email}</p>
-              </div>
+            <div className="relative" ref={menuRef}>
               <button
-                onClick={() => onSignOut()}
-                className="btn btn-ghost btn-sm gap-2"
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+                aria-label="User menu"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  viewBox="0 0 20 20"
+                  className="h-6 w-6 text-slate-600"
+                  viewBox="0 0 24 24"
                   fill="currentColor"
                 >
                   <path
                     fillRule="evenodd"
-                    d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
+                    d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>Sign Out</span>
               </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+                  <Link
+                    href="/"
+                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  {permissions?.canManageUsers && (
+                    <Link
+                      href="/admin"
+                      className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Admin Panel
+                    </Link>
+                  )}
+                  <hr className="my-1 border-slate-200" />
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onSignOut();
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

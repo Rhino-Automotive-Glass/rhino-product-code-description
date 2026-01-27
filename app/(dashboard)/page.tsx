@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import CodeGenerator from '../components/CodeGenerator';
 import ProductCompatibility from '../components/ProductCompatibility';
-import SavedProductsTable from '../components/SavedProductsTable';
+import SavedProductsTable, { SortField, SortDirection } from '../components/SavedProductsTable';
 import EditProductModal from '../components/EditProductModal';
 import Pagination from '../components/Pagination';
 import { productService } from '../lib/services/productService';
@@ -48,7 +48,7 @@ export interface SavedProduct extends ProductData {
 
 export default function Home() {
   // Role and permissions
-  const { role, permissions, isLoading: roleLoading } = useRole();
+  const { user, role, permissions, isLoading: roleLoading } = useRole();
 
   // Tab state - default to 'db' for non-admins
   const [activeTab, setActiveTab] = useState<'agregar' | 'db'>('db');
@@ -80,6 +80,10 @@ export default function Home() {
 
   // Search state for BD Códigos tab
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Sort state for BD Códigos tab
+  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -167,6 +171,40 @@ export default function Home() {
     setSearchTerm('');
     setCurrentPage(1);
     loadDbProducts(1, '');
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, start with ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortedDbProducts = () => {
+    if (!sortField) return dbProducts;
+
+    return [...dbProducts].sort((a, b) => {
+      let valueA: string;
+      let valueB: string;
+
+      if (sortField === 'productCode') {
+        valueA = a.productCode.generated.toLowerCase();
+        valueB = b.productCode.generated.toLowerCase();
+      } else {
+        valueA = a.description.generated.toLowerCase();
+        valueB = b.description.generated.toLowerCase();
+      }
+
+      if (sortDirection === 'asc') {
+        return valueA.localeCompare(valueB);
+      } else {
+        return valueB.localeCompare(valueA);
+      }
+    });
   };
 
   const generateProductCode = (): string => {
@@ -610,6 +648,20 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
+      {/* Welcome Message */}
+      {user && (
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 text-center">
+          <p className="text-base md:text-xl font-medium text-slate-900">
+            Welcome {user.email}
+            {role && (
+            <span className="px-3 py-0.5 mx-4 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 uppercase">
+              {role === 'qa' ? 'QA' : role}
+            </span>
+          )}
+          </p>
+        </div>
+      )}
+
       {/* Tabs Navigation */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-0">
         <div className="bg-white rounded-t-xl shadow-sm border border-slate-200 border-b-0">
@@ -627,7 +679,7 @@ export default function Home() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
                 </svg>
-                <span>Agregar Códigos</span>
+                <span>Agregar</span>
                 {activeTab === 'agregar' && (
                   <span className="absolute bottom-0 left-0 right-0 h-1 bg-orange-500 rounded-t-sm"></span>
                 )}
@@ -832,11 +884,14 @@ export default function Home() {
                 <>
                   <div className={`mb-6 transition-opacity duration-200 ${isLoadingDb ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                     <SavedProductsTable
-                      products={dbProducts}
+                      products={getSortedDbProducts()}
                       onDelete={permissions?.canDeleteProducts ? handleDeleteDbProduct : undefined}
                       onToggleVerified={handleToggleDbVerified}
                       onEdit={permissions?.canEditProducts ? handleEditDbProduct : undefined}
                       canToggleVerified={permissions?.canToggleVerified || false}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      onSort={handleSort}
                     />
                   </div>
 

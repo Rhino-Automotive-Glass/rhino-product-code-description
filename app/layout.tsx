@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Rhino Code Generator",
+  title: "Rhino Code",
   description: "Automotive Glass Production Catalog Reference",
 };
 
