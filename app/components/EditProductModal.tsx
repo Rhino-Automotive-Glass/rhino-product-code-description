@@ -242,7 +242,7 @@ export default function EditProductModal({
 
     const parteLabel = parteOptions.find(p => p.value === parte)?.label || '-';
     const posicionText = posicion || '-';
-    const ladoText = lado || '-';
+    const ladoText = lado === 'Ambos' ? 'LEFT AND RIGHT' : lado || '-';
 
     let description = `${parteLabel} ${posicionText} ${ladoText}`;
 
@@ -527,6 +527,7 @@ export default function EditProductModal({
                       {[
                         { value: 'Left', label: 'Left' },
                         { value: 'Right', label: 'Right' },
+                        { value: 'Ambos', label: 'Ambos' },
                       ].map(option => (
                         <label key={option.value} className="flex items-center cursor-pointer">
                           <input
