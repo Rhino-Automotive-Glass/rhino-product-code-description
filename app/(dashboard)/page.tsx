@@ -257,7 +257,7 @@ export default function Home() {
 
     const parteLabel = parteOptions.find(p => p.value === parte)?.label || '-';
     const posicionText = posicion || '-';
-    const ladoText = lado || '-';
+    const ladoText = lado === 'Ambos' ? 'LEFT AND RIGHT' : lado || '-';
 
     let description = `${parteLabel} ${posicionText} ${ladoText}`;
 

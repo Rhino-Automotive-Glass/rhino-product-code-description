@@ -268,6 +268,17 @@ export default function CodeGenerator({
               />
               <span className="ml-2 text-sm text-slate-700">Right</span>
             </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="lado"
+                value="Ambos"
+                checked={lado === 'Ambos'}
+                onChange={(e) => setLado(e.target.value)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 border-slate-300"
+              />
+              <span className="ml-2 text-sm text-slate-700">Ambos</span>
+            </label>
           </div>
         </div>
       </form>
