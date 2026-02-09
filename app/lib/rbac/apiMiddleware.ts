@@ -26,23 +26,7 @@ export async function requireRole(
 
   const { user, supabase } = authResult;
 
-  // Get user role
-  const { data: roleData, error: roleError } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .single();
-
-  if (roleError || !roleData) {
-    // Default to viewer if no role found
-    const userRole = 'viewer' as UserRole;
-    if (!allowedRoles.includes(userRole)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-    return { user, supabase, role: userRole };
-  }
-
-  const userRole = roleData.role as UserRole;
+  const userRole = await getUserRole(user.id, supabase);
   if (!allowedRoles.includes(userRole)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
@@ -56,13 +40,13 @@ export async function getUserRole(
 ): Promise<UserRole> {
   const { data, error } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role_id, roles(name)')
     .eq('user_id', userId)
     .single();
 
-  if (error || !data) {
+  if (error || !data || !data.roles) {
     return 'viewer'; // Default role
   }
 
-  return data.role as UserRole;
+  return data.roles.name as UserRole;
 }

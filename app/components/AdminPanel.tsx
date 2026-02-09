@@ -1,12 +1,53 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserWithRole, UserRole } from '../lib/rbac/types';
+import { UserRole } from '../lib/rbac/types';
+
+interface UserWithRole {
+  id: string;
+  email: string;
+  role: UserRole;
+  role_display_name: string;
+  assigned_at: string;
+}
+
+interface RoleOption {
+  id: string;
+  name: string;
+  display_name: string;
+}
+
+const ROLE_BADGE_COLORS: Record<string, string> = {
+  super_admin: 'bg-red-100 text-red-800',
+  admin: 'bg-purple-100 text-purple-800',
+  editor: 'bg-green-100 text-green-800',
+  quality_assurance: 'bg-blue-100 text-blue-800',
+  approver: 'bg-yellow-100 text-yellow-800',
+  viewer: 'bg-gray-100 text-gray-800',
+};
 
 export default function AdminPanel() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [roles, setRoles] = useState<RoleOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+  const loadRoles = async () => {
+    try {
+      const { createClient } = await import('../lib/supabase/client');
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('roles')
+        .select('id, name, display_name')
+        .order('hierarchy_level', { ascending: false });
+
+      if (!error && data) {
+        setRoles(data);
+      }
+    } catch (error) {
+      console.error('Error loading roles:', error);
+    }
+  };
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -28,13 +69,13 @@ export default function AdminPanel() {
     }
   };
 
-  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+  const handleRoleChange = async (userId: string, roleId: string) => {
     setUpdatingUserId(userId);
     try {
       const response = await fetch(`/api/admin/users/${userId}/role`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify({ role_id: roleId }),
       });
 
       if (response.ok) {
@@ -54,6 +95,7 @@ export default function AdminPanel() {
   };
 
   useEffect(() => {
+    loadRoles();
     loadUsers();
   }, []);
 
@@ -116,13 +158,9 @@ export default function AdminPanel() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                      user.role === 'admin'
-                        ? 'bg-purple-100 text-purple-800'
-                        : user.role === 'qa'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-800'
+                      ROLE_BADGE_COLORS[user.role] || 'bg-gray-100 text-gray-800'
                     }`}>
-                      {user.role === 'qa' ? 'QA' : user.role}
+                      {user.role_display_name}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -130,16 +168,18 @@ export default function AdminPanel() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
+                      value={roles.find(r => r.name === user.role)?.id || ''}
+                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
                       disabled={updatingUserId === user.id}
                       className={`text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${
                         updatingUserId === user.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                       }`}
                     >
-                      <option value="viewer">Viewer</option>
-                      <option value="qa">QA/Editor</option>
-                      <option value="admin">Admin</option>
+                      {roles.map(role => (
+                        <option key={role.id} value={role.id}>
+                          {role.display_name}
+                        </option>
+                      ))}
                     </select>
                     {updatingUserId === user.id && (
                       <span className="ml-2 inline-block">

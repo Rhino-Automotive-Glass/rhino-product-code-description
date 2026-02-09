@@ -10,7 +10,7 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && role !== 'admin') {
+    if (!isLoading && role !== 'admin' && role !== 'super_admin') {
       router.push('/');
     }
   }, [role, isLoading, router]);
@@ -28,7 +28,7 @@ export default function AdminPage() {
   }
 
   // Don't render anything if not admin (will redirect)
-  if (role !== 'admin') {
+  if (role !== 'admin' && role !== 'super_admin') {
     return null;
   }
 

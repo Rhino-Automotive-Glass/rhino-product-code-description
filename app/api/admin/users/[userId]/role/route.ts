@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/app/lib/rbac/apiMiddleware';
-import { UserRole } from '@/app/lib/rbac/types';
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   // Only admins can assign roles
-  const authResult = await requireRole(request, ['admin']);
+  const authResult = await requireRole(request, ['super_admin', 'admin']);
   if (authResult instanceof NextResponse) {
     return authResult;
   }
@@ -15,17 +14,28 @@ export async function PUT(
   try {
     const { userId } = await params;
     const body = await request.json();
-    const { role } = body as { role: UserRole };
+    const { role_id } = body as { role_id: string };
 
-    if (!['admin', 'qa', 'viewer'].includes(role)) {
-      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+    if (!role_id) {
+      return NextResponse.json({ error: 'role_id is required' }, { status: 400 });
     }
 
     const { supabase, user } = authResult;
 
+    // Validate the role_id exists
+    const { data: roleData, error: roleError } = await supabase
+      .from('roles')
+      .select('id, name, hierarchy_level')
+      .eq('id', role_id)
+      .single();
+
+    if (roleError || !roleData) {
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+    }
+
     const { error } = await supabase.from('user_roles').upsert({
       user_id: userId,
-      role: role,
+      role_id: role_id,
       assigned_by: user.id,
       updated_at: new Date().toISOString(),
     }, {

@@ -3,8 +3,8 @@ import { createClient } from '@/app/lib/supabase/server';
 import { requireRole } from '@/app/lib/rbac/apiMiddleware';
 
 export async function POST(request: NextRequest) {
-  // Only admins can create products
-  const authResult = await requireRole(request, ['admin']);
+  // Admins and editors can create products
+  const authResult = await requireRole(request, ['super_admin', 'admin', 'editor']);
   if (authResult instanceof NextResponse) {
     return authResult; // Access denied
   }

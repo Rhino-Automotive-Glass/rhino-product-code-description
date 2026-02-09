@@ -33,15 +33,15 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const fetchUserRole = async (userId: string) => {
     const { data, error } = await supabase
       .from('user_roles')
-      .select('role')
+      .select('role_id, roles(name)')
       .eq('user_id', userId)
       .single();
 
-    if (error || !data) {
+    if (error || !data || !data.roles) {
       return 'viewer' as UserRole; // Default
     }
 
-    return data.role as UserRole;
+    return (data.roles as any).name as UserRole;
   };
 
   const refreshRole = async () => {

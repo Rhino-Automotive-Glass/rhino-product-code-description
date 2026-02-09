@@ -6,8 +6,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Allow both admin and qa, but with different permissions
-  const authResult = await requireRole(request, ['admin', 'qa']);
+  // Allow admin-level and QA-level roles, but with different permissions
+  const authResult = await requireRole(request, ['super_admin', 'admin', 'editor', 'quality_assurance', 'approver']);
   if (authResult instanceof NextResponse) {
     return authResult;
   }
@@ -20,8 +20,8 @@ export async function PATCH(
 
     const updateData: Record<string, unknown> = {};
 
-    // QA users can ONLY update the verified field
-    if (role === 'qa') {
+    // QA/approver users can ONLY update the verified field
+    if (role === 'quality_assurance' || role === 'approver') {
       if (Object.keys(body).length !== 1 || body.verified === undefined) {
         return NextResponse.json(
           { error: 'QA users can only toggle verified status' },
@@ -75,7 +75,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   // Only admins can delete
-  const authResult = await requireRole(request, ['admin']);
+  const authResult = await requireRole(request, ['super_admin', 'admin']);
   if (authResult instanceof NextResponse) {
     return authResult;
   }

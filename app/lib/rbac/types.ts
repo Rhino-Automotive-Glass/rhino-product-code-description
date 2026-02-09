@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'qa' | 'viewer';
+export type UserRole = 'super_admin' | 'admin' | 'editor' | 'quality_assurance' | 'approver' | 'viewer';
 
 export interface RolePermissions {
   canCreateProducts: boolean;

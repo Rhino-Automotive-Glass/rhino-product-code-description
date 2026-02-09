@@ -655,7 +655,7 @@ export default function Home() {
             Welcome {user.email}
             {role && (
             <span className="px-3 py-0.5 mx-4 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 uppercase">
-              {role === 'qa' ? 'QA' : role}
+              {role === 'quality_assurance' ? 'QA' : role === 'super_admin' ? 'Super Admin' : role}
             </span>
           )}
           </p>
