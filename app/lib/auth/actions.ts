@@ -23,9 +23,8 @@ export async function signIn(email: string, password: string) {
 export async function signUp(email: string, password: string) {
   const supabase = await createClient()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
   const { error } = await supabase.auth.signUp({
     email,
