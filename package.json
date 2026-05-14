@@ -16,7 +16,9 @@
     "test:webkit": "playwright test --project=webkit",
     "test:mobile": "playwright test --project='Mobile Chrome' --project='Mobile Safari'",
     "test:report": "playwright show-report",
-    "test:codegen": "playwright codegen http://localhost:3000"
+    "test:codegen": "playwright codegen http://localhost:3000",
+    "db:backup": "bash scripts/backup-db.sh",
+    "db:restore": "bash scripts/restore-db.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
