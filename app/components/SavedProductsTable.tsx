@@ -101,7 +101,7 @@ export default function SavedProductsTable({
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm font-mono text-gray-900">
-                      {product.description.generated}
+                      {product.description.displayName ?? product.description.generated}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">

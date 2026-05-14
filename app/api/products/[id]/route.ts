@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/app/lib/supabase/server';
 import { requireRole } from '@/app/lib/rbac/apiMiddleware';
+import { withDisplayName } from '@/app/lib/description/withDisplayName';
 
 export async function PATCH(
   request: NextRequest,
@@ -38,7 +39,8 @@ export async function PATCH(
         updateData.compatibility_data = body.compatibility;
       }
       if (body.description) {
-        updateData.description_data = body.description;
+        // Derive the Spanish displayName from `generated` on every write.
+        updateData.description_data = withDisplayName(body.description);
       }
       if (body.verified !== undefined) {
         updateData.verified = body.verified;

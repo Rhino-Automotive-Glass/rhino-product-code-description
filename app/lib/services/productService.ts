@@ -32,6 +32,8 @@ export interface ProductData {
     posicion: string;
     lado: string;
     generated: string;
+    // Spanish display name; read path prefers `displayName ?? generated`.
+    displayName?: string;
   };
   verified: boolean;
 }

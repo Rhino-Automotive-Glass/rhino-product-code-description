@@ -35,6 +35,8 @@ export interface ProductData {
     posicion: string;
     lado: string;
     generated: string;
+    // Spanish display name; read path prefers `displayName ?? generated`.
+    displayName?: string;
   };
   verified: boolean;
 }
@@ -195,8 +197,8 @@ export default function Home() {
         valueA = a.productCode.generated.toLowerCase();
         valueB = b.productCode.generated.toLowerCase();
       } else {
-        valueA = a.description.generated.toLowerCase();
-        valueB = b.description.generated.toLowerCase();
+        valueA = (a.description.displayName ?? a.description.generated).toLowerCase();
+        valueB = (b.description.displayName ?? b.description.generated).toLowerCase();
       }
 
       if (sortDirection === 'asc') {

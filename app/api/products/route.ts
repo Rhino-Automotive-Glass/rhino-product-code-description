@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/app/lib/supabase/server';
 import { requireRole } from '@/app/lib/rbac/apiMiddleware';
+import { withDisplayName } from '@/app/lib/description/withDisplayName';
 
 export async function POST(request: NextRequest) {
   // Admins and editors can create products
@@ -17,7 +18,8 @@ export async function POST(request: NextRequest) {
     const insertData = {
       product_code_data: body.productCode,
       compatibility_data: body.compatibility,
-      description_data: body.description,
+      // Derive the Spanish displayName from `generated` on every write.
+      description_data: withDisplayName(body.description),
       verified: body.verified ?? false,
       status: 'active',
     };

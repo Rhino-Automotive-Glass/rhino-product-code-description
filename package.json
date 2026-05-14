@@ -18,7 +18,9 @@
     "test:report": "playwright show-report",
     "test:codegen": "playwright codegen http://localhost:3000",
     "db:backup": "bash scripts/backup-db.sh",
-    "db:restore": "bash scripts/restore-db.sh"
+    "db:restore": "bash scripts/restore-db.sh",
+    "db:snapshot": "tsx --env-file=.env.local scripts/backup-product-codes.ts",
+    "db:backfill": "tsx --env-file=.env.local scripts/backfill-display-name.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -36,6 +38,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.0",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

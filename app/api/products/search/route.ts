@@ -44,12 +44,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const results = data.map((item) => ({
-      id: item.id,
-      code: (item.product_code_data as any)?.generated || '',
-      description: (item.description_data as any)?.generated || '',
-      verified: item.verified ?? false,
-    }));
+    const results = data.map((item) => {
+      const description = item.description_data as any;
+      return {
+        id: item.id,
+        code: (item.product_code_data as any)?.generated || '',
+        // Prefer the Spanish display name, fall back to the English generated string.
+        description: description?.displayName ?? description?.generated ?? '',
+        verified: item.verified ?? false,
+      };
+    });
 
     return NextResponse.json(
       {
