@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 export default function Header({ user, onSignOut }: HeaderProps) {
-  const { role, permissions } = useRole();
+  const { permissions } = useRole();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -80,15 +80,14 @@ export default function Header({ user, onSignOut }: HeaderProps) {
                     </Link>
                   )}
                   <hr className="my-1 border-slate-200" />
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onSignOut();
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
-                  >
-                    Sign Out
-                  </button>
+                  <form action={onSignOut} onSubmit={() => setMenuOpen(false)}>
+                    <button
+                      type="submit"
+                      className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </form>
                 </div>
               )}
             </div>

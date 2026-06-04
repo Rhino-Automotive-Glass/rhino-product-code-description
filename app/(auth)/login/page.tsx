@@ -1,5 +1,8 @@
 import { LoginForm } from '@/app/components/auth/LoginForm'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function LoginPage() {
   return (
     <div className="space-y-6">
