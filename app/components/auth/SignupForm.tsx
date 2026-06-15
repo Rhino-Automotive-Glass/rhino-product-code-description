@@ -8,6 +8,7 @@ import Link from 'next/link'
 
 export function SignupForm() {
   const [error, setError] = useState<string>()
+  const [success, setSuccess] = useState<string>()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -15,6 +16,7 @@ export function SignupForm() {
     e.preventDefault()
     setLoading(true)
     setError(undefined)
+    setSuccess(undefined)
 
     const formData = new FormData(e.currentTarget)
     const email = formData.get('email') as string
@@ -27,22 +29,44 @@ export function SignupForm() {
       return
     }
 
-    const result = await signUp(email, password)
+    try {
+      const result = await signUp(email, password)
 
-    if (result?.error) {
-      setError(result.error)
+      if (result?.error) {
+        setError(result.error)
+        setLoading(false)
+      } else if (result?.success) {
+        setSuccess('Account created. Check your email to confirm your account before signing in.')
+        setLoading(false)
+        router.prefetch('/login')
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      setError(`Unable to create account. ${message}`)
       setLoading(false)
-    } else if (result?.success) {
-      // Show success alert
-      alert('Te has registrado, confirma tu correo electrónico')
-      // Redirect to home
-      router.push('/')
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <AuthErrorMessage message={error} />
+      {success && (
+        <div className="rounded-lg bg-green-50 border border-green-200 p-3 flex items-start gap-2">
+          <svg
+            className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.45-1.647-1.647a.75.75 0 10-1.06 1.061l2.267 2.267a.75.75 0 001.137-.089l3.753-5.16z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <p className="text-sm text-green-800 font-medium">{success}</p>
+        </div>
+      )}
 
       <div>
         <label

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { UserRole } from '../lib/rbac/types';
+import { Notice, NoticeBanner } from './NoticeBanner';
 
 interface UserWithRole {
   id: string;
@@ -26,11 +27,16 @@ const ROLE_BADGE_COLORS: Record<string, string> = {
   viewer: 'bg-gray-100 text-gray-800',
 };
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Unknown error';
+}
+
 export default function AdminPanel() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [roles, setRoles] = useState<RoleOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
 
   const loadRoles = async () => {
     try {
@@ -43,14 +49,26 @@ export default function AdminPanel() {
 
       if (!error && data) {
         setRoles(data);
+      } else if (error) {
+        setNotice({
+          tone: 'error',
+          title: 'Error al cargar roles',
+          message: error.message,
+        });
       }
     } catch (error) {
       console.error('Error loading roles:', error);
+      setNotice({
+        tone: 'error',
+        title: 'Error inesperado al cargar roles',
+        message: getErrorMessage(error),
+      });
     }
   };
 
   const loadUsers = async () => {
     setIsLoading(true);
+    setNotice(null);
     try {
       const response = await fetch('/api/admin/users');
       const result = await response.json();
@@ -59,11 +77,19 @@ export default function AdminPanel() {
         setUsers(result.data);
       } else {
         console.error('Error loading users:', result.error);
-        alert('Error al cargar usuarios');
+        setNotice({
+          tone: 'error',
+          title: 'Error al cargar usuarios',
+          message: result.error ?? 'La API no devolvió un detalle del error.',
+        });
       }
     } catch (error) {
       console.error('Unexpected error loading users:', error);
-      alert('Error inesperado al cargar usuarios');
+      setNotice({
+        tone: 'error',
+        title: 'Error inesperado al cargar usuarios',
+        message: getErrorMessage(error),
+      });
     } finally {
       setIsLoading(false);
     }
@@ -80,15 +106,27 @@ export default function AdminPanel() {
 
       if (response.ok) {
         await loadUsers();
-        alert('Rol actualizado exitosamente');
+        setNotice({
+          tone: 'success',
+          title: 'Rol actualizado',
+          message: 'El cambio de rol se guardó correctamente.',
+        });
       } else {
         const errorData = await response.json();
         console.error('Error updating role:', errorData);
-        alert('Error al actualizar el rol');
+        setNotice({
+          tone: 'error',
+          title: 'Error al actualizar el rol',
+          message: errorData.error ?? 'La API no devolvió un detalle del error.',
+        });
       }
     } catch (error) {
       console.error('Unexpected error updating role:', error);
-      alert('Error inesperado al actualizar el rol');
+      setNotice({
+        tone: 'error',
+        title: 'Error inesperado al actualizar el rol',
+        message: getErrorMessage(error),
+      });
     } finally {
       setUpdatingUserId(null);
     }
@@ -112,6 +150,11 @@ export default function AdminPanel() {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
+      {notice && (
+        <div className="mb-6">
+          <NoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-slate-900">Gestión de Usuarios</h2>
         <button

@@ -11,14 +11,20 @@ interface RoleContextType {
   role: UserRole | null;
   permissions: RolePermissions | null;
   isLoading: boolean;
+  error: string | null;
   refreshRole: () => Promise<void>;
 }
+
+type RoleRelation = {
+  name?: string
+} | null
 
 const RoleContext = createContext<RoleContextType>({
   user: null,
   role: null,
   permissions: null,
   isLoading: true,
+  error: null,
   refreshRole: async () => {},
 });
 
@@ -27,6 +33,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole | null>(null);
   const [permissions, setPermissions] = useState<RolePermissions | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -37,19 +44,38 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       .eq('user_id', userId)
       .single();
 
-    if (error || !data || !data.roles) {
-      return 'viewer' as UserRole; // Default
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return 'viewer' as UserRole;
+      }
+
+      throw new Error(error.message);
     }
 
-    return (data.roles as any).name as UserRole;
+    if (!data || !data.roles) {
+      return 'viewer' as UserRole;
+    }
+
+    const roleRelation = data.roles as RoleRelation | RoleRelation[];
+    const roleName = Array.isArray(roleRelation)
+      ? roleRelation[0]?.name
+      : roleRelation?.name;
+
+    return (roleName ?? 'viewer') as UserRole;
   };
 
   const refreshRole = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const {
         data: { user: currentUser },
+        error: userError,
       } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw new Error(userError.message);
+      }
 
       if (currentUser) {
         setUser(currentUser);
@@ -62,6 +88,11 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         setPermissions(null);
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown role error';
+      setError(`Unable to load your account permissions. ${message}`);
+      setUser(null);
+      setRole(null);
+      setPermissions(null);
       console.error('Error fetching role:', error);
     } finally {
       setIsLoading(false);
@@ -81,6 +112,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setRole(null);
         setPermissions(null);
+        setError(null);
         setIsLoading(false);
       }
     });
@@ -92,7 +124,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
   return (
     <RoleContext.Provider
-      value={{ user, role, permissions, isLoading, refreshRole }}
+      value={{ user, role, permissions, isLoading, error, refreshRole }}
     >
       {children}
     </RoleContext.Provider>

@@ -3,7 +3,15 @@ import { LoginForm } from '@/app/components/auth/LoginForm'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<{
+    error?: string
+  }>
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -13,7 +21,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <LoginForm />
+      <LoginForm initialError={params.error} />
     </div>
   )
 }

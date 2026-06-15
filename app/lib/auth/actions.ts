@@ -7,13 +7,23 @@ import { redirect } from 'next/navigation'
 export async function signIn(email: string, password: string) {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
+  let errorMessage: string | null = null
 
-  if (error) {
-    return { error: error.message }
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      errorMessage = error.message
+    }
+  } catch (error) {
+    errorMessage = error instanceof Error ? error.message : 'Unexpected sign-in error'
+  }
+
+  if (errorMessage) {
+    return { error: errorMessage }
   }
 
   revalidatePath('/', 'layout')
@@ -26,16 +36,26 @@ export async function signUp(email: string, password: string) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${siteUrl}/api/auth/callback`,
-    },
-  })
+  let errorMessage: string | null = null
 
-  if (error) {
-    return { error: error.message }
+  try {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${siteUrl}/api/auth/callback`,
+      },
+    })
+
+    if (error) {
+      errorMessage = error.message
+    }
+  } catch (error) {
+    errorMessage = error instanceof Error ? error.message : 'Unexpected sign-up error'
+  }
+
+  if (errorMessage) {
+    return { error: errorMessage }
   }
 
   revalidatePath('/', 'layout')

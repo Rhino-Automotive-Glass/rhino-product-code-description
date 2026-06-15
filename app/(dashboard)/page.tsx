@@ -8,6 +8,8 @@ import EditProductModal from '../components/EditProductModal';
 import Pagination from '../components/Pagination';
 import { productService } from '../lib/services/productService';
 import { useRole } from '../contexts/RoleContext';
+import { ErrorState } from '../components/ErrorState';
+import { Notice, NoticeBanner } from '../components/NoticeBanner';
 
 export interface Compatibility {
   marca: string;
@@ -48,9 +50,13 @@ export interface SavedProduct extends ProductData {
   status?: string;
 }
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Unknown error';
+}
+
 export default function Home() {
   // Role and permissions
-  const { user, role, permissions, isLoading: roleLoading } = useRole();
+  const { user, role, permissions, isLoading: roleLoading, error: roleError, refreshRole } = useRole();
 
   // Tab state - default to 'db' for non-admins
   const [activeTab, setActiveTab] = useState<'agregar' | 'db'>('db');
@@ -91,6 +97,7 @@ export default function Home() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SavedProduct | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
 
   // Update tab if user doesn't have permission
   useEffect(() => {
@@ -110,6 +117,7 @@ export default function Home() {
 
   const loadDbProducts = async (page: number = 1, search: string = searchTerm) => {
     setIsLoadingDb(true);
+    setNotice(null);
     try {
       const response = await productService.getProducts(
         'active',
@@ -123,7 +131,11 @@ export default function Home() {
 
       if (response.error) {
         console.error('Error loading DB products:', response.error);
-        alert('Error al cargar productos de la base de datos');
+        setNotice({
+          tone: 'error',
+          title: 'Error al cargar productos',
+          message: getErrorMessage(response.error),
+        });
         setDbProducts([]);
         setTotalPages(0);
         setTotalCount(0);
@@ -135,6 +147,11 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Unexpected error loading DB products:', error);
+      setNotice({
+        tone: 'error',
+        title: 'Error inesperado al cargar productos',
+        message: getErrorMessage(error),
+      });
       setDbProducts([]);
       setTotalPages(0);
       setTotalCount(0);
@@ -403,7 +420,11 @@ export default function Home() {
     );
 
     if (isDuplicate) {
-      alert(`El código "${generatedCode}" ya existe en la tabla`);
+      setNotice({
+        tone: 'warning',
+        title: 'Código duplicado',
+        message: `El código "${generatedCode}" ya existe en la tabla.`,
+      });
       return;
     }
 
@@ -437,9 +458,13 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ error: 'Unknown API error' }));
         console.error('Error deleting from database:', errorData);
-        alert('Error al eliminar producto');
+        setNotice({
+          tone: 'error',
+          title: 'Error al eliminar producto',
+          message: errorData.error ?? 'La API no devolvió un detalle del error.',
+        });
         return;
       }
 
@@ -455,10 +480,18 @@ export default function Home() {
         loadDbProducts(currentPage);
       }
 
-      alert('Producto eliminado exitosamente');
+      setNotice({
+        tone: 'success',
+        title: 'Producto eliminado',
+        message: `${product.productCode.generated} se eliminó correctamente.`,
+      });
     } catch (error) {
       console.error('Unexpected error deleting:', error);
-      alert('Error inesperado al eliminar');
+      setNotice({
+        tone: 'error',
+        title: 'Error inesperado al eliminar',
+        message: getErrorMessage(error),
+      });
     }
   };
 
@@ -472,7 +505,11 @@ export default function Home() {
 
   const handleToggleDbVerified = async (index: number) => {
     if (!permissions?.canToggleVerified) {
-      alert('No tienes permisos para cambiar el estado de verificación');
+      setNotice({
+        tone: 'error',
+        title: 'Permiso denegado',
+        message: 'No tienes permisos para cambiar el estado de verificación.',
+      });
       return;
     }
 
@@ -501,7 +538,7 @@ export default function Home() {
       console.log('Update result:', response.ok ? 'SUCCESS' : 'ERROR');
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ error: 'Unknown API error' }));
         console.error('Error updating verified status:', errorData);
         // Revert on error
         setDbProducts(prev =>
@@ -509,7 +546,11 @@ export default function Home() {
             i === index ? { ...p, verified: !newVerifiedStatus } : p
           )
         );
-        alert('Error al actualizar el estado de verificación');
+        setNotice({
+          tone: 'error',
+          title: 'Error al actualizar verificación',
+          message: errorData.error ?? 'La API no devolvió un detalle del error.',
+        });
       }
     } catch (error) {
       console.error('Unexpected error updating verified status:', error);
@@ -519,6 +560,11 @@ export default function Home() {
           i === index ? { ...p, verified: !newVerifiedStatus } : p
         )
       );
+      setNotice({
+        tone: 'error',
+        title: 'Error inesperado al actualizar verificación',
+        message: getErrorMessage(error),
+      });
     }
   };
 
@@ -545,9 +591,13 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ error: 'Unknown API error' }));
         console.error('Error updating product:', errorData);
-        alert('Error al actualizar el producto');
+        setNotice({
+          tone: 'error',
+          title: 'Error al actualizar producto',
+          message: errorData.error ?? 'La API no devolvió un detalle del error.',
+        });
         return;
       }
 
@@ -558,10 +608,18 @@ export default function Home() {
 
       setEditModalOpen(false);
       setEditingProduct(null);
-      alert('Producto actualizado exitosamente');
+      setNotice({
+        tone: 'success',
+        title: 'Producto actualizado',
+        message: `${updatedProduct.productCode.generated} se actualizó correctamente.`,
+      });
     } catch (error) {
       console.error('Unexpected error updating product:', error);
-      alert('Error inesperado al actualizar');
+      setNotice({
+        tone: 'error',
+        title: 'Error inesperado al actualizar',
+        message: getErrorMessage(error),
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -581,7 +639,11 @@ export default function Home() {
 
   const handleGuardarTodos = async () => {
     if (savedProducts.length === 0) {
-      alert('No hay productos para guardar');
+      setNotice({
+        tone: 'warning',
+        title: 'No hay productos para guardar',
+        message: 'Agrega al menos un producto antes de guardar en la base de datos.',
+      });
       return;
     }
 
@@ -609,7 +671,7 @@ export default function Home() {
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({ error: 'Unknown API error' }));
           errorCount++;
           errors.push(`${product.productCode.generated}: ${errorData.error}`);
           console.error('Error saving product:', product.productCode.generated, errorData);
@@ -627,12 +689,24 @@ export default function Home() {
     setIsSavingAll(false);
 
     if (errorCount === 0) {
-      alert(`✅ Todos los productos guardados exitosamente (${successCount})`);
+      setNotice({
+        tone: 'success',
+        title: 'Todos los productos fueron guardados',
+        message: `${successCount} producto(s) guardado(s) exitosamente.`,
+      });
       setSavedProducts([]);
     } else if (successCount === 0) {
-      alert(`❌ Error al guardar todos los productos\n\n${errors.join('\n')}`);
+      setNotice({
+        tone: 'error',
+        title: 'No se pudo guardar ningún producto',
+        message: errors.join('\n'),
+      });
     } else {
-      alert(`⚠️ Guardados: ${successCount}\nErrores: ${errorCount}\n\n${errors.join('\n')}`);
+      setNotice({
+        tone: 'warning',
+        title: 'Algunos productos no se guardaron',
+        message: `Guardados: ${successCount}\nErrores: ${errorCount}\n\n${errors.join('\n')}`,
+      });
     }
   };
 
@@ -645,6 +719,21 @@ export default function Home() {
           <p className="text-slate-700 font-medium">Cargando...</p>
         </div>
       </div>
+    );
+  }
+
+  if (roleError) {
+    return (
+      <ErrorState
+        title="Unable to load dashboard"
+        message={roleError}
+        actionLabel="Try again"
+        onAction={refreshRole}
+        secondaryActionLabel="Go to login"
+        onSecondaryAction={() => {
+          window.location.href = '/login'
+        }}
+      />
     );
   }
 
@@ -711,6 +800,11 @@ export default function Home() {
 
       {/* Tab Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        {notice && (
+          <div className="mb-4">
+            <NoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
+          </div>
+        )}
         <div className="bg-white rounded-b-xl shadow-sm border border-slate-200 border-t-0 p-6 lg:p-8">
         {activeTab === 'agregar' && permissions?.canViewAgregarTab ? (
           // AGREGAR TAB

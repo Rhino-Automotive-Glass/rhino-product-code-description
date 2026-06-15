@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { carBrandsWithSubModels } from '../../carBrands';
 import { Compatibility } from '../(dashboard)/page';
+import { Notice, NoticeBanner } from './NoticeBanner';
 
 interface ProductCompatibilityProps {
   compatibilities: Compatibility[];
@@ -28,6 +29,7 @@ export default function ProductCompatibility({
   const [additional, setAdditional] = useState('');
   const [modelo, setModelo] = useState('');
   const [customMarca, setCustomMarca] = useState(''); // Custom brand/model input
+  const [validationNotice, setValidationNotice] = useState<Notice | null>(null);
 
   // Check if "Otro" is selected
   const isOtroSelected = marca === 'Otro';
@@ -70,14 +72,17 @@ export default function ProductCompatibility({
 
   // Reset subModelo, version, additional, and customMarca when marca changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSubModelo('');
     setVersion('');
     setAdditional('');
     setCustomMarca('');
+    setValidationNotice(null);
   }, [marca]);
 
   // Reset version and additional when subModelo changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVersion('');
     setAdditional('');
   }, [subModelo]);
@@ -85,12 +90,14 @@ export default function ProductCompatibility({
   // Reset form fields when resetTrigger changes
   useEffect(() => {
     if (resetTrigger > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMarca('');
       setSubModelo('');
       setVersion('');
       setAdditional('');
       setModelo('');
       setCustomMarca('');
+      setValidationNotice(null);
     }
   }, [resetTrigger]);
 
@@ -118,12 +125,20 @@ export default function ProductCompatibility({
     // Validation based on whether "Otro" is selected
     if (isOtroSelected) {
       if (!customMarca.trim() || !modelo) {
-        alert('Por favor ingresa la marca/modelo personalizado y el año');
+        setValidationNotice({
+          tone: 'warning',
+          title: 'Faltan datos de compatibilidad',
+          message: 'Por favor ingresa la marca/modelo personalizado y el año.',
+        });
         return;
       }
     } else {
       if (!marca || !subModelo || !modelo) {
-        alert('Por favor selecciona todos los campos requeridos antes de añadir la compatibilidad');
+        setValidationNotice({
+          tone: 'warning',
+          title: 'Faltan datos de compatibilidad',
+          message: 'Por favor selecciona todos los campos requeridos antes de añadir la compatibilidad.',
+        });
         return;
       }
       // Note: version is optional, no validation needed
@@ -146,11 +161,16 @@ export default function ProductCompatibility({
         };
 
     if (isDuplicate(newCompatibility)) {
-      alert('Esta compatibilidad ya existe');
+      setValidationNotice({
+        tone: 'warning',
+        title: 'Compatibilidad duplicada',
+        message: 'Esta compatibilidad ya existe.',
+      });
       return;
     }
 
     setCompatibilities([...compatibilities, newCompatibility]);
+    setValidationNotice(null);
     
     // Clear the custom input after adding (keep marca as "Otro" for convenience)
     if (isOtroSelected) {
@@ -206,6 +226,13 @@ export default function ProductCompatibility({
       </div>
 
       <form className="space-y-6">
+        {validationNotice && (
+          <NoticeBanner
+            notice={validationNotice}
+            onDismiss={() => setValidationNotice(null)}
+          />
+        )}
+
         {/* Marca */}
         <div className="w-full">
           <label className="block text-sm font-medium text-slate-700 mb-2">

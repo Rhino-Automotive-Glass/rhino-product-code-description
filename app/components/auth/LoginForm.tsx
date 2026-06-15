@@ -5,8 +5,8 @@ import { signIn } from '@/app/lib/auth/actions'
 import { AuthErrorMessage } from './AuthErrorMessage'
 import Link from 'next/link'
 
-export function LoginForm() {
-  const [error, setError] = useState<string>()
+export function LoginForm({ initialError }: { initialError?: string }) {
+  const [error, setError] = useState<string | undefined>(initialError)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -18,10 +18,16 @@ export function LoginForm() {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
-    const result = await signIn(email, password)
+    try {
+      const result = await signIn(email, password)
 
-    if (result?.error) {
-      setError(result.error)
+      if (result?.error) {
+        setError(result.error)
+        setLoading(false)
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      setError(`Unable to sign in. ${message}`)
       setLoading(false)
     }
   }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { SavedProduct, Compatibility } from '../(dashboard)/page';
 import { carBrandsWithSubModels } from '../../carBrands';
+import { Notice, NoticeBanner } from './NoticeBanner';
 
 interface EditProductModalProps {
   isOpen: boolean;
@@ -42,10 +43,12 @@ export default function EditProductModal({
   const [additional, setAdditional] = useState('');
   const [modelo, setModelo] = useState('');
   const [customMarca, setCustomMarca] = useState('');
+  const [validationNotice, setValidationNotice] = useState<Notice | null>(null);
 
   // Load product data when modal opens
   useEffect(() => {
     if (product && isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClasificacion(product.productCode.clasificacion || '');
       setParte(product.productCode.parte || '');
       setNumero(product.productCode.numero || '');
@@ -61,6 +64,7 @@ export default function EditProductModal({
       setAdditional('');
       setModelo('');
       setCustomMarca('');
+      setValidationNotice(null);
     }
   }, [product, isOpen]);
 
@@ -99,13 +103,16 @@ export default function EditProductModal({
 
   // Reset dependent fields when parent changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSubModelo('');
     setVersion('');
     setAdditional('');
     setCustomMarca('');
+    setValidationNotice(null);
   }, [marca]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVersion('');
     setAdditional('');
   }, [subModelo]);
@@ -149,12 +156,20 @@ export default function EditProductModal({
   const handleAddCompatibility = () => {
     if (isOtroSelected) {
       if (!customMarca.trim() || !modelo) {
-        alert('Por favor ingresa la marca/modelo personalizado y el año');
+        setValidationNotice({
+          tone: 'warning',
+          title: 'Faltan datos de compatibilidad',
+          message: 'Por favor ingresa la marca/modelo personalizado y el año.',
+        });
         return;
       }
     } else {
       if (!marca || !subModelo || !modelo) {
-        alert('Por favor selecciona todos los campos requeridos antes de añadir la compatibilidad');
+        setValidationNotice({
+          tone: 'warning',
+          title: 'Faltan datos de compatibilidad',
+          message: 'Por favor selecciona todos los campos requeridos antes de añadir la compatibilidad.',
+        });
         return;
       }
     }
@@ -176,11 +191,16 @@ export default function EditProductModal({
         };
 
     if (isDuplicate(newCompatibility)) {
-      alert('Esta compatibilidad ya existe');
+      setValidationNotice({
+        tone: 'warning',
+        title: 'Compatibilidad duplicada',
+        message: 'Esta compatibilidad ya existe.',
+      });
       return;
     }
 
     setCompatibilities([...compatibilities, newCompatibility]);
+    setValidationNotice(null);
 
     if (isOtroSelected) {
       setCustomMarca('');
@@ -551,6 +571,13 @@ export default function EditProductModal({
                 <h3 className="text-lg font-bold text-slate-900 mb-6">Product Compatibility</h3>
 
                 <div className="space-y-5">
+                  {validationNotice && (
+                    <NoticeBanner
+                      notice={validationNotice}
+                      onDismiss={() => setValidationNotice(null)}
+                    />
+                  )}
+
                   {/* Marca */}
                   <div className="w-full">
                     <label className="block text-sm font-medium text-slate-700 mb-2">

@@ -6,7 +6,7 @@ import { useRole } from '@/app/contexts/RoleContext';
 import AdminPanel from '@/app/components/AdminPanel';
 
 export default function AdminPage() {
-  const { role, isLoading } = useRole();
+  const { role, isLoading, error, refreshRole } = useRole();
   const router = useRouter();
 
   useEffect(() => {
@@ -22,6 +22,27 @@ export default function AdminPage() {
         <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="text-slate-700 font-medium">Verificando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-slate-50 px-4">
+        <div className="card max-w-lg w-full p-6 sm:p-8">
+          <h1 className="text-xl font-semibold text-slate-900">
+            Unable to load admin panel
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{error}</p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <button type="button" onClick={refreshRole} className="btn btn-primary btn-md">
+              Try again
+            </button>
+            <button type="button" onClick={() => router.push('/login')} className="btn btn-secondary btn-md">
+              Go to login
+            </button>
+          </div>
         </div>
       </div>
     );
