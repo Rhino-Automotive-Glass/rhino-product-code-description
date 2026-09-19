@@ -57,7 +57,7 @@ function getErrorMessage(error: unknown) {
 
 export default function Home() {
   // Role and permissions
-  const { user, role, permissions, isLoading: roleLoading, error: roleError, refreshRole } = useRole();
+  const { user, role, isPending, permissions, isLoading: roleLoading, error: roleError, refreshRole } = useRole();
 
   // Tab state - default to 'db' for non-admins
   const [activeTab, setActiveTab] = useState<'agregar' | 'db'>('db');
@@ -797,7 +797,17 @@ export default function Home() {
               {role === 'quality_assurance' ? 'QA' : role === 'super_admin' ? 'Super Admin' : role}
             </span>
           )}
+            {isPending && (
+            <span className="px-3 py-0.5 mx-4 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 uppercase">
+              Pending approval
+            </span>
+          )}
           </p>
+          {isPending && (
+            <p role="status" className="mt-2 text-sm text-slate-600">
+              Your account is waiting for an administrator to assign a role. Until then you can browse the catalog.
+            </p>
+          )}
         </div>
       )}
 

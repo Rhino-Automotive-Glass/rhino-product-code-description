@@ -57,4 +57,28 @@ BEGIN
 
   INSERT INTO public.user_roles (user_id, role_id)
   SELECT '00000000-0000-4000-8000-00000000e2e1', r.id FROM public.roles r WHERE r.name = 'viewer';
+
+  -- A signed-up account an admin has not approved yet: can sign in, has NO
+  -- role (migration 018). Same local-only password as the editor.
+  INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+    created_at, updated_at,
+    confirmation_token, recovery_token, email_change_token_new, email_change
+  ) VALUES (
+    '00000000-0000-0000-0000-000000000000', '00000000-0000-4000-8000-00000000e2e2',
+    'authenticated', 'authenticated', 'e2e-pending@example.test',
+    extensions.crypt('e2e-local-password', extensions.gen_salt('bf')),
+    now(), '{"provider":"email","providers":["email"]}', '{}',
+    now(), now(), '', '', '', ''
+  );
+
+  INSERT INTO auth.identities (
+    id, user_id, provider_id, provider, identity_data,
+    last_sign_in_at, created_at, updated_at
+  ) VALUES (
+    gen_random_uuid(), '00000000-0000-4000-8000-00000000e2e2', '00000000-0000-4000-8000-00000000e2e2', 'email',
+    jsonb_build_object('sub', '00000000-0000-4000-8000-00000000e2e2', 'email', 'e2e-pending@example.test', 'email_verified', true),
+    now(), now(), now()
+  );
 END $$;
