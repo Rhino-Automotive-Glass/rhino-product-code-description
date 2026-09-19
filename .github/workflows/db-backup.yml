@@ -18,6 +18,11 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # Must match the Supabase server's major version (Project Settings ->
+      # Infrastructure). pg_dump refuses to dump a newer server; bump this when
+      # the project is upgraded.
+      PG_MAJOR: '17'
 
     steps:
       - uses: actions/checkout@v4
@@ -25,13 +30,26 @@ jobs:
       # The runner ships an older client than Supabase's server, and pg_dump
       # refuses to dump a newer major version. Pull the matching client from
       # the PostgreSQL APT repo rather than relying on the distro package.
+      #
+      # Installing it is not enough: /usr/bin/pg_dump is Ubuntu's pg_wrapper,
+      # which picks the runner's preinstalled PostgreSQL 16 cluster version.
+      # Put the versioned bin directory first on PATH for later steps.
       - name: Install PostgreSQL client
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-common
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-          sudo apt-get install -y postgresql-client-17
+          sudo apt-get install -y "postgresql-client-$PG_MAJOR"
+          echo "/usr/lib/postgresql/$PG_MAJOR/bin" >> "$GITHUB_PATH"
+
+      # Fail here, with a clear message, rather than mid-dump.
+      - name: Verify pg_dump version
+        run: |
           pg_dump --version
+          pg_dump --version | grep -qE " $PG_MAJOR\.[0-9]+" || {
+            echo "::error::pg_dump is not version $PG_MAJOR: $(command -v pg_dump)"
+            exit 1
+          }
 
       # No npm install needed: backup-db.sh is plain bash + pg_dump.
       - name: Run backup
