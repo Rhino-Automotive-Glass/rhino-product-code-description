@@ -67,6 +67,15 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
+      # Runs after the artifact upload so a violation never costs the backup.
+      # Fails the job (GitHub emails on failure) if production drifts from the
+      # rules in migrations 010-013: an anon-callable function, a table
+      # without RLS, an unpinned search_path, or the lock-down trigger gone.
+      - name: Check security invariants
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/diagnostics/security-invariants.sql
+
       # Off-site copy #2: S3, for retention beyond 30 days and survival
       # independent of GitHub. Optional — the step is skipped unless the
       # AWS_S3_BUCKET secret is set, so the workflow still succeeds without it.
