@@ -55,4 +55,9 @@ psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 \
   -f supabase/e2e/schema.sql \
   -f supabase/e2e/seed.sql
 
+# Same checks the nightly backup runs against production: the local copy must
+# honour them too, or schema.sql was generated from a pre-hardening backup.
+echo "[e2e-db] Checking security invariants"
+psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/diagnostics/security-invariants.sql
+
 echo "[e2e-db] Ready: $(psql "$DB_URL" -X -At -c "SELECT count(*) FROM public.roles") roles, test user e2e-editor@example.test"

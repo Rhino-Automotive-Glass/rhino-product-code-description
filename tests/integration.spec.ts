@@ -190,16 +190,17 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     const codeText = await rhinoPage.getGeneratedCodeText();
     expect(codeText).toMatch(/[-]{5,}/); // Should have dashes
 
-    expect(await rhinoPage.compatibilityCount.textContent()).toContain('(0)');
+    await expect(rhinoPage.compatibilityCount).toContainText('(0)');
 
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
     expect(descriptionText).toContain('-');
 
     // Verify Code Generator form fields are cleared
-    expect(await rhinoPage.numeroInput.inputValue()).toBe('');
+    await expect(rhinoPage.numeroInput).toHaveValue('');
     
-    // Verify ProductCompatibility form fields are also cleared
-    expect(await rhinoPage.marcaSelect.inputValue()).toBe('');
+    // Verify ProductCompatibility form fields are also cleared. The select is
+    // reset by an effect one render after the click, so wait for it.
+    await expect(rhinoPage.marcaSelect).toHaveValue('');
   });
 
   test('should maintain state consistency across sections', async () => {
