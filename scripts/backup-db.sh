@@ -85,13 +85,14 @@ echo "[backup] Starting pg_dump -> $BACKUP_FILE"
 
 # --format=custom  : compressed, restorable archive (use with pg_restore)
 # --no-owner       : restore works regardless of the target role names
-# --no-privileges  : skip GRANT/REVOKE so restores are portable across projects
+# Privileges (GRANT/REVOKE) ARE included: the anon/authenticated/service_role
+# grants are part of the security model (see migrations 010-012). Dropping them
+# would make a restore silently fall back to Supabase's permissive defaults.
 # --verbose        : progress output for useful logs
 # Schema, tables and indexes are all included by default with this format.
 pg_dump "$SUPABASE_DB_URL" \
   --format=custom \
   --no-owner \
-  --no-privileges \
   --verbose \
   --file="$BACKUP_FILE"
 
