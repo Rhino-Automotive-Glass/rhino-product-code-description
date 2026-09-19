@@ -6,7 +6,7 @@
 -- Runs after every nightly backup (production) and after every
 -- `npm run e2e:db` (local copy), so a regression — a new function callable
 -- with the anon key, a table without RLS — fails a job instead of going
--- unnoticed. Rules come from migrations 010-015.
+-- unnoticed. Rules come from migrations 010-016.
 --
 -- To allow something on purpose, change the rule here in the same PR.
 
@@ -75,6 +75,19 @@ BEGIN
     ORDER BY 1
   LOOP
     violations := violations || (item || ' has USAGE on schema private');
+  END LOOP;
+
+  -- 6. No foreign key may SET NULL into a NOT NULL column: the delete it is
+  --    meant to allow would fail instead (audit_logs.user_id, migration 016).
+  FOR item IN
+    SELECT c.conrelid::regclass::text || '.' || a.attname
+    FROM pg_catalog.pg_constraint c
+    JOIN pg_catalog.pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
+    JOIN pg_catalog.pg_namespace n ON n.oid = c.connamespace
+    WHERE c.contype = 'f' AND c.confdeltype = 'n' AND a.attnotnull AND n.nspname = 'public'
+    ORDER BY 1
+  LOOP
+    violations := violations || ('ON DELETE SET NULL into NOT NULL column ' || item);
   END LOOP;
 
   IF pg_catalog.cardinality(violations) > 0 THEN
