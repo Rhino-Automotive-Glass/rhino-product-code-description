@@ -45,7 +45,7 @@ echo "[e2e-db] Resetting public schema and loading supabase/e2e/*.sql"
 psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL'
 -- Remove anything a previous run created, including the test user.
 DROP SCHEMA IF EXISTS public CASCADE;
-DELETE FROM auth.users WHERE email = 'e2e-editor@example.test';
+DELETE FROM auth.users WHERE email IN ('e2e-editor@example.test', 'e2e-viewer@example.test');
 -- Recreate `public` as Supabase ships it; schema.sql adds the object grants.
 CREATE SCHEMA public;
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;

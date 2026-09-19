@@ -39,4 +39,22 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'e2e seed: role "editor" missing — regenerate schema.sql';
   END IF;
+
+  -- A second user (viewer, cannot sign in) so user_roles holds other people's
+  -- rows, as in production. RLS bugs that only fire on rows the caller cannot
+  -- see stay hidden with a single user (see tests/save-to-database.spec.ts).
+  INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+    created_at, updated_at,
+    confirmation_token, recovery_token, email_change_token_new, email_change
+  ) VALUES (
+    '00000000-0000-0000-0000-000000000000', '00000000-0000-4000-8000-00000000e2e1',
+    'authenticated', 'authenticated', 'e2e-viewer@example.test', '',
+    now(), '{"provider":"email","providers":["email"]}', '{}',
+    now(), now(), '', '', '', ''
+  );
+
+  INSERT INTO public.user_roles (user_id, role_id)
+  SELECT '00000000-0000-4000-8000-00000000e2e1', r.id FROM public.roles r WHERE r.name = 'viewer';
 END $$;
