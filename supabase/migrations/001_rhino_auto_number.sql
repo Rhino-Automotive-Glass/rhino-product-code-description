@@ -1,3 +1,6 @@
+-- HISTORICAL: the Rhino auto-number feature was removed. The counters table
+-- was dropped by hand and the functions by migration 017. Do not re-run.
+
 -- ============================================
 -- Rhino Auto-Number Migration
 -- ============================================
