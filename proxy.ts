@@ -4,7 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 import type { User } from '@supabase/supabase-js'
 
 const AUTH_PAGES = new Set(['/login', '/signup'])
-const PUBLIC_API_ROUTES = new Set(['/api/auth/callback'])
+// Auth email links land here before the user has a session.
+const PUBLIC_API_ROUTES = new Set(['/api/auth/callback', '/api/auth/confirm'])
 
 const apiCorsHeaders = {
   'Access-Control-Allow-Origin': '*',
