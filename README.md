@@ -85,13 +85,25 @@ the scripts:
 cp .env.example .env.local
 ```
 
-Set `SUPABASE_DB_URL` in `.env.local`. Find it in the Supabase dashboard under
-**Project Settings → Database → Connection string → URI**. Prefer the **direct
-connection** (port `5432`) for dump/restore so the full schema is captured:
+Set `SUPABASE_DB_URL` in `.env.local`. Find it in the Supabase dashboard via
+the **Connect** button → **Connection string** → **URI**, and copy the
+**Session pooler** string:
 
 ```
-SUPABASE_DB_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
+SUPABASE_DB_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
 ```
+
+Which connection string to use:
+
+| Option | Port | Use for backups? |
+| --- | --- | --- |
+| **Session pooler** | `5432` | **Yes.** IPv4, works with `pg_dump`/`pg_restore`, works from GitHub Actions. |
+| Direct connection (`db.[PROJECT-REF].supabase.co`) | `5432` | Only from IPv6-capable networks or with the IPv4 add-on. GitHub Actions runners are IPv4-only, so it fails there. |
+| Transaction pooler | `6543` | **No.** `pg_dump` does not work through transaction pooling. |
+
+`[PASSWORD]` is the database password, not your Supabase login. If it contains
+`@ : / # ? %`, URL-encode it (e.g. `@` → `%40`) or reset it under
+**Project Settings → Database** to a letters-and-digits password.
 
 The scripts read `.env.local` and `.env`, and also accept `SUPABASE_DB_URL`
 from the shell environment — which is how CI/cron should provide it. The shell
