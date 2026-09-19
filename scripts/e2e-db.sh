@@ -45,10 +45,15 @@ echo "[e2e-db] Resetting public schema and loading supabase/e2e/*.sql"
 psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL'
 -- Remove anything a previous run created, including the test user.
 DROP SCHEMA IF EXISTS public CASCADE;
+DROP SCHEMA IF EXISTS private CASCADE;
 DELETE FROM auth.users WHERE email IN ('e2e-editor@example.test', 'e2e-viewer@example.test');
 -- Recreate `public` as Supabase ships it; schema.sql adds the object grants.
 CREATE SCHEMA public;
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+-- `private` as migration 015 creates it: no access for the API roles.
+-- (pg_restore --schema emits neither schema's CREATE statement.)
+CREATE SCHEMA private;
+REVOKE ALL ON SCHEMA private FROM PUBLIC;
 SQL
 
 psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 \

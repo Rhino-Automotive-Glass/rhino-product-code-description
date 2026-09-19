@@ -6,7 +6,7 @@
 -- Runs after every nightly backup (production) and after every
 -- `npm run e2e:db` (local copy), so a regression — a new function callable
 -- with the anon key, a table without RLS — fails a job instead of going
--- unnoticed. Rules come from migrations 010-013.
+-- unnoticed. Rules come from migrations 010-015.
 --
 -- To allow something on purpose, change the rule here in the same PR.
 
@@ -63,6 +63,19 @@ BEGIN
   ) THEN
     violations := violations || 'event trigger rhino_lock_down_new_functions missing or disabled'::text;
   END IF;
+
+  -- 5. The `private` schema (internal helpers, migration 015) stays closed to
+  --    the API roles.
+  FOR item IN
+    SELECT r.rolname::text
+    FROM pg_catalog.pg_roles r
+    WHERE r.rolname IN ('anon', 'authenticated')
+      AND EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = 'private')
+      AND pg_catalog.has_schema_privilege(r.rolname, 'private', 'USAGE')
+    ORDER BY 1
+  LOOP
+    violations := violations || (item || ' has USAGE on schema private');
+  END LOOP;
 
   IF pg_catalog.cardinality(violations) > 0 THEN
     RAISE EXCEPTION E'Security invariants violated (%):\n  - %',

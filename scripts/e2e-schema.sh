@@ -8,7 +8,7 @@
 # from them. So the structure is taken from a real backup instead.
 #
 # What goes into schema.sql:
-#   - the `public` schema only: tables, functions, triggers, indexes, RLS
+#   - the `public` and `private` schemas: tables, functions, triggers, indexes, RLS
 #     policies, and GRANT/REVOKE (auth/storage/etc. come with local Supabase)
 #   - rows of the reference tables the app needs to work (REFERENCE_TABLES)
 #   - NO product data, NO users, NO audit logs
@@ -68,7 +68,8 @@ trap 'rm -f "$EVT_LIST"' EXIT
   echo "-- against a local Supabase only. Contains no product data and no users."
   echo
 
-  pg_restore --schema-only --schema=public --no-owner --file=- "$BACKUP_FILE"
+  # `private` holds internal helpers public functions call (migration 015).
+  pg_restore --schema-only --schema=public --schema=private --no-owner --file=- "$BACKUP_FILE"
 
   # Event triggers belong to no schema, so --schema=public drops them. Pull
   # in this project's own (rhino_*), not Supabase's internal ones.
