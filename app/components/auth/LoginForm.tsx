@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { unstable_rethrow } from 'next/navigation'
 import { signIn } from '@/app/lib/auth/actions'
+import { actionErrorMessage } from '@/app/lib/auth/actionErrorMessage'
 import { AuthErrorMessage } from './AuthErrorMessage'
 import Link from 'next/link'
 
@@ -31,8 +32,7 @@ export function LoginForm({ initialError }: { initialError?: string }) {
       // throwing NEXT_REDIRECT. Let it through so the navigation proceeds,
       // instead of flashing "Unable to sign in. NEXT_REDIRECT".
       unstable_rethrow(error)
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      setError(`Unable to sign in. ${message}`)
+      setError(actionErrorMessage(error, 'Unable to sign in.'))
       setLoading(false)
     }
   }
