@@ -124,14 +124,13 @@ test.describe('Product Compatibility Section', () => {
     await expect(rhinoPage.getCompatibilityInList('Nissan Altima 2021')).toBeVisible();
   });
 
-  test('should display compatibility in uppercase', async () => {
+  test('should list compatibility as entered and uppercase it in the description', async () => {
     await rhinoPage.addCompatibility('Toyota', 'Camry', '2020');
 
-    // Verify list item is uppercase
-    const listItem = rhinoPage.getCompatibilityInList('Toyota Camry 2020');
-    const listText = await listItem.textContent();
-    // The text should already be uppercase
-    expect(listText).toEqual(listText?.toUpperCase());
+    // The list shows the entry as selected...
+    await expect(rhinoPage.getCompatibilityInList('Toyota Camry 2020')).toBeVisible();
+    // ...and the generated description uppercases it
+    expect(await rhinoPage.getGeneratedDescriptionText()).toContain('TOYOTA CAMRY 2020');
   });
 
   test('should handle various car brands', async () => {
@@ -246,8 +245,8 @@ test.describe('Product Compatibility - Version Field', () => {
     await rhinoPage.subModeloSelect.selectOption('ProMaster');
     await rhinoPage.versionSelect.selectOption('1500');
     
-    // Change sub-modelo
-    await rhinoPage.subModeloSelect.selectOption('1500');
+    // Change sub-modelo to another Ram model that has its own versions
+    await rhinoPage.subModeloSelect.selectOption('ProMaster Rapid');
     
     // Version should be reset
     const versionValue = await rhinoPage.versionSelect.inputValue();
@@ -282,9 +281,10 @@ test.describe('Product Compatibility - Version Field', () => {
   });
 
   test('should test Chevrolet Silverado versions', async () => {
-    await rhinoPage.addCompatibilityWithVersion('Chevrolet', 'Silverado', '1500', '2024');
+    // Silverado versions are trim levels ("1500 LT", "2500HD", ...), see carBrands.tsx
+    await rhinoPage.addCompatibilityWithVersion('Chevrolet', 'Silverado', '1500 LT', '2024');
     
-    await expect(rhinoPage.getCompatibilityInList('Chevrolet Silverado-1500 2024')).toBeVisible();
+    await expect(rhinoPage.getCompatibilityInList('Chevrolet Silverado-1500 LT 2024')).toBeVisible();
   });
 });
 

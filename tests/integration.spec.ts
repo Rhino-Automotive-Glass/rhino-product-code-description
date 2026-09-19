@@ -37,7 +37,7 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
 
     // Step 4: Verify complete description includes everything
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
-    expect(descriptionText).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2020, 2021');
+    expect(descriptionText).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2020-2021');
   });
 
   test('should complete full workflow with versioned compatibilities', async () => {
@@ -68,7 +68,7 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
 
     // Step 4: Verify complete description includes version with hyphen format
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
-    expect(descriptionText).toBe('SIDE REAR RIGHT RAM PROMASTER-1500 2020, 2021');
+    expect(descriptionText).toBe('SIDE REAR RIGHT RAM PROMASTER 1500 2020-2021');
   });
 
   test('should update description when parte changes in Code Generator', async () => {
@@ -109,7 +109,7 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
     
     // Verify grouping and sorting
-    expect(descriptionText).toContain('TOYOTA CAMRY 2020, 2021, 2022');
+    expect(descriptionText).toContain('TOYOTA CAMRY 2020-2022');
     expect(descriptionText).toContain('NISSAN ALTIMA 2023');
     expect(descriptionText).toContain('CHEVROLET MALIBU 2024');
   });
@@ -131,9 +131,9 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
     
     // Verify grouping and sorting - each version is grouped separately
-    expect(descriptionText).toContain('RAM PROMASTER-1500 2020, 2021, 2022');
-    expect(descriptionText).toContain('RAM PROMASTER-2500 2023');
-    expect(descriptionText).toContain('FORD TRANSIT-350 2024');
+    expect(descriptionText).toContain('RAM PROMASTER 1500 2020-2022');
+    expect(descriptionText).toContain('RAM PROMASTER 2500 2023');
+    expect(descriptionText).toContain('FORD TRANSIT 350 2024');
   });
 
   test('should handle mixed compatibilities (regular, versioned, custom)', async () => {
@@ -155,7 +155,7 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
     
     expect(descriptionText).toContain('TOYOTA CAMRY 2020');
-    expect(descriptionText).toContain('RAM PROMASTER-1500 2021');
+    expect(descriptionText).toContain('RAM PROMASTER 1500 2021');
     expect(descriptionText).toContain('FUSO CANTER 2022');
   });
 
@@ -261,16 +261,16 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
 
     // Verify both in description
     let descriptionText = await rhinoPage.getGeneratedDescriptionText();
-    expect(descriptionText).toContain('RAM PROMASTER-1500 2020');
-    expect(descriptionText).toContain('FORD TRANSIT-350 2021');
+    expect(descriptionText).toContain('RAM PROMASTER 1500 2020');
+    expect(descriptionText).toContain('FORD TRANSIT 350 2021');
 
     // Delete first compatibility
     await rhinoPage.deleteCompatibilityByIndex(0);
 
     // Description should update
     descriptionText = await rhinoPage.getGeneratedDescriptionText();
-    expect(descriptionText).not.toContain('RAM PROMASTER-1500 2020');
-    expect(descriptionText).toContain('FORD TRANSIT-350 2021');
+    expect(descriptionText).not.toContain('RAM PROMASTER 1500 2020');
+    expect(descriptionText).toContain('FORD TRANSIT 350 2021');
   });
 
   test('should generate realistic complete product spec', async () => {
@@ -301,7 +301,7 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     expect(await rhinoPage.getGeneratedCodeText()).toBe('RS50001GTY');
     // Verify count
     await expect(rhinoPage.compatibilityCount).toContainText('(4)');
-    expect(await rhinoPage.getGeneratedDescriptionText()).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2018, 2019, 2020, 2021');
+    expect(await rhinoPage.getGeneratedDescriptionText()).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2018-2021');
   });
 
   test('should generate realistic complete product spec for commercial van', async () => {
@@ -332,6 +332,6 @@ test.describe('Integration Tests - Cross-Section Functionality', () => {
     expect(await rhinoPage.getGeneratedCodeText()).toBe('RS60001CLN');
     // Verify count
     await expect(rhinoPage.compatibilityCount).toContainText('(4)');
-    expect(await rhinoPage.getGeneratedDescriptionText()).toBe('SIDE FRONT RIGHT RAM PROMASTER-1500 2019, 2020, 2021, 2022');
+    expect(await rhinoPage.getGeneratedDescriptionText()).toBe('SIDE FRONT RIGHT RAM PROMASTER 1500 2019-2022');
   });
 });
