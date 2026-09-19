@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { unstable_rethrow } from 'next/navigation'
 import { signIn } from '@/app/lib/auth/actions'
 import { AuthErrorMessage } from './AuthErrorMessage'
 import Link from 'next/link'
@@ -26,6 +27,10 @@ export function LoginForm({ initialError }: { initialError?: string }) {
         setLoading(false)
       }
     } catch (error) {
+      // On success signIn() calls redirect('/'), which Next.js implements by
+      // throwing NEXT_REDIRECT. Let it through so the navigation proceeds,
+      // instead of flashing "Unable to sign in. NEXT_REDIRECT".
+      unstable_rethrow(error)
       const message = error instanceof Error ? error.message : 'Unknown error'
       setError(`Unable to sign in. ${message}`)
       setLoading(false)
