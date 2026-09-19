@@ -53,9 +53,9 @@ export default function CodeGenerator({
   };
 
   return (
-    <div className="p-6 lg:p-8 min-h-[750px]">
+    <section aria-labelledby="product-details-heading" className="p-6 lg:p-8 min-h-[750px]">
       <div className="mb-6 lg:mb-8">
-        <h2 className="text-2xl lg:text-2xl font-bold text-slate-900 mb-2">
+        <h2 id="product-details-heading" className="text-2xl lg:text-2xl font-bold text-slate-900 mb-2">
           Product Details
         </h2>
       </div>
@@ -282,6 +282,6 @@ export default function CodeGenerator({
           </div>
         </div>
       </form>
-    </div>
+    </section>
   );
 }

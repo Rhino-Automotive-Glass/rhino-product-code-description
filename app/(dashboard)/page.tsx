@@ -756,10 +756,12 @@ export default function Home() {
       {/* Tabs Navigation */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-0">
         <div className="bg-white rounded-t-xl shadow-sm border border-slate-200 border-b-0">
-          <div className="flex w-full">
+          <div className="flex w-full" role="tablist">
             {/* Only show Agregar tab if user has permission */}
             {permissions?.canViewAgregarTab && (
               <button
+                role="tab"
+                aria-selected={activeTab === 'agregar'}
                 onClick={() => setActiveTab('agregar')}
                 className={`flex-1 py-4 px-6 font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2.5 relative ${
                   activeTab === 'agregar'
@@ -777,6 +779,8 @@ export default function Home() {
               </button>
             )}
             <button
+              role="tab"
+              aria-selected={activeTab === 'db'}
               onClick={() => setActiveTab('db')}
               className={`flex-1 py-4 px-6 font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2.5 relative ${
                 activeTab === 'db'
