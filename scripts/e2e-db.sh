@@ -46,7 +46,7 @@ psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL'
 -- Remove anything a previous run created, including the test user.
 DROP SCHEMA IF EXISTS public CASCADE;
 DROP SCHEMA IF EXISTS private CASCADE;
-DELETE FROM auth.users WHERE email IN ('e2e-editor@example.test', 'e2e-viewer@example.test');
+DELETE FROM auth.users WHERE email IN ('e2e-editor@example.test', 'e2e-viewer@example.test', 'e2e-pending@example.test');
 -- Recreate `public` as Supabase ships it; schema.sql adds the object grants.
 CREATE SCHEMA public;
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;

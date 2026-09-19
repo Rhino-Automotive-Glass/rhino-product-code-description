@@ -8,7 +8,14 @@ import { getPermissions } from '@/app/lib/rbac/permissions';
 
 interface RoleContextType {
   user: User | null;
+  /** null while loading, signed out, or pending (signed in without a role). */
   role: UserRole | null;
+  /**
+   * Signed in but no role assigned yet — e.g. a self-signup waiting for an
+   * admin in rhino-access. Database rules give such accounts no access beyond
+   * the public catalog (migration 018); the UI mirrors that as read-only.
+   */
+  isPending: boolean;
   permissions: RolePermissions | null;
   isLoading: boolean;
   error: string | null;
@@ -22,6 +29,7 @@ type RoleRelation = {
 const RoleContext = createContext<RoleContextType>({
   user: null,
   role: null,
+  isPending: false,
   permissions: null,
   isLoading: true,
   error: null,
@@ -31,13 +39,15 @@ const RoleContext = createContext<RoleContextType>({
 export function RoleProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const [permissions, setPermissions] = useState<RolePermissions | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const supabase = createClient();
 
-  const fetchUserRole = async (userId: string) => {
+  /** The user's role, or null when none is assigned (pending approval). */
+  const fetchUserRole = async (userId: string): Promise<UserRole | null> => {
     const { data, error } = await supabase
       .from('user_roles')
       .select('role_id, roles(name)')
@@ -45,15 +55,16 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       .single();
 
     if (error) {
+      // No user_roles row: pending approval, not a viewer.
       if (error.code === 'PGRST116') {
-        return 'viewer' as UserRole;
+        return null;
       }
 
       throw new Error(error.message);
     }
 
     if (!data || !data.roles) {
-      return 'viewer' as UserRole;
+      return null;
     }
 
     const roleRelation = data.roles as RoleRelation | RoleRelation[];
@@ -61,7 +72,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       ? roleRelation[0]?.name
       : roleRelation?.name;
 
-    return (roleName ?? 'viewer') as UserRole;
+    return (roleName ?? null) as UserRole | null;
   };
 
   const refreshRole = async () => {
@@ -81,10 +92,13 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
         const userRole = await fetchUserRole(currentUser.id);
         setRole(userRole);
-        setPermissions(getPermissions(userRole));
+        setIsPending(userRole === null);
+        // Pending accounts get the most restricted (viewer) UI permissions.
+        setPermissions(getPermissions(userRole ?? 'viewer'));
       } else {
         setUser(null);
         setRole(null);
+        setIsPending(false);
         setPermissions(null);
       }
     } catch (error) {
@@ -92,6 +106,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       setError(`Unable to load your account permissions. ${message}`);
       setUser(null);
       setRole(null);
+      setIsPending(false);
       setPermissions(null);
       console.error('Error fetching role:', error);
     } finally {
@@ -111,6 +126,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
         setRole(null);
+        setIsPending(false);
         setPermissions(null);
         setError(null);
         setIsLoading(false);
@@ -124,7 +140,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
   return (
     <RoleContext.Provider
-      value={{ user, role, permissions, isLoading, error, refreshRole }}
+      value={{ user, role, isPending, permissions, isLoading, error, refreshRole }}
     >
       {children}
     </RoleContext.Provider>
