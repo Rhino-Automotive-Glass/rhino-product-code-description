@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { SavedProduct, Compatibility } from '../(dashboard)/page';
 import { carBrandsWithSubModels } from '../../carBrands';
 import { Notice, NoticeBanner } from './NoticeBanner';
+import { formatYears } from '../lib/description/formatYears';
 
 interface EditProductModalProps {
   isOpen: boolean;
@@ -320,13 +321,8 @@ export default function EditProductModal({
 
       const parts: string[] = [];
       finalGrouped.forEach((years, displayKey) => {
-        const uniqueYears = [...new Set(years)];
-        const sortedYears = uniqueYears.sort((a, b) => parseInt(a) - parseInt(b));
-
-        // Show year range (min-max) instead of listing all years
-        const yearDisplay = sortedYears.length === 1
-          ? sortedYears[0]
-          : `${sortedYears[0]}-${sortedYears[sortedYears.length - 1]}`;
+        // Consecutive years become a range; gaps are kept visible.
+        const yearDisplay = formatYears(years);
         parts.push(`${displayKey} ${yearDisplay}`);
       });
 

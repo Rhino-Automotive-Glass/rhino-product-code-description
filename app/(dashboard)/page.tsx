@@ -10,6 +10,7 @@ import { productService } from '../lib/services/productService';
 import { useRole } from '../contexts/RoleContext';
 import { ErrorState } from '../components/ErrorState';
 import { Notice, NoticeBanner } from '../components/NoticeBanner';
+import { formatYears } from '../lib/description/formatYears';
 
 export interface Compatibility {
   marca: string;
@@ -364,12 +365,8 @@ export default function Home() {
 
       const parts: string[] = [];
       finalGrouped.forEach((years, displayKey) => {
-        const uniqueYears = [...new Set(years)];
-        const sortedYears = uniqueYears.sort((a, b) => parseInt(a) - parseInt(b));
-        // Show year range (min-max) instead of listing all years
-        const yearDisplay = sortedYears.length === 1
-          ? sortedYears[0]
-          : `${sortedYears[0]}-${sortedYears[sortedYears.length - 1]}`;
+        // Consecutive years become a range; gaps are kept visible.
+        const yearDisplay = formatYears(years);
         parts.push(`${displayKey} ${yearDisplay}`);
       });
 
