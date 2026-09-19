@@ -11,7 +11,8 @@
 #
 # Requirements:
 #   - PostgreSQL client tools (pg_restore) on PATH
-#   - SUPABASE_DB_URL set in the environment or in .env at the project root
+#   - SUPABASE_DB_URL set in the environment, or in .env.local / .env at
+#     the project root
 #
 # WARNING: this is destructive. --clean drops existing objects before
 # recreating them. A confirmation prompt is shown before anything runs.
@@ -27,20 +28,29 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BACKUPS_ROOT="$ROOT_DIR/backups"
 
 # --- Load environment variables ---------------------------------------------
-# Same .env loading strategy as backup-db.sh — no credentials in source.
-ENV_FILE="$ROOT_DIR/.env"
-if [ -f "$ENV_FILE" ]; then
-  echo "[restore] Loading environment from $ENV_FILE"
-  set -a
-  # shellcheck disable=SC1090
-  . "$ENV_FILE"
-  set +a
+# Same env loading strategy as backup-db.sh — no credentials in source.
+# Precedence, highest first: shell environment, then .env.local, then .env.
+SHELL_DB_URL="${SUPABASE_DB_URL:-}"
+
+for ENV_FILE in "$ROOT_DIR/.env" "$ROOT_DIR/.env.local"; do
+  if [ -f "$ENV_FILE" ]; then
+    echo "[restore] Loading environment from $ENV_FILE"
+    set -a
+    # shellcheck disable=SC1090
+    . "$ENV_FILE"
+    set +a
+  fi
+done
+
+# Put the shell value back so the environment always wins over the files.
+if [ -n "$SHELL_DB_URL" ]; then
+  export SUPABASE_DB_URL="$SHELL_DB_URL"
 fi
 
 # --- Validate prerequisites -------------------------------------------------
 if [ -z "${SUPABASE_DB_URL:-}" ]; then
   echo "[restore] ERROR: SUPABASE_DB_URL is not set." >&2
-  echo "[restore]         Set it in the environment or in $ENV_FILE (see .env.example)." >&2
+  echo "[restore]         Set it in the environment, .env.local, or .env (see .env.example)." >&2
   exit 1
 fi
 

@@ -12,7 +12,8 @@
 #
 # Requirements:
 #   - PostgreSQL client tools (pg_dump) on PATH
-#   - SUPABASE_DB_URL set in the environment or in .env at the project root
+#   - SUPABASE_DB_URL set in the environment, or in .env.local / .env at
+#     the project root
 #
 # Compatible with macOS and Linux (bash).
 
@@ -29,23 +30,36 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # --- Load environment variables ---------------------------------------------
-# Secrets and credentials are never hard-coded. Load them from .env if present;
-# any value already exported in the shell takes precedence over the file.
-ENV_FILE="$ROOT_DIR/.env"
-if [ -f "$ENV_FILE" ]; then
-  echo "[backup] Loading environment from $ENV_FILE"
-  # 'set -a' marks every sourced variable for export.
-  set -a
-  # shellcheck disable=SC1090
-  . "$ENV_FILE"
-  set +a
+# Secrets and credentials are never hard-coded. Load them from .env and
+# .env.local if either is present. Precedence, highest first:
+#   1. values already exported in the shell (how CI and cron supply them)
+#   2. .env.local (per-developer overrides, git-ignored)
+#   3. .env
+#
+# Capture the shell-provided value first so sourcing a file cannot clobber it.
+SHELL_DB_URL="${SUPABASE_DB_URL:-}"
+
+for ENV_FILE in "$ROOT_DIR/.env" "$ROOT_DIR/.env.local"; do
+  if [ -f "$ENV_FILE" ]; then
+    echo "[backup] Loading environment from $ENV_FILE"
+    # 'set -a' marks every sourced variable for export.
+    set -a
+    # shellcheck disable=SC1090
+    . "$ENV_FILE"
+    set +a
+  fi
+done
+
+# Put the shell value back so the environment always wins over the files.
+if [ -n "$SHELL_DB_URL" ]; then
+  export SUPABASE_DB_URL="$SHELL_DB_URL"
 fi
 
 # --- Validate prerequisites -------------------------------------------------
 # Ensure the database URL is available before doing any work.
 if [ -z "${SUPABASE_DB_URL:-}" ]; then
   echo "[backup] ERROR: SUPABASE_DB_URL is not set." >&2
-  echo "[backup]        Set it in the environment or in $ENV_FILE (see .env.example)." >&2
+  echo "[backup]        Set it in the environment, .env.local, or .env (see .env.example)." >&2
   exit 1
 fi
 
