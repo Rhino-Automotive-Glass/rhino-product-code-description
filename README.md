@@ -82,19 +82,32 @@ Copy the example env file and fill in the database URL — no secrets live in
 the scripts:
 
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
 
-Set `SUPABASE_DB_URL` in `.env`. Find it in the Supabase dashboard under
-**Project Settings → Database → Connection string → URI**. Prefer the **direct
-connection** (port `5432`) for dump/restore so the full schema is captured:
+Set `SUPABASE_DB_URL` in `.env.local`. Find it in the Supabase dashboard via
+the **Connect** button → **Connection string** → **URI**, and copy the
+**Session pooler** string:
 
 ```
-SUPABASE_DB_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
+SUPABASE_DB_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
 ```
 
-The scripts also accept `SUPABASE_DB_URL` from the shell environment, which is
-how CI/cron should provide it.
+Which connection string to use:
+
+| Option | Port | Use for backups? |
+| --- | --- | --- |
+| **Session pooler** | `5432` | **Yes.** IPv4, works with `pg_dump`/`pg_restore`, works from GitHub Actions. |
+| Direct connection (`db.[PROJECT-REF].supabase.co`) | `5432` | Only from IPv6-capable networks or with the IPv4 add-on. GitHub Actions runners are IPv4-only, so it fails there. |
+| Transaction pooler | `6543` | **No.** `pg_dump` does not work through transaction pooling. |
+
+`[PASSWORD]` is the database password, not your Supabase login. If it contains
+`@ : / # ? %`, URL-encode it (e.g. `@` → `%40`) or reset it under
+**Project Settings → Database** to a letters-and-digits password.
+
+The scripts read `.env.local` and `.env`, and also accept `SUPABASE_DB_URL`
+from the shell environment — which is how CI/cron should provide it. The shell
+value wins over both files.
 
 ### 3. Run a backup
 
@@ -136,7 +149,11 @@ scheduler.
 0 2 * * * cd /path/to/rhino-product-code-description && SUPABASE_DB_URL='postgresql://...' npm run db:backup >> /var/log/db-backup.log 2>&1
 ```
 
-**GitHub Actions** — store `SUPABASE_DB_URL` as a repository secret:
+**GitHub Actions** — already wired up in
+`.github/workflows/db-backup.yml` (daily at 02:00 UTC, plus manual
+`workflow_dispatch` runs). It only needs `SUPABASE_DB_URL` stored as a
+repository secret under **Settings → Secrets and variables → Actions**. For
+reference, the workflow is:
 
 ```yaml
 name: Database Backup
@@ -164,5 +181,58 @@ jobs:
           retention-days: 30
 ```
 
-For long-term storage, push the contents of `backups/` to off-site storage
-(e.g. S3, GCS, a Supabase Storage bucket) as a follow-up step.
+### 6. Off-site copies
+
+The scheduled workflow keeps two independent copies:
+
+| Copy | Where | Retention | Setup |
+| --- | --- | --- | --- |
+| Build artifact | GitHub Actions | 30 days | none — always on |
+| S3 object | `s3://$AWS_S3_BUCKET/db-backups/` | your bucket policy | optional, see below |
+
+The S3 step is skipped unless `AWS_S3_BUCKET` is set, so the workflow still
+succeeds without it (it logs a notice instead). To enable it, add these
+repository secrets:
+
+- `AWS_S3_BUCKET` — target bucket name
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — credentials for a user
+  restricted to `s3:PutObject` on that bucket
+- `AWS_REGION` — e.g. `us-east-1`
+
+> Prefer GitHub's OIDC integration (`aws-actions/configure-aws-credentials`)
+> over long-lived access keys if you can — it removes the stored secret.
+
+Note that a backup stored only inside the Supabase project it came from is not
+an off-site copy: it shares a blast radius with the thing it protects.
+
+### 7. Lightweight JSON snapshots
+
+When the PostgreSQL client tools are not available, `npm run db:snapshot`
+writes a JSON export of the API-reachable tables instead:
+
+```bash
+npm run db:snapshot                     # roles, user_roles, product_codes, audit_logs
+npm run db:snapshot -- product_codes    # a single table
+```
+
+Output: `backups/<date>/snapshot_<timestamp>.json`.
+
+Restore one with:
+
+```bash
+npm run db:restore-snapshot                          # latest snapshot
+npm run db:restore-snapshot -- path/to/snapshot.json # a specific file
+npm run db:restore-snapshot -- --table product_codes # one table only
+```
+
+The restore upserts by `id` and asks for a typed `yes` first (`RESTORE_YES=1`
+skips the prompt). Both the current multi-table format and the older
+`product_codes`-only format are accepted.
+
+**Snapshots are not a substitute for `npm run db:backup`.** They contain table
+rows and nothing else — no schema, indexes, constraints, triggers, functions,
+or RLS policies, and no `auth.users`. Tables reachable only through
+`SECURITY DEFINER` functions cannot be captured at all,
+because they are not exposed through the API. Restoring a snapshot also does
+not delete rows created since it was taken, so it repairs lost or changed rows
+rather than rewinding the table to a point in time.

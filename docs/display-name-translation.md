@@ -74,7 +74,7 @@ Consumers prefer `displayName`, falling back to `generated`:
 `scripts/backfill-display-name.ts` (`npm run db:backfill`) applies the same
 `translateDescription` to existing rows. Dry-run by default; `-- --run` to
 write. Batched, idempotent, logs per-row failures and continues.
-`scripts/backup-product-codes.ts` (`npm run db:snapshot`) writes a JSON
+`scripts/backup-tables.ts` (`npm run db:snapshot`) writes a JSON
 snapshot of `product_codes` first as a rollback safety net.
 
 Re-run the backfill after changing `STRUCTURAL_DICTIONARY` to bring existing

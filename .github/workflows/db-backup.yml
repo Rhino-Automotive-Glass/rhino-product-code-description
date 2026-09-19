@@ -1,0 +1,81 @@
+name: Database Backup
+
+# Nightly pg_dump of the Supabase database, uploaded as a build artifact.
+# Requires the SUPABASE_DB_URL repository secret (Settings -> Secrets and
+# variables -> Actions). Without it the job fails fast in backup-db.sh.
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # daily at 02:00 UTC
+  workflow_dispatch:       # allow manual runs from the Actions tab
+
+# Never let two backups of the same database overlap.
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The runner ships an older client than Supabase's server, and pg_dump
+      # refuses to dump a newer major version. Pull the matching client from
+      # the PostgreSQL APT repo rather than relying on the distro package.
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
+
+      # No npm install needed: backup-db.sh is plain bash + pg_dump.
+      - name: Run backup
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: bash scripts/backup-db.sh
+
+      # Off-site copy #1: GitHub-hosted artifact. Always on, but capped at
+      # 30 days and tied to this repository.
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: backups/
+          retention-days: 30
+          if-no-files-found: error
+
+      # Off-site copy #2: S3, for retention beyond 30 days and survival
+      # independent of GitHub. Optional — the step is skipped unless the
+      # AWS_S3_BUCKET secret is set, so the workflow still succeeds without it.
+      # Secrets cannot be read directly in an `if:`, hence the probe step.
+      - name: Check for off-site (S3) configuration
+        id: offsite
+        env:
+          BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: |
+          if [ -n "$BUCKET" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::AWS_S3_BUCKET not set - skipping off-site upload. Backup is artifact-only (30 day retention)."
+          fi
+
+      - name: Upload backup to S3
+        if: steps.offsite.outputs.enabled == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+          BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: |
+          # --no-progress keeps the log readable; the CLI ships on the runner.
+          aws s3 cp backups/ "s3://$BUCKET/db-backups/" \
+            --recursive \
+            --no-progress \
+            --only-show-errors
+          echo "Uploaded to s3://$BUCKET/db-backups/"

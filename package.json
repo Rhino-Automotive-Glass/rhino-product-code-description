@@ -19,7 +19,8 @@
     "test:codegen": "playwright codegen http://localhost:3000",
     "db:backup": "bash scripts/backup-db.sh",
     "db:restore": "bash scripts/restore-db.sh",
-    "db:snapshot": "tsx --env-file=.env.local scripts/backup-product-codes.ts",
+    "db:snapshot": "tsx --env-file=.env.local scripts/backup-tables.ts",
+    "db:restore-snapshot": "tsx --env-file=.env.local scripts/restore-snapshot.ts",
     "db:backfill": "tsx --env-file=.env.local scripts/backfill-display-name.ts"
   },
   "dependencies": {
