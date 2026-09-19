@@ -108,14 +108,15 @@ echo "[restore] Starting pg_restore..."
 # --clean        : drop database objects before recreating them
 # --if-exists    : avoid errors when an object to drop does not exist
 # --no-owner     : do not restore ownership, matching the backup flags
-# --no-privileges: do not restore GRANT/REVOKE statements
+# Privileges are restored: backups carry the anon/authenticated grants and
+# revokes from migrations 010-012. Older backups taken with --no-privileges
+# have none, so re-apply those migrations after restoring one of them.
 # --verbose      : progress output for useful logs
 # --dbname       : the connection string is also the restore target
 pg_restore \
   --clean \
   --if-exists \
   --no-owner \
-  --no-privileges \
   --verbose \
   --dbname="$SUPABASE_DB_URL" \
   "$BACKUP_FILE"

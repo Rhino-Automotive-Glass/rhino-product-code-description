@@ -79,7 +79,7 @@ test.describe('Product Description Generation (in Product Details)', () => {
     await rhinoPage.addCompatibility('Toyota', 'Camry', '2022');
 
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
-    expect(descriptionText).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2020, 2021, 2022');
+    expect(descriptionText).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2020-2022');
   });
 
   test('should group compatibilities by marca and sub-modelo', async () => {
@@ -98,9 +98,9 @@ test.describe('Product Description Generation (in Product Details)', () => {
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
     
     // Should group by marca + subModelo
-    expect(descriptionText).toContain('TOYOTA CAMRY 2020, 2021');
-    expect(descriptionText).toContain('NISSAN ALTIMA 2022, 2023');
-    expect(descriptionText).toBe('SIDE REAR RIGHT TOYOTA CAMRY 2020, 2021 NISSAN ALTIMA 2022, 2023');
+    expect(descriptionText).toContain('TOYOTA CAMRY 2020-2021');
+    expect(descriptionText).toContain('NISSAN ALTIMA 2022-2023');
+    expect(descriptionText).toBe('SIDE REAR RIGHT TOYOTA CAMRY 2020-2021 NISSAN ALTIMA 2022-2023');
   });
 
   test('should sort years in ascending order within groups', async () => {
@@ -117,7 +117,7 @@ test.describe('Product Description Generation (in Product Details)', () => {
 
     const descriptionText = await rhinoPage.getGeneratedDescriptionText();
     // Should be sorted ascending
-    expect(descriptionText).toBe('DOOR FRONT RIGHT TOYOTA CAMRY 2020, 2021, 2023');
+    expect(descriptionText).toBe('DOOR FRONT RIGHT TOYOTA CAMRY 2020-2021, 2023');
   });
 
   test('should update description in real-time when compatibility changes', async () => {
@@ -139,7 +139,7 @@ test.describe('Product Description Generation (in Product Details)', () => {
     // Add another
     await rhinoPage.addCompatibility('Toyota', 'Camry', '2021');
     descriptionText = await rhinoPage.getGeneratedDescriptionText();
-    expect(descriptionText).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2020, 2021');
+    expect(descriptionText).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2020-2021');
 
     // Delete first compatibility
     await rhinoPage.deleteCompatibilityByIndex(0);

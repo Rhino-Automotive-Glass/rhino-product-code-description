@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "playwright test",
+    "test:e2e": "bash scripts/e2e-db.sh && playwright test",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
@@ -21,7 +22,9 @@
     "db:restore": "bash scripts/restore-db.sh",
     "db:snapshot": "tsx --env-file=.env.local scripts/backup-tables.ts",
     "db:restore-snapshot": "tsx --env-file=.env.local scripts/restore-snapshot.ts",
-    "db:backfill": "tsx --env-file=.env.local scripts/backfill-display-name.ts"
+    "db:backfill": "tsx --env-file=.env.local scripts/backfill-display-name.ts",
+    "e2e:db": "bash scripts/e2e-db.sh",
+    "e2e:schema": "bash scripts/e2e-schema.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",

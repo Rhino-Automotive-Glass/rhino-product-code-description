@@ -74,17 +74,17 @@ test.describe('Responsive Layout Tests', () => {
   test.describe('Tablet Layout (768px - 1023px)', () => {
     test.use({ viewport: { width: 800, height: 1024 } });
 
-    test('should display in 2-column layout', async () => {
-      // Product Details and Compatibility should still be side by side
+    test('should stack forms in a single column', async () => {
+      // Two columns start at the lg breakpoint (1024px); tablets get one column
       await expect(rhinoPage.codeGeneratorHeading).toBeVisible();
       await expect(rhinoPage.compatibilityHeading).toBeVisible();
 
       const codeGenBox = await rhinoPage.codeGeneratorHeading.boundingBox();
       const compatibilityBox = await rhinoPage.compatibilityHeading.boundingBox();
 
-      // Should still be side by side at tablet size
-      expect(codeGenBox!.x).toBeLessThan(compatibilityBox!.x);
-      expect(Math.abs(codeGenBox!.y - compatibilityBox!.y)).toBeLessThan(50);
+      // Product Details sits above Compatibility, left-aligned with it
+      expect(codeGenBox!.y).toBeLessThan(compatibilityBox!.y);
+      expect(Math.abs(codeGenBox!.x - compatibilityBox!.x)).toBeLessThan(5);
     });
 
     test('should display buttons side by side', async () => {
@@ -261,13 +261,8 @@ test.describe('Responsive Layout Tests', () => {
 
     test('should have 750px minimum height on both form containers', async ({ page }) => {
       // Get the card containers
-      const productDetailsCard = page.locator('.card').filter({
-        has: page.getByRole('heading', { name: 'Product Details' })
-      });
-      
-      const compatibilityCard = page.locator('.card').filter({
-        has: page.getByRole('heading', { name: 'Product Compatibility' })
-      });
+      const productDetailsCard = page.getByRole('region', { name: 'Product Details' });
+      const compatibilityCard = page.getByRole('region', { name: 'Product Compatibility' });
 
       // Both should be visible
       await expect(productDetailsCard).toBeVisible();

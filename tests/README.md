@@ -4,8 +4,40 @@ This directory contains all E2E tests for the Rhino Code Generator application u
 
 ## Quick Start
 
+Tests run against a **throwaway local Supabase**, never production — they sign
+in and save product codes. Requires Docker running and the Supabase CLI
+(`brew install supabase/tap/supabase`).
+
 ```bash
-# Run all tests
+# Start local Supabase + load schema and test user, then run all tests
+npm run test:e2e
+
+# Or in two steps (reuse the running stack between test runs)
+npm run e2e:db   # start/reset local Supabase (idempotent)
+npm test
+
+# Stop the local stack when done
+supabase stop
+```
+
+How it fits together:
+
+- `supabase/e2e/schema.sql` — production's `public` schema (tables, functions,
+  RLS policies, grants) + reference data (`roles`, `permissions`, …). No
+  product data, no users. Generated from a backup; regenerate after a
+  production schema change with `npm run db:backup && npm run e2e:schema`.
+- `supabase/e2e/seed.sql` — the test user `e2e-editor@example.test` (editor
+  role). Its password only exists in the local database.
+- `tests/auth.setup.ts` — signs in once; other tests reuse the session.
+- `playwright.config.ts` — starts the app on port 3100 pointed at the local
+  Supabase, and refuses to run if the Supabase URL is not localhost.
+
+The app under test uses port 3100, so a `npm run dev` on port 3000 can stay
+running. If `next dev` refuses to start because another dev server holds its
+lock, stop your dev server first.
+
+```bash
+# Run all tests (local Supabase must be running)
 npm test
 
 # Interactive UI mode (recommended for development)
@@ -144,7 +176,8 @@ Tests automatically run on:
 - Push to main/master
 - Pull requests
 
-See `.github/workflows/playwright.yml` for configuration.
+CI starts the same local Supabase in Docker (`npm run e2e:db`), so it needs
+no repository secrets. See `.github/workflows/playwright.yml`.
 
 ## Need Help?
 

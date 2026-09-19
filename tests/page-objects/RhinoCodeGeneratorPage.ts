@@ -66,7 +66,8 @@ export class RhinoCodeGeneratorPage {
     this.headerTitle = page.getByRole('heading', { name: 'Rhino Code' });
 
     // Action Buttons (in main content area, next to generated output)
-    this.agregarButton = page.getByRole('button', { name: 'Agregar' });
+    // exact: the "Agregar" tab and "Agregar Compatibilidad" share the word.
+    this.agregarButton = page.getByRole('button', { name: 'Agregar', exact: true });
     this.limpiarButton = page.getByRole('button', { name: 'Limpiar' });
 
     // Generated Output Display (single horizontal row)
@@ -101,10 +102,8 @@ export class RhinoCodeGeneratorPage {
     // Product Compatibility - Using data-testid attributes (most robust approach)
     this.compatibilityHeading = page.getByRole('heading', { name: 'Product Compatibility' });
     
-    // Scope to Product Compatibility section using the card container
-    this.compatibilitySection = page.locator('.card').filter({ 
-      has: page.getByRole('heading', { name: 'Product Compatibility' }) 
-    });
+    // Scope to the Product Compatibility <section aria-labelledby> region
+    this.compatibilitySection = page.getByRole('region', { name: 'Product Compatibility' });
     
     // Use data-testid attributes for reliable element selection
     this.marcaSelect = page.getByTestId('marca-select');
@@ -116,7 +115,7 @@ export class RhinoCodeGeneratorPage {
     this.customMarcaInput = page.getByTestId('custom-marca-input');
     this.customMarcaContainer = page.getByTestId('custom-marca-container');
 
-    this.addCompatibilityButton = page.getByRole('button', { name: 'Añadir Compatibilidad' });
+    this.addCompatibilityButton = page.getByRole('button', { name: 'Agregar Compatibilidad' });
     this.compatibilityList = page.locator('div').filter({ hasText: /Compatibilidades Añadidas/ });
     this.compatibilityCount = page.getByText(/Compatibilidades Añadidas \(\d+\)/);
   }
@@ -124,6 +123,8 @@ export class RhinoCodeGeneratorPage {
   // Navigation
   async goto() {
     await this.page.goto('/', { waitUntil: 'networkidle' });
+    // The dashboard opens on "BD Códigos"; the generator forms live on "Agregar".
+    await this.page.getByRole('tab', { name: 'Agregar' }).click();
     // Wait for the page to be fully loaded - just check the heading is visible
     await this.compatibilityHeading.waitFor({ state: 'visible' });
     // Wait for at least one combobox to be visible in the compatibility section

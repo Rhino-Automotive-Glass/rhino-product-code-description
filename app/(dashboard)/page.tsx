@@ -10,6 +10,7 @@ import { productService } from '../lib/services/productService';
 import { useRole } from '../contexts/RoleContext';
 import { ErrorState } from '../components/ErrorState';
 import { Notice, NoticeBanner } from '../components/NoticeBanner';
+import { formatYears } from '../lib/description/formatYears';
 
 export interface Compatibility {
   marca: string;
@@ -364,12 +365,8 @@ export default function Home() {
 
       const parts: string[] = [];
       finalGrouped.forEach((years, displayKey) => {
-        const uniqueYears = [...new Set(years)];
-        const sortedYears = uniqueYears.sort((a, b) => parseInt(a) - parseInt(b));
-        // Show year range (min-max) instead of listing all years
-        const yearDisplay = sortedYears.length === 1
-          ? sortedYears[0]
-          : `${sortedYears[0]}-${sortedYears[sortedYears.length - 1]}`;
+        // Consecutive years become a range; gaps are kept visible.
+        const yearDisplay = formatYears(years);
         parts.push(`${displayKey} ${yearDisplay}`);
       });
 
@@ -756,10 +753,12 @@ export default function Home() {
       {/* Tabs Navigation */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-0">
         <div className="bg-white rounded-t-xl shadow-sm border border-slate-200 border-b-0">
-          <div className="flex w-full">
+          <div className="flex w-full" role="tablist">
             {/* Only show Agregar tab if user has permission */}
             {permissions?.canViewAgregarTab && (
               <button
+                role="tab"
+                aria-selected={activeTab === 'agregar'}
                 onClick={() => setActiveTab('agregar')}
                 className={`flex-1 py-4 px-6 font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2.5 relative ${
                   activeTab === 'agregar'
@@ -777,6 +776,8 @@ export default function Home() {
               </button>
             )}
             <button
+              role="tab"
+              aria-selected={activeTab === 'db'}
               onClick={() => setActiveTab('db')}
               className={`flex-1 py-4 px-6 font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2.5 relative ${
                 activeTab === 'db'
