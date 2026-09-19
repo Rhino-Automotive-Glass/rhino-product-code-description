@@ -53,3 +53,10 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 .worktrees/
+
+# local AI-agent tooling (per-developer, not project code)
+.claude/settings.local.json
+.claude/skills/
+.agents/
+.grok/
+skills-lock.json
