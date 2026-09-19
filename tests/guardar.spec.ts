@@ -230,9 +230,12 @@ test.describe('Agregar Feature (formerly Guardar)', () => {
       });
 
       await rhinoPage.fillCodeGenerator({ clasificacion: 'R' });
+      // Choosing R pre-fills a suggested Número asynchronously; wait for it so
+      // every click below submits the same data.
+      await expect(rhinoPage.numeroInput).not.toHaveValue('');
 
       const agregarButton = page.getByRole('button', { name: 'Agregar', exact: true });
-      
+
       // Click multiple times with the same data
       await agregarButton.click();
       await agregarButton.click();

@@ -7,6 +7,8 @@ interface CodeGeneratorProps {
   setParte: (value: string) => void;
   numero: string;
   setNumero: (value: string) => void;
+  /** True while Número holds the untouched next-number suggestion (R only). */
+  numeroIsSuggested?: boolean;
   color: string;
   setColor: (value: string) => void;
   aditamento: string;
@@ -24,6 +26,7 @@ export default function CodeGenerator({
   setParte,
   numero,
   setNumero,
+  numeroIsSuggested = false,
   color,
   setColor,
   aditamento,
@@ -135,11 +138,14 @@ export default function CodeGenerator({
 
         {/* Número */}
         <div className="w-full">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="numero-input" className="block text-sm font-medium text-slate-700 mb-2">
             Número
           </label>
           <input
+            id="numero-input"
             type="text"
+            inputMode="numeric"
+            aria-describedby={numeroIsSuggested ? 'numero-suggestion' : undefined}
             value={numero}
             onChange={handleNumeroChange}
             onBlur={handleNumeroBlur}
@@ -147,6 +153,11 @@ export default function CodeGenerator({
             maxLength={5}
             className="block w-full px-4 py-2.5 text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400 transition-all duration-200 bg-white"
           />
+          {numeroIsSuggested && (
+            <p id="numero-suggestion" className="mt-1.5 text-xs text-slate-500">
+              Sugerido: siguiente número Rhino disponible. Puedes cambiarlo.
+            </p>
+          )}
         </div>
 
         {/* Color */}
