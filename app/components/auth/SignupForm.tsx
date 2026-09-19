@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signUp } from '@/app/lib/auth/actions'
+import { actionErrorMessage } from '@/app/lib/auth/actionErrorMessage'
 import { AuthErrorMessage } from './AuthErrorMessage'
 import Link from 'next/link'
 
@@ -41,8 +42,7 @@ export function SignupForm() {
         router.prefetch('/login')
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      setError(`Unable to create account. ${message}`)
+      setError(actionErrorMessage(error, 'Unable to create account.'))
       setLoading(false)
     }
   }
