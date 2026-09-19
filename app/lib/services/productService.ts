@@ -273,33 +273,6 @@ export class ProductService {
     }
   }
 
-  async searchByCode(searchTerm: string): Promise<{ 
-    data: SavedProduct[] | null; 
-    error: Error | null 
-  }> {
-    try {
-      const { data, error } = await this.supabase
-        .rpc('search_products_by_code', { search_term: searchTerm });
-
-      if (error) throw error;
-
-      const products = data.map((item: any) => ({
-        id: item.id,
-        productCode: item.product_code_data,
-        compatibility: item.compatibility_data,
-        description: item.description_data,
-        verified: item.verified ?? false,
-        created_at: item.created_at,
-        updated_at: item.updated_at || item.created_at,
-      }));
-
-      return { data: products, error: null };
-    } catch (error) {
-      console.error('Error searching products:', error);
-      return { data: null, error: error as Error };
-    }
-  }
-
   async productCodeExists(code: string): Promise<boolean> {
     try {
       const { data, error } = await this.supabase
