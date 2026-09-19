@@ -82,6 +82,14 @@ export default function Home() {
   numeroRef.current = numero;
   numeroSuggestionRef.current = numeroSuggestion;
 
+  // User edits go through here so the ref sees them immediately. Updating it
+  // only on render left a window where a suggestion arriving between a
+  // keystroke and the re-render still saw an empty field and overwrote it.
+  const updateNumero = (value: string) => {
+    numeroRef.current = value;
+    setNumero(value);
+  };
+
   // Local products (Agregar tab)
   const [savedProducts, setSavedProducts] = useState<SavedProduct[]>([]);
   const [isSavingAll, setIsSavingAll] = useState(false);
@@ -861,7 +869,7 @@ export default function Home() {
                   parte={parte}
                   setParte={setParte}
                   numero={numero}
-                  setNumero={setNumero}
+                  setNumero={updateNumero}
                   numeroIsSuggested={numeroSuggestion !== null && numero === numeroSuggestion}
                   color={color}
                   setColor={setColor}
