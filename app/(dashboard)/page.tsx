@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import CodeGenerator from '../components/CodeGenerator';
 import ProductCompatibility from '../components/ProductCompatibility';
 import SavedProductsTable, { SortField, SortDirection } from '../components/SavedProductsTable';
@@ -73,6 +73,15 @@ export default function Home() {
   const [compatibilities, setCompatibilities] = useState<Compatibility[]>([]);
   const [compatibilityResetTrigger, setCompatibilityResetTrigger] = useState(0);
 
+  // Número suggested for Rhino (R) codes: the value auto-filled from
+  // /api/products/next-numero, or null. The user can always overwrite it.
+  const [numeroSuggestion, setNumeroSuggestion] = useState<string | null>(null);
+  // Latest values for the async suggestion callback, without re-running it.
+  const numeroRef = useRef(numero);
+  const numeroSuggestionRef = useRef(numeroSuggestion);
+  numeroRef.current = numero;
+  numeroSuggestionRef.current = numeroSuggestion;
+
   // Local products (Agregar tab)
   const [savedProducts, setSavedProducts] = useState<SavedProduct[]>([]);
   const [isSavingAll, setIsSavingAll] = useState(false);
@@ -101,6 +110,39 @@ export default function Home() {
   const [notice, setNotice] = useState<Notice | null>(null);
 
   // Update tab if user doesn't have permission
+  // Choosing R with an empty Número pre-fills the next free Rhino number.
+  // Runs on clasificación changes only, so clearing the field by hand does not
+  // refill it; a value typed while the request is in flight always wins.
+  useEffect(() => {
+    if (clasificacion !== 'R') {
+      // Leaving R: drop an untouched suggestion (D/F numbers are external).
+      const suggested = numeroSuggestionRef.current;
+      if (suggested !== null && numeroRef.current === suggested) {
+        setNumero('');
+      }
+      setNumeroSuggestion(null);
+      return;
+    }
+
+    if (numeroRef.current !== '') return;
+
+    let cancelled = false;
+    fetch('/api/products/next-numero')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { numero?: string | null } | null) => {
+        if (cancelled || !data?.numero || numeroRef.current !== '') return;
+        setNumero(data.numero);
+        setNumeroSuggestion(data.numero);
+      })
+      .catch(() => {
+        // A suggestion is optional; the field simply stays empty.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clasificacion]);
+
   useEffect(() => {
     if (!roleLoading && permissions && !permissions.canViewAgregarTab && activeTab === 'agregar') {
       setActiveTab('db');
@@ -626,6 +668,7 @@ export default function Home() {
     setClasificacion('');
     setParte('');
     setNumero('');
+    setNumeroSuggestion(null);
     setColor('');
     setAditamento('');
     setPosicion('');
@@ -819,6 +862,7 @@ export default function Home() {
                   setParte={setParte}
                   numero={numero}
                   setNumero={setNumero}
+                  numeroIsSuggested={numeroSuggestion !== null && numero === numeroSuggestion}
                   color={color}
                   setColor={setColor}
                   aditamento={aditamento}
