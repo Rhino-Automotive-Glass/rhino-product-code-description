@@ -130,7 +130,7 @@ $$;
 
 CREATE FUNCTION public.enforce_product_codes_verified_only_update() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+    SET search_path TO ''
     AS $$
 DECLARE
   actor_level int := public.current_user_hierarchy_level();
@@ -139,7 +139,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF actor_level >= 80 THEN
+  IF actor_level >= 60 THEN
     RETURN NEW;
   END IF;
 
@@ -152,6 +152,8 @@ BEGIN
     USING ERRCODE = '42501';
 END;
 $$;
+
+COMMENT ON FUNCTION public.enforce_product_codes_verified_only_update() IS 'BEFORE UPDATE guard: editors and above may fully edit product codes; QA may change only verified.';
 
 
 --
@@ -3179,5 +3181,4 @@ stock	Rhino Stock	Inventory and stock management	https://rhino-stock.vercel.app	
 --
 -- PostgreSQL database dump complete
 --
-
 

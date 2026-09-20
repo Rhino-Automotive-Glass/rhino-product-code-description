@@ -29,4 +29,51 @@ test.describe('Save to database', () => {
     await expect(page.getByText('Todos los productos fueron guardados')).toBeVisible();
     await expect(page.getByText('1 producto(s) guardado(s) exitosamente.')).toBeVisible();
   });
+
+  test('editor can fully update a saved product code', async ({ page }) => {
+    const numero = String(Date.now() % 100000).padStart(5, '0');
+    const generatedCode = `R-S-${numero}`;
+
+    const createResponse = await page.request.post('/api/products', {
+      data: {
+        productCode: {
+          clasificacion: 'R',
+          parte: 's',
+          numero,
+          color: '',
+          aditamento: '',
+          generated: generatedCode,
+        },
+        compatibility: {
+          items: [{ marca: 'Toyota', subModelo: 'Camry', version: '', additional: '', modelo: '2020' }],
+          generated: 'TOYOTA CAMRY 2020',
+        },
+        description: {
+          parte: 'SIDE',
+          posicion: '',
+          lado: '',
+          generated: 'SIDE TOYOTA CAMRY 2020',
+        },
+        verified: false,
+      },
+    });
+
+    expect(createResponse.ok(), await createResponse.text()).toBe(true);
+    const created = await createResponse.json();
+
+    const updateResponse = await page.request.patch(`/api/products/${created.data.id}`, {
+      data: {
+        description: {
+          parte: 'SIDE',
+          posicion: 'FRONT',
+          lado: 'LEFT',
+          generated: 'SIDE FRONT LEFT TOYOTA CAMRY 2020',
+        },
+      },
+    });
+
+    expect(updateResponse.ok(), await updateResponse.text()).toBe(true);
+    const updated = await updateResponse.json();
+    expect(updated.data.description_data.generated).toBe('SIDE FRONT LEFT TOYOTA CAMRY 2020');
+  });
 });
