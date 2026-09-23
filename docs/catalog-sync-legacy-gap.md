@@ -6,7 +6,7 @@ Exact SQL: [migration](../supabase/migrations/20260923064618_backfill_legacy_cat
 
 A unique index on `products.product_code_id` enforces one catalog product per source and supports `ON CONFLICT DO NOTHING` during overlapping writes. Helper locks and rereads source row before mapping it. API roles lose direct EXECUTE grants on trigger functions; existing triggers still run as table owner.
 
-Catalog app owns `products`. Mirror unique index into rhino-catalog migration history before applying this proposal to production.
+Catalog app owns `products`. Unique index still needs a matching rhino-catalog migration. This repository-history follow-up was not completed before production execution.
 
 ## Live definition change
 
@@ -31,6 +31,6 @@ Local disposable Supabase tests:
 
 ## Deployment and rollback
 
-Production was not changed for this PR. Production and repo migration histories differ; `supabase/config.toml` disables local replay. Do not run `supabase db push`. Recheck live schema and data immediately before approved execution; apply this migration through an explicitly approved migration mechanism as one transaction.
+Migration was applied to production after explicit owner approval on 2026-09-23. Production verification passed; exact execution evidence remains in the private local review bundle. Production and repo migration histories differ; `supabase/config.toml` disables local replay. Do not run `supabase db push` or reapply this migration.
 
-For rollback, stop source writes and snapshot catalog edits since backfill. Restore trigger function definitions and grants from fresh pre-execution snapshot. Delete only products created by backfill whose catalog-owned fields and group links are still untouched; membership rows cascade. Keep edited or published rows for manual reconciliation. Drop helper after restoring functions; drop unique index only after checking writer dependencies. Record rollback as a new migration; do not rewrite migration history.
+For rollback, stop source writes and snapshot catalog edits since backfill. Restore trigger function definitions and grants from pre-execution snapshot. Delete only products created by backfill whose catalog-owned fields and group links are still untouched; membership rows cascade. Keep edited or published rows for manual reconciliation. Drop helper after restoring functions; drop unique index only after checking writer dependencies. Record rollback as a new migration; do not rewrite migration history.
