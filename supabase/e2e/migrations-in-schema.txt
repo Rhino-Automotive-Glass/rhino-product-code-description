@@ -1,0 +1,42 @@
+# Migrations already contained in supabase/e2e/schema.sql.
+#
+# schema.sql is a BASELINE: a structure dump of production (scripts/e2e-schema.sh),
+# so it contains every migration that has already run there. This file records
+# which ones those are, so scripts/e2e-apply-migrations.sh can apply the rest on
+# top instead of replaying them.
+#
+# Rules:
+#   - One bare filename from supabase/migrations/ per line. `#` comments and
+#     blank lines are ignored. No paths, no duplicates.
+#   - A NEW migration does NOT go here. Leaving it out is what makes CI execute
+#     it, which is the point of the file.
+#   - Add entries only when schema.sql is regenerated from a production backup
+#     that already includes them — in the same commit. See docs/TESTING.md,
+#     "Baseline schema and pending migrations".
+#
+# Verified against schema.sql when this file was created (2026-09-23).
+
+# Legacy non-timestamp names, applied to production before the repo adopted
+# Supabase's timestamp convention.
+001_rhino_auto_number.sql
+002_enable_rls_counters.sql
+003_create_user_roles_rbac.sql
+004_create_audit_logs.sql
+005_enable_rls_product_codes.sql
+006_default_viewer_role_trigger.sql
+007_rbac_helper_functions.sql
+008_fix_create_catalog_entry.sql
+009_sync_catalog_on_source_update.sql
+010_enable_rls_public_tables.sql
+011_revoke_anon_function_execute.sql
+012_revoke_public_function_execute.sql
+013_harden_functions.sql
+014_drop_dead_policies_and_functions.sql
+015_restrict_user_hierarchy_level.sql
+016_audit_logs_allow_deleted_actor.sql
+017_drop_rhino_auto_number.sql
+018_no_role_no_access.sql
+add_verified_column.sql
+
+# Timestamped migrations already in production at the time of the backup.
+20260920193948_fix_editor_product_code_updates.sql

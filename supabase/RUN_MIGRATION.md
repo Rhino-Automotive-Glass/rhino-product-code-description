@@ -28,12 +28,15 @@ AND column_name = 'verified';
 
 You should see the `verified` column listed.
 
-## Alternative: Run via Supabase CLI
+## Do not use `supabase db push` from this repository
 
-If you have the Supabase CLI installed:
+Production is shared with several Rhino apps and has drifted from
+`supabase/migrations/`, so `supabase/config.toml` sets
+`db.migrations.enabled = false` and `supabase db push`, `migration repair`, and
+other remote migration commands are off limits here. Apply production changes
+through the dashboard SQL editor as above.
 
-```bash
-supabase db push
-```
-
-This will apply all pending migrations.
+Locally, migrations are exercised automatically: `npm run e2e:db` loads the
+baseline `supabase/e2e/schema.sql` and then applies every migration the
+baseline does not already contain. See
+docs/TESTING.md, "Database Setup: Baseline Schema and Pending Migrations".
