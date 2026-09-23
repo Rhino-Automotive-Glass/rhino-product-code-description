@@ -31,8 +31,19 @@ jobs:
       with:
         version: latest
 
-    - name: Start local Supabase and load e2e schema
+    # Loads the baseline schema, then applies every migration the baseline does
+    # not already contain (supabase/e2e/migrations-in-schema.txt). A migration
+    # that fails here fails the pull request instead of the deploy.
+    - name: Start local Supabase, load baseline schema and apply pending migrations
       run: npm run e2e:db
+
+    - name: Check migration runner selection rules
+      run: bash supabase/tests/migration_runner.sh
+
+    - name: Assert pending migrations were applied
+      run: |
+        DB_URL="$(supabase status -o env | sed -n 's/^DB_URL="\(.*\)"$/\1/p')"
+        psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f supabase/tests/pending_migrations_applied.sql
 
     - name: Run Playwright tests
       run: npm run test

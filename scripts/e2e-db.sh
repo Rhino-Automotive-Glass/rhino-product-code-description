@@ -7,6 +7,13 @@
 # state. Never touches a remote project — the URL is taken from
 # `supabase status` and must point at localhost.
 #
+# Order: baseline schema -> pending migrations -> seed -> security invariants.
+# supabase/e2e/schema.sql is a production snapshot, i.e. a baseline rather than
+# the target state, so every migration it does not already contain is applied
+# on top (see supabase/e2e/migrations-in-schema.txt). That is what makes CI
+# execute the SQL that is about to run against production; a broken migration
+# fails the run here instead of on deploy.
+#
 # Requirements: Docker running, Supabase CLI, psql.
 #
 # Usage: npm run e2e:db
@@ -41,7 +48,7 @@ case "$DB_URL" in
     ;;
 esac
 
-echo "[e2e-db] Resetting public schema and loading supabase/e2e/*.sql"
+echo "[e2e-db] Resetting public schema and loading supabase/e2e/schema.sql"
 psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL'
 -- Remove anything a previous run created, including the test user.
 DROP SCHEMA IF EXISTS public CASCADE;
@@ -56,9 +63,17 @@ CREATE SCHEMA private;
 REVOKE ALL ON SCHEMA private FROM PUBLIC;
 SQL
 
-psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 \
-  -f supabase/e2e/schema.sql \
-  -f supabase/e2e/seed.sql
+psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/e2e/schema.sql
+
+# Migrations the baseline does not already contain. Runs before the seed so a
+# migration that rewrites data sees only what schema.sql created, exactly as it
+# will in production.
+bash scripts/e2e-apply-migrations.sh \
+  "$DB_URL" \
+  supabase/migrations \
+  supabase/e2e/migrations-in-schema.txt
+
+psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/e2e/seed.sql
 
 # Same checks the nightly backup runs against production: the local copy must
 # honour them too, or schema.sql was generated from a pre-hardening backup.
